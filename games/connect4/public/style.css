@@ -89,7 +89,7 @@ body {
     align-items: center;
     width: 100%;
     max-width: 800px;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     gap: 20px;
 }
 
@@ -98,7 +98,7 @@ body {
     align-items: center;
     background: rgba(10, 10, 20, 0.8);
     border: 1px solid var(--border-color);
-    padding: 15px 25px;
+    padding: 6px 15px;
     border-radius: 12px;
     flex-grow: 1;
     flex-basis: 0;
