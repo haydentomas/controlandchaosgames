@@ -88,27 +88,29 @@
             const iframe = document.getElementById('game-frame');
             const activeTitle = document.getElementById('active-game-name');
             const subtitle = document.getElementById('terminal-subtitle');
+            const mainHeader = document.querySelector('#terminal-view > header');
 
             if (gameKey === 'connect4') {
-                activeTitle.innerText = "CONNECT 4 PLAYGROUND";
+                activeTitle.innerText = "CONTROL & CHAOS CONNECT 4";
                 subtitle.innerText = "PLAYING CONNECT 4";
                 iframe.src = "/games/connect4/board/lobby?debug=true";
             } else if (gameKey === 'chess') {
-                activeTitle.innerText = "CHESS PLAYGROUND";
+                activeTitle.innerText = "CONTROL & CHAOS CHESS";
                 subtitle.innerText = "PLAYING CHESS";
                 iframe.src = "/games/chess/board/lobby?debug=true";
             } else if (gameKey === 'tictactoe') {
-                activeTitle.innerText = "TIC TAC TOE PLAYGROUND";
+                activeTitle.innerText = "CONTROL & CHAOS TIC TAC TOE";
                 subtitle.innerText = "PLAYING TIC TAC TOE";
                 iframe.src = "/games/tictactoe/board/lobby?debug=true";
             } else if (gameKey === 'checkers') {
-                activeTitle.innerText = "CHECKERS PLAYGROUND";
+                activeTitle.innerText = "CONTROL & CHAOS CHECKERS";
                 subtitle.innerText = "PLAYING CHECKERS";
                 iframe.src = "/games/checkers/board/lobby?debug=true";
             }
 
             selector.classList.add('hidden');
             gameScreen.classList.remove('hidden');
+            if (mainHeader) mainHeader.classList.add('hidden');
         }
 
         function unloadGame() {
@@ -116,12 +118,14 @@
             const gameScreen = document.getElementById('game-screen');
             const iframe = document.getElementById('game-frame');
             const subtitle = document.getElementById('terminal-subtitle');
+            const mainHeader = document.querySelector('#terminal-view > header');
 
             iframe.src = "";
             subtitle.innerText = "ARCADE TERMINAL";
             
             gameScreen.classList.add('hidden');
             selector.classList.remove('hidden');
+            if (mainHeader) mainHeader.classList.remove('hidden');
         }
 
         function reloadCurrentGame() {
