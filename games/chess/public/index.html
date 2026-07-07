@@ -18,6 +18,116 @@
         linkEl.href = (cssBasePath || '') + '/style.css';
         document.head.appendChild(linkEl);
     </script>
+    <style>
+        /* Board Overlay (Join Screen) */
+        .board-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(9, 9, 14, 0.93) !important;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100000 !important; /* Force on top of all chess square layers */
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .board-overlay.fade-out {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        .overlay-card {
+            text-align: center;
+            padding: 30px;
+            background: rgba(20, 20, 35, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 380px;
+            width: 90%;
+            z-index: 100001 !important;
+        }
+
+        .overlay-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--neon-blue) !important;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .overlay-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary) !important;
+            margin-bottom: 24px;
+            line-height: 1.4;
+        }
+
+        .overlay-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .btn-overlay-join {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            background: transparent;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+
+        .btn-overlay-join.join-white-color {
+            border: 1px solid #ffffff !important;
+            color: #ffffff !important;
+            box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-overlay-join.join-white-color:hover:not(:disabled) {
+            background: #ffffff !important;
+            color: #000000 !important;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-overlay-join.join-black-color {
+            border: 1px solid var(--neon-purple) !important;
+            color: var(--neon-purple) !important;
+            box-shadow: inset 0 0 5px rgba(192, 0, 255, 0.2);
+        }
+
+        .btn-overlay-join.join-black-color:hover:not(:disabled) {
+            background: var(--neon-purple) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 15px rgba(192, 0, 255, 0.5);
+        }
+
+        .btn-overlay-join:disabled {
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            color: var(--text-secondary) !important;
+            cursor: not-allowed;
+            background: rgba(255, 255, 255, 0.02) !important;
+            box-shadow: none !important;
+        }
+
+        .overlay-desc {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.25) !important;
+        }
+    </style>
     <!-- Socket.io Client -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
@@ -58,16 +168,19 @@
             <div class="board-frame-outer">
                 <div class="board-frame">
                     <div id="chess-grid" class="board-grid"></div>
-                </div>
-            </div>
 
-            <!-- Debug / Local Test Panel -->
-            <div id="debug-panel" class="hidden" style="margin: 20px auto 10px; padding: 15px; background: rgba(255,255,255,0.03); border: 1px dashed var(--neon-blue); border-radius: 12px; width: 100%; max-width: 620px; text-align: center; z-index: 10;">
-                <h3 style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: var(--neon-blue); margin-bottom: 12px; letter-spacing: 1px;">🛠️ Local Test Panel</h3>
-                <button id="btn-debug-join-white" class="btn-reset" style="margin: 0 5px; border-color: #ffffff; color: #ffffff;">Join White</button>
-                <button id="btn-debug-join-black" class="btn-reset" style="margin: 0 5px; border-color: var(--neon-purple); color: var(--neon-purple);">Join Black</button>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 10px;">
-                    (Click a piece to select it, then click a destination square to move)
+                    <!-- Over the Board Join Overlay -->
+                    <div id="join-overlay" class="board-overlay">
+                        <div class="overlay-card">
+                            <h3 class="overlay-title">WAITING FOR PLAYERS</h3>
+                            <p class="overlay-subtitle">Both players must join to start the match.</p>
+                            <div class="overlay-buttons">
+                                <button id="btn-overlay-join-white" class="btn-overlay-join join-white-color">JOIN AS WHITE</button>
+                                <button id="btn-overlay-join-black" class="btn-overlay-join join-black-color">JOIN AS BLACK</button>
+                            </div>
+                            <p class="overlay-desc">(Or join automatically from Second Life)</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -105,25 +218,22 @@
 
             setupChessBoard();
 
-            if (isDebug) {
-                document.getElementById('debug-panel').classList.remove('hidden');
-                
-                document.getElementById('btn-debug-join-white').addEventListener('click', () => {
-                    fetch(`${basePath}/api/join`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ gameId, uuid: 'debug_white', name: 'White Player', role: 'white' })
-                    });
+            // Bind Overlay Join Buttons
+            document.getElementById('btn-overlay-join-white').addEventListener('click', () => {
+                fetch(`${basePath}/api/join`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, uuid: 'debug_white', name: 'White Player', role: 'white' })
                 });
-                
-                document.getElementById('btn-debug-join-black').addEventListener('click', () => {
-                    fetch(`${basePath}/api/join`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ gameId, uuid: 'debug_black', name: 'Black Player', role: 'black' })
-                    });
+            });
+            
+            document.getElementById('btn-overlay-join-black').addEventListener('click', () => {
+                fetch(`${basePath}/api/join`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, uuid: 'debug_black', name: 'Black Player', role: 'black' })
                 });
-            }
+            });
 
             document.getElementById('btn-reset-board').addEventListener('click', () => {
                 fetch(`${basePath}/api/reset`, {
@@ -200,6 +310,35 @@
 
         function updateChessBoard(game, lastMove) {
             currentTurn = game.turn;
+
+            // Update Join Overlay status
+            const overlay = document.getElementById('join-overlay');
+            const joinWhiteBtn = document.getElementById('btn-overlay-join-white');
+            const joinBlackBtn = document.getElementById('btn-overlay-join-black');
+
+            if (game.status === 'waiting') {
+                overlay.classList.remove('fade-out');
+                
+                // White Join Button
+                if (game.player1) {
+                    joinWhiteBtn.innerText = `WHITE: ${game.player1.name.toUpperCase()}`;
+                    joinWhiteBtn.disabled = true;
+                } else {
+                    joinWhiteBtn.innerText = `JOIN AS WHITE`;
+                    joinWhiteBtn.disabled = false;
+                }
+
+                // Black Join Button
+                if (game.player2) {
+                    joinBlackBtn.innerText = `BLACK: ${game.player2.name.toUpperCase()}`;
+                    joinBlackBtn.disabled = true;
+                } else {
+                    joinBlackBtn.innerText = `JOIN AS BLACK`;
+                    joinBlackBtn.disabled = false;
+                }
+            } else {
+                overlay.classList.add('fade-out');
+            }
 
             // Update player names
             document.getElementById('player-white-name').innerText = game.player1 ? game.player1.name : 'Waiting...';
