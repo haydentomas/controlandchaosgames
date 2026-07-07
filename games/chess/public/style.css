@@ -39,7 +39,8 @@ body {
 }
 
 .view {
-    min-height: 100vh;
+    min-height: auto;
+    padding-top: 5px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -85,7 +86,7 @@ body {
     align-items: center;
     width: 100%;
     max-width: 650px;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     gap: 15px;
 }
 
@@ -201,8 +202,8 @@ body {
 .board-frame-outer {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
     border: 1px solid var(--border-color);
-    padding: 16px;
-    border-radius: 20px;
+    padding: 12px;
+    border-radius: 16px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
     margin-bottom: 10px;
 }
