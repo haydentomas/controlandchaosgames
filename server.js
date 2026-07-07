@@ -73,7 +73,7 @@ try {
 
 // Global Terminal API / Sockets can be added here if needed
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
     console.log(`=== Game Terminal Server running on port ${PORT} ===`);
     console.log(`Lobby: http://localhost:${PORT}`);
