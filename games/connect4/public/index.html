@@ -73,18 +73,22 @@
                     
                     <!-- Coin Slots Grid (Drawn dynamically) -->
                     <div id="connect4-grid" class="board-grid"></div>
+
+                    <!-- Over the Board Join Overlay -->
+                    <div id="join-overlay" class="board-overlay">
+                        <div class="overlay-card">
+                            <h3 class="overlay-title">WAITING FOR PLAYERS</h3>
+                            <p class="overlay-subtitle">Both players must join to start the match.</p>
+                            <div class="overlay-buttons">
+                                <button id="btn-overlay-join-red" class="btn-overlay-join join-red-color">JOIN AS RED</button>
+                                <button id="btn-overlay-join-yellow" class="btn-overlay-join join-yellow-color">JOIN AS YELLOW</button>
+                            </div>
+                            <p class="overlay-desc">(Or join automatically from Second Life)</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Debug / Local Test Panel -->
-            <div id="debug-panel" class="hidden" style="margin: 30px auto 10px; padding: 15px; background: rgba(255,255,255,0.03); border: 1px dashed var(--neon-blue); border-radius: 12px; width: 100%; max-width: 620px; text-align: center; z-index: 10;">
-                <h3 style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: var(--neon-blue); margin-bottom: 12px; letter-spacing: 1px;">🛠️ Local Test Panel</h3>
-                <button id="btn-debug-join-red" class="btn-reset" style="margin: 0 5px; border-color: var(--neon-red); color: var(--neon-red);">Join Red</button>
-                <button id="btn-debug-join-yellow" class="btn-reset" style="margin: 0 5px; border-color: var(--neon-yellow); color: var(--neon-yellow);">Join Yellow</button>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 10px;">
-                    (Click any column directly on the grid above to simulate a turn)
-                </div>
-            </div>
         </main>
     </div>
 
@@ -120,41 +124,38 @@
             document.getElementById('spectator-view').classList.remove('hidden');
             setupSpectatorBoard();
 
-            if (isDebug) {
-                document.getElementById('debug-panel').classList.remove('hidden');
-                
-                document.getElementById('btn-debug-join-red').addEventListener('click', () => {
-                    fetch(`${basePath}/api/join`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ gameId, uuid: 'debug_red', name: 'Debug Red', role: 'red' })
-                    });
+            // Bind Overlay Join Buttons
+            document.getElementById('btn-overlay-join-red').addEventListener('click', () => {
+                fetch(`${basePath}/api/join`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, uuid: 'debug_red', name: 'Player Red', role: 'red' })
                 });
-                
-                document.getElementById('btn-debug-join-yellow').addEventListener('click', () => {
-                    fetch(`${basePath}/api/join`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ gameId, uuid: 'debug_yellow', name: 'Debug Yellow', role: 'yellow' })
-                    });
+            });
+            
+            document.getElementById('btn-overlay-join-yellow').addEventListener('click', () => {
+                fetch(`${basePath}/api/join`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, uuid: 'debug_yellow', name: 'Player Yellow', role: 'yellow' })
                 });
+            });
 
-                // Add grid clicking to drop coins in debug mode
-                document.getElementById('connect4-grid').addEventListener('click', (e) => {
-                    const slot = e.target.closest('.slot');
-                    if (!slot) return;
-                    
-                    const parts = slot.id.split('-');
-                    const col = parts[2];
-                    const uuid = gameTurn === 1 ? 'debug_red' : 'debug_yellow';
+            // Add grid clicking to drop coins
+            document.getElementById('connect4-grid').addEventListener('click', (e) => {
+                const slot = e.target.closest('.slot');
+                if (!slot) return;
+                
+                const parts = slot.id.split('-');
+                const col = parts[2];
+                const uuid = gameTurn === 1 ? 'debug_red' : 'debug_yellow';
 
-                    fetch(`${basePath}/api/move`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ gameId, uuid, col })
-                    });
+                fetch(`${basePath}/api/move`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, uuid, col })
                 });
-            }
+            });
         });
 
         // =========================================
@@ -191,6 +192,35 @@
 
         function updateSpectatorBoard(game, lastMove) {
             gameTurn = game.turn;
+
+            // Update Join Overlay status
+            const overlay = document.getElementById('join-overlay');
+            const joinRedBtn = document.getElementById('btn-overlay-join-red');
+            const joinYellowBtn = document.getElementById('btn-overlay-join-yellow');
+
+            if (game.status === 'waiting') {
+                overlay.classList.remove('fade-out');
+                
+                // Red Join Button
+                if (game.player1) {
+                    joinRedBtn.innerText = `RED: ${game.player1.name.toUpperCase()}`;
+                    joinRedBtn.disabled = true;
+                } else {
+                    joinRedBtn.innerText = `JOIN AS RED`;
+                    joinRedBtn.disabled = false;
+                }
+
+                // Yellow Join Button
+                if (game.player2) {
+                    joinYellowBtn.innerText = `YELLOW: ${game.player2.name.toUpperCase()}`;
+                    joinYellowBtn.disabled = true;
+                } else {
+                    joinYellowBtn.innerText = `JOIN AS YELLOW`;
+                    joinYellowBtn.disabled = false;
+                }
+            } else {
+                overlay.classList.add('fade-out');
+            }
 
             // Update names
             document.getElementById('player-red-name').innerText = game.player1 ? game.player1.name : 'Waiting...';
