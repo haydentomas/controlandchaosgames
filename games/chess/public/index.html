@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Chess Arcade</title>
+    <!-- Premium Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <script>
+        // Resolve base path dynamically
+        const linkPathParts = window.location.pathname.split('/');
+        const linkBoardIndex = linkPathParts.indexOf('board');
+        const cssBasePath = linkBoardIndex !== -1 ? linkPathParts.slice(0, linkBoardIndex).join('/') : '';
+        
+        // Insert style tag
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'stylesheet';
+        linkEl.href = (cssBasePath || '') + '/style.css';
+        document.head.appendChild(linkEl);
+    </script>
+    <!-- Socket.io Client -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+
+    <div id="spectator-view" class="view">
+        <header>
+            <h1 class="logo">CONTROL & CHAOS</h1>
+            <h2 class="sub-logo">CHESS ARCADE</h2>
+        </header>
+
+        <main class="spectator-container">
+            <!-- Player Stats Header -->
+            <div class="players-bar">
+                <div id="player-white-card" class="player-card white-card">
+                    <div class="color-indicator"></div>
+                    <div class="player-info">
+                        <span class="player-label">WHITE PLAYER</span>
+                        <span id="player-white-name" class="player-name">Waiting...</span>
+                    </div>
+                </div>
+
+                <div class="status-center">
+                    <span id="game-status-text" class="status-badge">WAITING FOR PLAYERS</span>
+                    <button id="btn-reset-board" class="btn-reset">RESET MATCH</button>
+                </div>
+
+                <div id="player-black-card" class="player-card black-card">
+                    <div class="player-info text-right">
+                        <span class="player-label">BLACK PLAYER</span>
+                        <span id="player-black-name" class="player-name">Waiting...</span>
+                    </div>
+                    <div class="color-indicator"></div>
+                </div>
+            </div>
+
+            <!-- In-World Chess Grid -->
+            <div class="board-frame-outer">
+                <div class="board-frame">
+                    <div id="chess-grid" class="board-grid"></div>
+                </div>
+            </div>
+
+            <!-- Debug / Local Test Panel -->
+            <div id="debug-panel" class="hidden" style="margin: 20px auto 10px; padding: 15px; background: rgba(255,255,255,0.03); border: 1px dashed var(--neon-blue); border-radius: 12px; width: 100%; max-width: 620px; text-align: center; z-index: 10;">
+                <h3 style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: var(--neon-blue); margin-bottom: 12px; letter-spacing: 1px;">🛠️ Local Test Panel</h3>
+                <button id="btn-debug-join-white" class="btn-reset" style="margin: 0 5px; border-color: #ffffff; color: #ffffff;">Join White</button>
+                <button id="btn-debug-join-black" class="btn-reset" style="margin: 0 5px; border-color: var(--neon-purple); color: var(--neon-purple);">Join Black</button>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 10px;">
+                    (Click a piece to select it, then click a destination square to move)
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Client Logic -->
+    <script>
+        // Parse Route & detect base path dynamically
+        const pathParts = window.location.pathname.split('/');
+        const boardIndex = pathParts.indexOf('board');
+        const gameId = boardIndex !== -1 && pathParts[boardIndex + 1] ? pathParts[boardIndex + 1] : 'lobby';
+        const basePath = boardIndex !== -1 ? pathParts.slice(0, boardIndex).join('/') : '';
+        const socket = io(basePath || '/');
+
+        let currentTurn = 'white';
+        let selectedSquare = null; // { r, c }
+        const isDebug = new URLSearchParams(window.location.search).get('debug') === 'true' || 
+                        window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1';
+
+        // Chess piece unicode symbols map
+        const pieceSymbols = {
+            'wp': '♙', 'wr': '♖', 'wn': '♘', 'wb': '♗', 'wq': '♕', 'wk': '♔',
+            'bp': '♟', 'br': '♜', 'bn': '♞', 'bb': '♝', 'bq': '♛', 'bk': '♚'
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            socket.emit('join_game', gameId);
+
+            // Hide header if loaded inside the terminal iframe
+            if (window.self !== window.top) {
+                const headerEl = document.querySelector('#spectator-view header');
+                if (headerEl) headerEl.style.display = 'none';
+            }
+
+            setupChessBoard();
+
+            if (isDebug) {
+                document.getElementById('debug-panel').classList.remove('hidden');
+                
+                document.getElementById('btn-debug-join-white').addEventListener('click', () => {
+                    fetch(`${basePath}/api/join`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId, uuid: 'debug_white', name: 'White Player', role: 'white' })
+                    });
+                });
+                
+                document.getElementById('btn-debug-join-black').addEventListener('click', () => {
+                    fetch(`${basePath}/api/join`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId, uuid: 'debug_black', name: 'Black Player', role: 'black' })
+                    });
+                });
+            }
+
+            document.getElementById('btn-reset-board').addEventListener('click', () => {
+                fetch(`${basePath}/api/reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId })
+                });
+            });
+        });
+
+        function setupChessBoard() {
+            const gridContainer = document.getElementById('chess-grid');
+            gridContainer.innerHTML = '';
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.createElement('div');
+                    square.classList.add('square');
+                    square.classList.add((r + c) % 2 === 0 ? 'light-sq' : 'dark-sq');
+                    square.id = `square-${r}-${c}`;
+                    
+                    square.addEventListener('click', () => handleSquareClick(r, c));
+
+                    gridContainer.appendChild(square);
+                }
+            }
+        }
+
+        function handleSquareClick(r, c) {
+            if (!isDebug) return; // Simple interaction in debug/local test
+
+            const squareEl = document.getElementById(`square-${r}-${c}`);
+            const piece = squareEl.getAttribute('data-piece');
+
+            if (selectedSquare) {
+                // Check if clicking the same square to deselect
+                if (selectedSquare.r === r && selectedSquare.c === c) {
+                    clearSelections();
+                    return;
+                }
+
+                // Attempt to move
+                const uuid = currentTurn === 'white' ? 'debug_white' : 'debug_black';
+                fetch(`${basePath}/api/move`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        gameId,
+                        uuid,
+                        fromRow: selectedSquare.r,
+                        fromCol: selectedSquare.c,
+                        toRow: r,
+                        toCol: c
+                    })
+                }).then(res => {
+                    if (!res.ok) {
+                        res.json().then(data => alert(data.error || "Invalid move."));
+                    }
+                    clearSelections();
+                });
+            } else {
+                // Select a piece if it belongs to active turn
+                if (piece && piece.startsWith(currentTurn[0])) {
+                    selectedSquare = { r, c };
+                    squareEl.classList.add('selected');
+                }
+            }
+        }
+
+        function clearSelections() {
+            selectedSquare = null;
+            document.querySelectorAll('.square').forEach(sq => sq.classList.remove('selected'));
+        }
+
+        function updateChessBoard(game, lastMove) {
+            currentTurn = game.turn;
+
+            // Update player names
+            document.getElementById('player-white-name').innerText = game.player1 ? game.player1.name : 'Waiting...';
+            document.getElementById('player-black-name').innerText = game.player2 ? game.player2.name : 'Waiting...';
+
+            // Active player highlights
+            document.getElementById('player-white-card').classList.remove('active');
+            document.getElementById('player-black-card').classList.remove('active');
+
+            if (game.status === 'playing') {
+                if (game.turn === 'white') {
+                    document.getElementById('player-white-card').classList.add('active');
+                    document.getElementById('game-status-text').innerText = "WHITE'S TURN";
+                } else {
+                    document.getElementById('player-black-card').classList.add('active');
+                    document.getElementById('game-status-text').innerText = "BLACK'S TURN";
+                }
+            } else if (game.status === 'won') {
+                const winnerName = game.winner === 'white' ? game.player1.name : game.player2.name;
+                document.getElementById('game-status-text').innerText = `${winnerName.toUpperCase()} WINS!`;
+                if (game.winner === 'white') document.getElementById('player-white-card').classList.add('active');
+                else document.getElementById('player-black-card').classList.add('active');
+            } else {
+                document.getElementById('game-status-text').innerText = "WAITING FOR PLAYERS";
+            }
+
+            // Draw board pieces
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.getElementById(`square-${r}-${c}`);
+                    const piece = game.board[r][c];
+                    
+                    square.innerHTML = '';
+                    square.className = `square ${(r + c) % 2 === 0 ? 'light-sq' : 'dark-sq'}`;
+                    
+                    if (piece) {
+                        square.setAttribute('data-piece', piece);
+                        const pieceSpan = document.createElement('span');
+                        pieceSpan.classList.add('piece');
+                        pieceSpan.classList.add(piece.startsWith('w') ? 'white-piece' : 'black-piece');
+                        pieceSpan.innerText = pieceSymbols[piece] || '';
+                        square.appendChild(pieceSpan);
+                    } else {
+                        square.removeAttribute('data-piece');
+                    }
+                }
+            }
+
+            // Animate / highlight last move
+            if (lastMove) {
+                const fromSq = document.getElementById(`square-${lastMove.from[0]}-${lastMove.from[1]}`);
+                const toSq = document.getElementById(`square-${lastMove.to[0]}-${lastMove.to[1]}`);
+                if (fromSq) fromSq.classList.add('last-move-from');
+                if (toSq) toSq.classList.add('last-move-to');
+            }
+        }
+
+        socket.on('update', (data) => {
+            const game = data.game || data;
+            const lastMove = data.lastMove || null;
+            updateChessBoard(game, lastMove);
+        });
+    </script>
+</body>
+</html>

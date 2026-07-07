@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Tic Tac Toe Arcade</title>
+    <!-- Premium Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <script>
+        // Resolve base path dynamically
+        const linkPathParts = window.location.pathname.split('/');
+        const linkBoardIndex = linkPathParts.indexOf('board');
+        const cssBasePath = linkBoardIndex !== -1 ? linkPathParts.slice(0, linkBoardIndex).join('/') : '';
+        
+        // Insert style tag
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'stylesheet';
+        linkEl.href = (cssBasePath || '') + '/style.css';
+        document.head.appendChild(linkEl);
+    </script>
+    <!-- Socket.io Client -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+
+    <div id="spectator-view" class="view">
+        <header>
+            <h1 class="logo">CONTROL & CHAOS</h1>
+            <h2 class="sub-logo">TIC TAC TOE ARCADE</h2>
+        </header>
+
+        <main class="spectator-container">
+            <!-- Player Stats Header -->
+            <div class="players-bar">
+                <div id="player-x-card" class="player-card x-card">
+                    <div class="color-indicator"></div>
+                    <div class="player-info">
+                        <span class="player-label">X PLAYER</span>
+                        <span id="player-x-name" class="player-name">Waiting...</span>
+                    </div>
+                </div>
+
+                <div class="status-center">
+                    <span id="game-status-text" class="status-badge">WAITING FOR PLAYERS</span>
+                    <div class="action-buttons">
+                        <button id="btn-reset-board" class="btn-reset">RESET</button>
+                        <!-- Board Size Selector -->
+                        <select id="select-board-size" class="select-size">
+                            <option value="3">3x3 Grid</option>
+                            <option value="6">6x6 Grid</option>
+                            <option value="10">10x10 Grid</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="player-o-card" class="player-card o-card">
+                    <div class="player-info text-right">
+                        <span class="player-label">O PLAYER</span>
+                        <span id="player-o-name" class="player-name">Waiting...</span>
+                    </div>
+                    <div class="color-indicator"></div>
+                </div>
+            </div>
+
+            <!-- In-World Tic Tac Toe Grid -->
+            <div class="board-frame-outer">
+                <div class="board-frame">
+                    <div id="tictactoe-grid" class="board-grid"></div>
+                </div>
+            </div>
+
+            <!-- Debug / Local Test Panel -->
+            <div id="debug-panel" class="hidden" style="margin: 25px auto 10px; padding: 15px; background: rgba(255,255,255,0.03); border: 1px dashed var(--neon-blue); border-radius: 12px; width: 100%; max-width: 620px; text-align: center; z-index: 10;">
+                <h3 style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: var(--neon-blue); margin-bottom: 12px; letter-spacing: 1px;">🛠️ Local Test Panel</h3>
+                <button id="btn-debug-join-x" class="btn-reset" style="margin: 0 5px; border-color: var(--neon-red); color: var(--neon-red);">Join X</button>
+                <button id="btn-debug-join-o" class="btn-reset" style="margin: 0 5px; border-color: var(--neon-blue); color: var(--neon-blue);">Join O</button>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 10px;">
+                    (Click any empty square to place your token)
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Client Logic -->
+    <script>
+        const pathParts = window.location.pathname.split('/');
+        const boardIndex = pathParts.indexOf('board');
+        const gameId = boardIndex !== -1 && pathParts[boardIndex + 1] ? pathParts[boardIndex + 1] : 'lobby';
+        const basePath = boardIndex !== -1 ? pathParts.slice(0, boardIndex).join('/') : '';
+        const socket = io(basePath || '/');
+
+        let activeTurn = 1;
+        let boardSize = 3;
+        const isDebug = new URLSearchParams(window.location.search).get('debug') === 'true' || 
+                        window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1';
+
+        document.addEventListener("DOMContentLoaded", () => {
+            socket.emit('join_game', gameId);
+
+            // Hide header if loaded inside the terminal iframe
+            if (window.self !== window.top) {
+                const headerEl = document.querySelector('#spectator-view header');
+                if (headerEl) headerEl.style.display = 'none';
+            }
+
+            if (isDebug) {
+                document.getElementById('debug-panel').classList.remove('hidden');
+                
+                document.getElementById('btn-debug-join-x').addEventListener('click', () => {
+                    fetch(`${basePath}/api/join`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId, uuid: 'debug_x', name: 'Player X', role: 'X', size: boardSize })
+                    });
+                });
+                
+                document.getElementById('btn-debug-join-o').addEventListener('click', () => {
+                    fetch(`${basePath}/api/join`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId, uuid: 'debug_o', name: 'Player O', role: 'O', size: boardSize })
+                    });
+                });
+            }
+
+            // Reset matches
+            document.getElementById('btn-reset-board').addEventListener('click', () => {
+                fetch(`${basePath}/api/reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, size: boardSize })
+                });
+            });
+
+            // Size Selector change event
+            document.getElementById('select-board-size').addEventListener('change', (e) => {
+                boardSize = parseInt(e.target.value);
+                fetch(`${basePath}/api/reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, size: boardSize })
+                });
+            });
+        });
+
+        function renderGridStructure(size) {
+            const gridContainer = document.getElementById('tictactoe-grid');
+            gridContainer.innerHTML = '';
+            
+            // Adjust template layouts
+            gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            gridContainer.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+            
+            // Set cell dimension class
+            let cellClass = 'cell-medium';
+            if (size === 6) cellClass = 'cell-small';
+            if (size === 10) cellClass = 'cell-tiny';
+
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = `cell ${cellClass}`;
+                    cell.id = `cell-${r}-${c}`;
+                    
+                    cell.addEventListener('click', () => {
+                        if (!isDebug) return;
+                        const uuid = activeTurn === 1 ? 'debug_x' : 'debug_o';
+                        fetch(`${basePath}/api/move`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ gameId, uuid, row: r, col: c })
+                        });
+                    });
+
+                    gridContainer.appendChild(cell);
+                }
+            }
+        }
+
+        function updateBoard(game, lastMove) {
+            activeTurn = game.turn;
+            
+            // Sync Size selection dropdown if loaded from server config
+            if (game.size !== boardSize) {
+                boardSize = game.size;
+                document.getElementById('select-board-size').value = boardSize;
+            }
+
+            // Sync layout size
+            const gridContainer = document.getElementById('tictactoe-grid');
+            if (gridContainer.children.length !== (boardSize * boardSize)) {
+                renderGridStructure(boardSize);
+            }
+
+            // Player names
+            document.getElementById('player-x-name').innerText = game.player1 ? game.player1.name : 'Waiting...';
+            document.getElementById('player-o-name').innerText = game.player2 ? game.player2.name : 'Waiting...';
+
+            document.getElementById('player-x-card').classList.remove('active');
+            document.getElementById('player-o-card').classList.remove('active');
+
+            if (game.status === 'playing') {
+                if (game.turn === 1) {
+                    document.getElementById('player-x-card').classList.add('active');
+                    document.getElementById('game-status-text').innerText = "X'S TURN";
+                } else {
+                    document.getElementById('player-o-card').classList.add('active');
+                    document.getElementById('game-status-text').innerText = "O'S TURN";
+                }
+            } else if (game.status === 'won') {
+                const winnerName = game.winner === 1 ? game.player1.name : game.player2.name;
+                document.getElementById('game-status-text').innerText = `${winnerName.toUpperCase()} WINS!`;
+                if (game.winner === 1) document.getElementById('player-x-card').classList.add('active');
+                else document.getElementById('player-o-card').classList.add('active');
+            } else if (game.status === 'draw') {
+                document.getElementById('game-status-text').innerText = "MATCH DRAW!";
+            } else {
+                document.getElementById('game-status-text').innerText = "WAITING FOR PLAYERS";
+            }
+
+            // Redraw tokens
+            for (let r = 0; r < boardSize; r++) {
+                for (let c = 0; c < boardSize; c++) {
+                    const cell = document.getElementById(`cell-${r}-${c}`);
+                    const val = game.board[r][c];
+                    
+                    cell.innerHTML = '';
+                    cell.className = cell.className.split(' ').filter(cn => cn !== 'winning-cell').join(' ');
+
+                    if (val === 1) {
+                        cell.innerHTML = '<span class="token token-x">X</span>';
+                    } else if (val === 2) {
+                        cell.innerHTML = '<span class="token token-o">O</span>';
+                    }
+                }
+            }
+
+            // Highlight wins
+            if (game.status === 'won' && game.winCoords) {
+                game.winCoords.forEach(([r, c]) => {
+                    const cell = document.getElementById(`cell-${r}-${c}`);
+                    if (cell) cell.classList.add('winning-cell');
+                });
+            }
+        }
+
+        socket.on('update', (data) => {
+            const game = data.game || data;
+            const lastMove = data.lastMove || null;
+            updateBoard(game, lastMove);
+        });
+    </script>
+</body>
+</html>

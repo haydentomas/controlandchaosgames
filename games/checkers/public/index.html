@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Checkers Arcade</title>
+    <!-- Premium Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <script>
+        // Resolve base path dynamically
+        const linkPathParts = window.location.pathname.split('/');
+        const linkBoardIndex = linkPathParts.indexOf('board');
+        const cssBasePath = linkBoardIndex !== -1 ? linkPathParts.slice(0, linkBoardIndex).join('/') : '';
+        
+        // Insert style tag
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'stylesheet';
+        linkEl.href = (cssBasePath || '') + '/style.css';
+        document.head.appendChild(linkEl);
+    </script>
+    <!-- Socket.io Client -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+
+    <div id="spectator-view" class="view">
+        <header>
+            <h1 class="logo">CONTROL & CHAOS</h1>
+            <h2 class="sub-logo">CHECKERS ARCADE</h2>
+        </header>
+
+        <main class="spectator-container">
+            <!-- Player Stats Header -->
+            <div class="players-bar">
+                <div id="player-red-card" class="player-card red-card">
+                    <div class="color-indicator"></div>
+                    <div class="player-info">
+                        <span class="player-label">RED PLAYER</span>
+                        <span id="player-red-name" class="player-name">Waiting...</span>
+                    </div>
+                </div>
+
+                <div class="status-center">
+                    <span id="game-status-text" class="status-badge">WAITING FOR PLAYERS</span>
+                    <button id="btn-reset-board" class="btn-reset">RESET MATCH</button>
+                </div>
+
+                <div id="player-black-card" class="player-card black-card">
+                    <div class="player-info text-right">
+                        <span class="player-label">BLACK PLAYER</span>
+                        <span id="player-black-name" class="player-name">Waiting...</span>
+                    </div>
+                    <div class="color-indicator"></div>
+                </div>
+            </div>
+
+            <!-- In-World Checkers Grid -->
+            <div class="board-frame-outer">
+                <div class="board-frame">
+                    <div id="checkers-grid" class="board-grid"></div>
+                </div>
+            </div>
+
+            <!-- Debug / Local Test Panel -->
+            <div id="debug-panel" class="hidden" style="margin: 20px auto 10px; padding: 15px; background: rgba(255,255,255,0.03); border: 1px dashed var(--neon-blue); border-radius: 12px; width: 100%; max-width: 620px; text-align: center; z-index: 10;">
+                <h3 style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: var(--neon-blue); margin-bottom: 12px; letter-spacing: 1px;">🛠️ Local Test Panel</h3>
+                <button id="btn-debug-join-red" class="btn-reset" style="margin: 0 5px; border-color: var(--neon-red); color: var(--neon-red);">Join Red</button>
+                <button id="btn-debug-join-black" class="btn-reset" style="margin: 0 5px; border-color: var(--neon-purple); color: var(--neon-purple);">Join Black</button>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 10px;">
+                    (Click your checker to select it, then click an adjacent diagonal square to move/jump)
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Client Logic -->
+    <script>
+        const pathParts = window.location.pathname.split('/');
+        const boardIndex = pathParts.indexOf('board');
+        const gameId = boardIndex !== -1 && pathParts[boardIndex + 1] ? pathParts[boardIndex + 1] : 'lobby';
+        const basePath = boardIndex !== -1 ? pathParts.slice(0, boardIndex).join('/') : '';
+        const socket = io(basePath || '/');
+
+        let currentTurn = 1; // 1 = Red, -1 = Black
+        let selectedSquare = null; // { r, c }
+        const isDebug = new URLSearchParams(window.location.search).get('debug') === 'true' || 
+                        window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1';
+
+        document.addEventListener("DOMContentLoaded", () => {
+            socket.emit('join_game', gameId);
+
+            if (window.self !== window.top) {
+                const headerEl = document.querySelector('#spectator-view header');
+                if (headerEl) headerEl.style.display = 'none';
+            }
+
+            setupBoardGrid();
+
+            if (isDebug) {
+                document.getElementById('debug-panel').classList.remove('hidden');
+                
+                document.getElementById('btn-debug-join-red').addEventListener('click', () => {
+                    fetch(`${basePath}/api/join`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId, uuid: 'debug_red', name: 'Red Player', role: 'red' })
+                    });
+                });
+                
+                document.getElementById('btn-debug-join-black').addEventListener('click', () => {
+                    fetch(`${basePath}/api/join`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId, uuid: 'debug_black', name: 'Black Player', role: 'black' })
+                    });
+                });
+            }
+
+            document.getElementById('btn-reset-board').addEventListener('click', () => {
+                fetch(`${basePath}/api/reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId })
+                });
+            });
+        });
+
+        function setupBoardGrid() {
+            const grid = document.getElementById('checkers-grid');
+            grid.innerHTML = '';
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.createElement('div');
+                    square.className = `square ${(r + c) % 2 === 1 ? 'dark-sq' : 'light-sq'}`;
+                    square.id = `square-${r}-${c}`;
+                    
+                    square.addEventListener('click', () => handleSquareClick(r, c));
+                    grid.appendChild(square);
+                }
+            }
+        }
+
+        function handleSquareClick(r, c) {
+            if (!isDebug) return;
+
+            const square = document.getElementById(`square-${r}-${c}`);
+            const val = parseInt(square.getAttribute('data-value') || '0');
+
+            if (selectedSquare) {
+                // Click same square to deselect
+                if (selectedSquare.r === r && selectedSquare.c === c) {
+                    clearSelection();
+                    return;
+                }
+
+                // If clicking another of one's own pieces, switch selection
+                if (val !== 0 && ((currentTurn === 1 && val > 0) || (currentTurn === -1 && val < 0))) {
+                    clearSelection();
+                    selectedSquare = { r, c };
+                    square.classList.add('selected');
+                    return;
+                }
+
+                // Attempt move/jump
+                const uuid = currentTurn === 1 ? 'debug_red' : 'debug_black';
+                fetch(`${basePath}/api/move`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        gameId,
+                        uuid,
+                        fromRow: selectedSquare.r,
+                        fromCol: selectedSquare.c,
+                        toRow: r,
+                        toCol: c
+                    })
+                }).then(res => {
+                    if (!res.ok) {
+                        res.json().then(data => alert(data.error || "Invalid move."));
+                    }
+                    clearSelection();
+                });
+
+            } else {
+                // Select own piece
+                if (val !== 0 && ((currentTurn === 1 && val > 0) || (currentTurn === -1 && val < 0))) {
+                    selectedSquare = { r, c };
+                    square.classList.add('selected');
+                }
+            }
+        }
+
+        function clearSelection() {
+            selectedSquare = null;
+            document.querySelectorAll('.square').forEach(sq => sq.classList.remove('selected'));
+        }
+
+        function updateBoardState(game, lastMove) {
+            currentTurn = game.turn;
+
+            // Player names
+            document.getElementById('player-red-name').innerText = game.player1 ? game.player1.name : 'Waiting...';
+            document.getElementById('player-black-name').innerText = game.player2 ? game.player2.name : 'Waiting...';
+
+            document.getElementById('player-red-card').classList.remove('active');
+            document.getElementById('player-black-card').classList.remove('active');
+
+            if (game.status === 'playing') {
+                if (game.turn === 1) {
+                    document.getElementById('player-red-card').classList.add('active');
+                    document.getElementById('game-status-text').innerText = "RED'S TURN";
+                } else {
+                    document.getElementById('player-black-card').classList.add('active');
+                    document.getElementById('game-status-text').innerText = "BLACK'S TURN";
+                }
+            } else if (game.status === 'won') {
+                const winnerName = game.winner === 1 ? game.player1.name : game.player2.name;
+                document.getElementById('game-status-text').innerText = `${winnerName.toUpperCase()} WINS!`;
+                if (game.winner === 1) document.getElementById('player-red-card').classList.add('active');
+                else document.getElementById('player-black-card').classList.add('active');
+            } else {
+                document.getElementById('game-status-text').innerText = "WAITING FOR PLAYERS";
+            }
+
+            // Draw pieces
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const square = document.getElementById(`square-${r}-${c}`);
+                    const val = game.board[r][c];
+
+                    square.innerHTML = '';
+                    square.className = `square ${(r + c) % 2 === 1 ? 'dark-sq' : 'light-sq'}`;
+                    square.setAttribute('data-value', val);
+
+                    if (val !== 0) {
+                        const piece = document.createElement('div');
+                        piece.className = 'checker';
+                        
+                        if (val > 0) {
+                            piece.classList.add('red-checker');
+                            if (val === 2) piece.innerHTML = '<span class="crown">👑</span>';
+                        } else {
+                            piece.classList.add('black-checker');
+                            if (val === -2) piece.innerHTML = '<span class="crown">👑</span>';
+                        }
+                        
+                        square.appendChild(piece);
+                    }
+                }
+            }
+
+            // Last move highlight
+            if (lastMove) {
+                const fromSq = document.getElementById(`square-${lastMove.from[0]}-${lastMove.from[1]}`);
+                const toSq = document.getElementById(`square-${lastMove.to[0]}-${lastMove.to[1]}`);
+                if (fromSq) fromSq.classList.add('last-move-from');
+                if (toSq) toSq.classList.add('last-move-to');
+            }
+        }
+
+        socket.on('update', (data) => {
+            const game = data.game || data;
+            const lastMove = data.lastMove || null;
+            updateBoardState(game, lastMove);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control & Chaos Arcade Terminal</title>
+    <!-- Premium Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <div id="terminal-view" class="view">
+        <header>
+            <h1 class="logo">CONTROL & CHAOS</h1>
+            <h2 class="sub-logo" id="terminal-subtitle">ARCADE TERMINAL</h2>
+        </header>
+
+        <!-- GAME SELECTOR SCREEN -->
+        <main class="terminal-container" id="selector-screen">
+            <h3 class="section-title">SELECT A 2-PLAYER GAME</h3>
+            <div class="games-grid">
+                
+                <!-- Connect 4 Card (Playable) -->
+                <div class="game-card active-game" onclick="loadGame('connect4')">
+                    <div class="game-card-glow"></div>
+                    <div class="game-card-content">
+                        <div class="game-icon">🔴</div>
+                        <h3 class="game-title">CONNECT 4</h3>
+                        <p class="game-desc">Get four tokens in a row vertically, horizontally, or diagonally. Full browser and toy connection support.</p>
+                        <span class="status-indicator playable">PLAYABLE</span>
+                    </div>
+                </div>
+
+                <!-- Chess Card (Playable) -->
+                <div class="game-card active-game" onclick="loadGame('chess')">
+                    <div class="game-card-glow"></div>
+                    <div class="game-card-content">
+                        <div class="game-icon">👑</div>
+                        <h3 class="game-title">CHESS</h3>
+                        <p class="game-desc">Classic game of strategy and tactics. Battle your opponent's king. Toy integration ready.</p>
+                        <span class="status-indicator playable">PLAYABLE</span>
+                    </div>
+                </div>
+
+                <!-- Checkers Card (Playable) -->
+                <div class="game-card active-game" onclick="loadGame('checkers')">
+                    <div class="game-card-glow"></div>
+                    <div class="game-card-content">
+                        <div class="game-icon">🏁</div>
+                        <h3 class="game-title">CHECKERS</h3>
+                        <p class="game-desc">Jump over and capture your opponent's pieces in this fast-paced classic board game.</p>
+                        <span class="status-indicator playable">PLAYABLE</span>
+                    </div>
+                </div>
+
+                <!-- Tic Tac Toe Card (Playable) -->
+                <div class="game-card active-game" onclick="loadGame('tictactoe')">
+                    <div class="game-card-glow"></div>
+                    <div class="game-card-content">
+                        <div class="game-icon">❌</div>
+                        <h3 class="game-title">TIC TAC TOE</h3>
+                        <p class="game-desc">Get three, four, or five tokens in a row. Select custom board sizes (3x3, 6x6, or 10x10) for extra difficulty.</p>
+                        <span class="status-indicator playable">PLAYABLE</span>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- GAME PLAYER SCREEN (LOADS SELECTED GAME IN IFRAME) -->
+        <main class="terminal-container hidden" id="game-screen">
+            <div class="game-controls">
+                <button class="btn-terminal" onclick="unloadGame()">◀ BACK TO GAMES</button>
+                <span id="active-game-name" class="active-game-banner">CONNECT 4</span>
+                <button class="btn-terminal" onclick="reloadCurrentGame()">🔄 RELOAD GAME</button>
+            </div>
+            <div class="iframe-wrapper">
+                <iframe id="game-frame" src="" frameborder="0" scrolling="no"></iframe>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function loadGame(gameKey) {
+            const selector = document.getElementById('selector-screen');
+            const gameScreen = document.getElementById('game-screen');
+            const iframe = document.getElementById('game-frame');
+            const activeTitle = document.getElementById('active-game-name');
+            const subtitle = document.getElementById('terminal-subtitle');
+
+            if (gameKey === 'connect4') {
+                activeTitle.innerText = "CONNECT 4 PLAYGROUND";
+                subtitle.innerText = "PLAYING CONNECT 4";
+                iframe.src = "/games/connect4/board/lobby?debug=true";
+            } else if (gameKey === 'chess') {
+                activeTitle.innerText = "CHESS PLAYGROUND";
+                subtitle.innerText = "PLAYING CHESS";
+                iframe.src = "/games/chess/board/lobby?debug=true";
+            } else if (gameKey === 'tictactoe') {
+                activeTitle.innerText = "TIC TAC TOE PLAYGROUND";
+                subtitle.innerText = "PLAYING TIC TAC TOE";
+                iframe.src = "/games/tictactoe/board/lobby?debug=true";
+            } else if (gameKey === 'checkers') {
+                activeTitle.innerText = "CHECKERS PLAYGROUND";
+                subtitle.innerText = "PLAYING CHECKERS";
+                iframe.src = "/games/checkers/board/lobby?debug=true";
+            }
+
+            selector.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+        }
+
+        function unloadGame() {
+            const selector = document.getElementById('selector-screen');
+            const gameScreen = document.getElementById('game-screen');
+            const iframe = document.getElementById('game-frame');
+            const subtitle = document.getElementById('terminal-subtitle');
+
+            iframe.src = "";
+            subtitle.innerText = "ARCADE TERMINAL";
+            
+            gameScreen.classList.add('hidden');
+            selector.classList.remove('hidden');
+        }
+
+        function reloadCurrentGame() {
+            const iframe = document.getElementById('game-frame');
+            iframe.src = iframe.src;
+        }
+    </script>
+</body>
+</html>

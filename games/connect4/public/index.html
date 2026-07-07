@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Four Arcade</title>
+    <!-- Premium Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <script>
+        // Resolve base path dynamically
+        const linkPathParts = window.location.pathname.split('/');
+        const linkBoardIndex = linkPathParts.indexOf('board');
+        const cssBasePath = linkBoardIndex !== -1 ? linkPathParts.slice(0, linkBoardIndex).join('/') : '';
+        
+        // Insert style tag
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'stylesheet';
+        linkEl.href = (cssBasePath || '') + '/style.css';
+        document.head.appendChild(linkEl);
+    </script>
+    <!-- Socket.io Client -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+
+    <!-- ========================================= -->
+    <!-- SPECTATOR BOARD VIEW (Displayed on Prim)  -->
+    <!-- ========================================= -->
+    <div id="spectator-view" class="view hidden">
+        <header>
+            <h1 class="logo">CONTROL & CHAOS</h1>
+            <h2 class="sub-logo">CONNECT 4 ARCADE</h2>
+        </header>
+
+        <main class="spectator-container">
+            <!-- Player Stats Header -->
+            <div class="players-bar">
+                <div id="player-red-card" class="player-card red-card">
+                    <div class="color-indicator"></div>
+                    <div class="player-info">
+                        <span class="player-label">RED PLAYER</span>
+                        <span id="player-red-name" class="player-name">Waiting...</span>
+                    </div>
+                </div>
+
+                <div class="status-center">
+                    <span id="game-status-text" class="status-badge">WAITING FOR PLAYERS</span>
+                    <button id="btn-reset-board" class="btn-reset">RESET MATCH</button>
+                </div>
+
+                <div id="player-yellow-card" class="player-card yellow-card">
+                    <div class="player-info text-right">
+                        <span class="player-label">YELLOW PLAYER</span>
+                        <span id="player-yellow-name" class="player-name">Waiting...</span>
+                    </div>
+                    <div class="color-indicator"></div>
+                </div>
+            </div>
+
+            <!-- In-World Connect 4 Grid -->
+            <div class="board-frame-outer">
+                <div class="board-frame">
+                    <!-- Drop Slot Columns (Visual only) -->
+                    <div class="board-columns-guide">
+                        <div class="guide-col"></div>
+                        <div class="guide-col"></div>
+                        <div class="guide-col"></div>
+                        <div class="guide-col"></div>
+                        <div class="guide-col"></div>
+                        <div class="guide-col"></div>
+                        <div class="guide-col"></div>
+                    </div>
+                    
+                    <!-- Coin Slots Grid (Drawn dynamically) -->
+                    <div id="connect4-grid" class="board-grid"></div>
+                </div>
+            </div>
+
+            <!-- Debug / Local Test Panel -->
+            <div id="debug-panel" class="hidden" style="margin: 30px auto 10px; padding: 15px; background: rgba(255,255,255,0.03); border: 1px dashed var(--neon-blue); border-radius: 12px; width: 100%; max-width: 620px; text-align: center; z-index: 10;">
+                <h3 style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: var(--neon-blue); margin-bottom: 12px; letter-spacing: 1px;">🛠️ Local Test Panel</h3>
+                <button id="btn-debug-join-red" class="btn-reset" style="margin: 0 5px; border-color: var(--neon-red); color: var(--neon-red);">Join Red</button>
+                <button id="btn-debug-join-yellow" class="btn-reset" style="margin: 0 5px; border-color: var(--neon-yellow); color: var(--neon-yellow);">Join Yellow</button>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 10px;">
+                    (Click any column directly on the grid above to simulate a turn)
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Client Logic -->
+    <script>
+        // Parse Route & detect base path dynamically
+        const pathParts = window.location.pathname.split('/');
+        const boardIndex = pathParts.indexOf('board');
+        const gameId = boardIndex !== -1 && pathParts[boardIndex + 1] ? pathParts[boardIndex + 1] : 'lobby';
+        
+        // Construct base path dynamically (e.g., "/games/connect4")
+        const basePath = boardIndex !== -1 ? pathParts.slice(0, boardIndex).join('/') : '';
+        
+        // Connect to namespace dynamically
+        const socket = io(basePath || '/');
+        
+        let gameTurn = 1;
+        const isDebug = new URLSearchParams(window.location.search).get('debug') === 'true' || 
+                        window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1';
+
+        // Initialize Page
+        document.addEventListener("DOMContentLoaded", () => {
+            socket.emit('join_game', gameId);
+
+            // Hide header if loaded inside the terminal iframe
+            if (window.self !== window.top) {
+                const headerEl = document.querySelector('#spectator-view header');
+                if (headerEl) headerEl.style.display = 'none';
+            }
+
+            // Always display board view on the MOAP face
+            document.getElementById('spectator-view').classList.remove('hidden');
+            setupSpectatorBoard();
+
+            if (isDebug) {
+                document.getElementById('debug-panel').classList.remove('hidden');
+                
+                document.getElementById('btn-debug-join-red').addEventListener('click', () => {
+                    fetch(`${basePath}/api/join`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId, uuid: 'debug_red', name: 'Debug Red', role: 'red' })
+                    });
+                });
+                
+                document.getElementById('btn-debug-join-yellow').addEventListener('click', () => {
+                    fetch(`${basePath}/api/join`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId, uuid: 'debug_yellow', name: 'Debug Yellow', role: 'yellow' })
+                    });
+                });
+
+                // Add grid clicking to drop coins in debug mode
+                document.getElementById('connect4-grid').addEventListener('click', (e) => {
+                    const slot = e.target.closest('.slot');
+                    if (!slot) return;
+                    
+                    const parts = slot.id.split('-');
+                    const col = parts[2];
+                    const uuid = gameTurn === 1 ? 'debug_red' : 'debug_yellow';
+
+                    fetch(`${basePath}/api/move`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId, uuid, col })
+                    });
+                });
+            }
+        });
+
+        // =========================================
+        // SPECTATOR BOARD RENDERING
+        // =========================================
+        function setupSpectatorBoard() {
+            const gridContainer = document.getElementById('connect4-grid');
+            gridContainer.innerHTML = '';
+            
+            // Generate board slots (6 rows x 7 cols)
+            // Render row 5 (top) down to row 0 (bottom)
+            for (let r = 5; r >= 0; r--) {
+                for (let c = 0; c < 7; c++) {
+                    const slot = document.createElement('div');
+                    slot.classList.add('slot');
+                    slot.id = `slot-${r}-${c}`;
+                    
+                    const innerCircle = document.createElement('div');
+                    innerCircle.classList.add('coin-circle');
+                    slot.appendChild(innerCircle);
+                    
+                    gridContainer.appendChild(slot);
+                }
+            }
+
+            document.getElementById('btn-reset-board').addEventListener('click', () => {
+                fetch(`${basePath}/api/reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId })
+                });
+            });
+        }
+
+        function updateSpectatorBoard(game, lastMove) {
+            gameTurn = game.turn;
+
+            // Update names
+            document.getElementById('player-red-name').innerText = game.player1 ? game.player1.name : 'Waiting...';
+            document.getElementById('player-yellow-name').innerText = game.player2 ? game.player2.name : 'Waiting...';
+
+            // Reset cards highlight
+            document.getElementById('player-red-card').classList.remove('active');
+            document.getElementById('player-yellow-card').classList.remove('active');
+
+            if (game.status === 'playing') {
+                if (game.turn === 1) {
+                    document.getElementById('player-red-card').classList.add('active');
+                    document.getElementById('game-status-text').innerText = "RED'S TURN";
+                } else {
+                    document.getElementById('player-yellow-card').classList.add('active');
+                    document.getElementById('game-status-text').innerText = "YELLOW'S TURN";
+                }
+            } else if (game.status === 'won') {
+                const winnerName = game.winner === 1 ? game.player1.name : game.player2.name;
+                document.getElementById('game-status-text').innerText = `${winnerName.toUpperCase()} WINS!`;
+                
+                // Highlight winning cards
+                if (game.winner === 1) document.getElementById('player-red-card').classList.add('active');
+                else document.getElementById('player-yellow-card').classList.add('active');
+            } else if (game.status === 'draw') {
+                document.getElementById('game-status-text').innerText = "MATCH DRAW!";
+            } else {
+                document.getElementById('game-status-text').innerText = "WAITING FOR PLAYERS";
+            }
+
+            // Update slots
+            for (let r = 0; r < 6; r++) {
+                for (let c = 0; c < 7; c++) {
+                    const slot = document.getElementById(`slot-${r}-${c}`);
+                    const circle = slot.querySelector('.coin-circle');
+                    const val = game.board[r][c];
+                    
+                    circle.className = 'coin-circle'; // Clear previous classes
+                    if (val === 1) {
+                        circle.classList.add('red-coin');
+                    } else if (val === 2) {
+                        circle.classList.add('yellow-coin');
+                    }
+                }
+            }
+
+            // Animate last move if present
+            if (lastMove) {
+                const slot = document.getElementById(`slot-${lastMove.r}-${lastMove.c}`);
+                const circle = slot.querySelector('.coin-circle');
+                circle.classList.add('drop-animate');
+            }
+
+            // Highlight Winning Line
+            if (game.status === 'won' && game.winCoords) {
+                game.winCoords.forEach(([r, c]) => {
+                    const slot = document.getElementById(`slot-${r}-${c}`);
+                    slot.classList.add('winning-slot');
+                });
+            } else {
+                // Clear winning highlights
+                document.querySelectorAll('.slot').forEach(slot => slot.classList.remove('winning-slot'));
+            }
+        }
+
+        // =========================================
+        // WEBSOCKET SUBSCRIBER
+        // =========================================
+        socket.on('update', (data) => {
+            const game = data.game || data; // Handle raw updates vs action updates
+            const lastMove = data.lastMove || null;
+            updateSpectatorBoard(game, lastMove);
+        });
+    </script>
+</body>
+</html>
