@@ -247,7 +247,7 @@ header {
 .iframe-wrapper {
     position: relative;
     width: 100%;
-    height: 650px;
+    height: 720px;
     border-radius: 12px;
     overflow: hidden;
     border: 1px solid var(--border-color);
