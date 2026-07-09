@@ -198,6 +198,24 @@ function init(app, io, mountPath = '') {
         res.json({ success: true });
     });
 
+    // Verify Lovense Connection API
+    app.post(`${mountPath}/api/vibe/verify`, async (req, res) => {
+        const { gameId, uuid } = req.body;
+        const game = games[gameId];
+        if (!game) return res.status(404).json({ error: "Game not found." });
+        const player = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
+        if (!player) return res.status(400).json({ error: "Player not registered." });
+        
+        const result = await lovenseHelper.verifyConnection(player.uuid);
+        if (result.success) {
+            player.connected = true;
+            gameIo.to(gameId).emit('update', game);
+            res.json({ success: true });
+        } else {
+            res.status(400).json({ error: result.error || "Verification failed." });
+        }
+    });
+
     // Reset Match
     app.post(`${mountPath}/api/reset`, (req, res) => {
         const { gameId } = req.body;

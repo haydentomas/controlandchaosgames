@@ -353,13 +353,22 @@ function init(app, io, mountPath = '') {
             game.status = 'draw';
         } else {
             game.turn = playerNum === 1 ? 2 : 1;
+            
+            // Calculate dynamic move vibration strength:
+            // - Bottom row (r = 0) is a low buzz (strength 3-4).
+            // - Top row (r = 5) goes up to strength 15-16.
+            // - Random offset adds organic difference.
+            const randomOffset = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
+            const calculatedStrength = Math.min(20, Math.max(1, 4 + (r * 2) + randomOffset));
+            const alertStrength = Math.min(20, Math.max(1, 5 + randomOffset));
+
             // Queue move vibration for current player, turn alert for opponent
             if (playerNum === 1) {
-                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'move' });
-                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'turn_alert' });
+                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'move', options: { strength: calculatedStrength, duration: 1 } });
+                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'turn_alert', options: { strength: alertStrength, duration: 1 } });
             } else {
-                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'move' });
-                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'turn_alert' });
+                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'move', options: { strength: calculatedStrength, duration: 1 } });
+                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'turn_alert', options: { strength: alertStrength, duration: 1 } });
             }
         }
 
@@ -368,7 +377,7 @@ function init(app, io, mountPath = '') {
 
         // Trigger player vibrations
         vibeQueue.forEach(item => {
-            if (item.uuid) lovenseHelper.triggerVibration(item.uuid, item.type);
+            if (item.uuid) lovenseHelper.triggerVibration(item.uuid, item.type, item.options);
         });
 
         // If CPU match and now it is CPU's turn (Player 2)
@@ -389,11 +398,14 @@ function init(app, io, mountPath = '') {
                         game.status = 'draw';
                     } else {
                         game.turn = 1;
-                        if (game.player1) cpuVibeQueue.push({ uuid: game.player1.uuid, type: 'turn_alert' });
+                        // Calculate alerts for CPU turn completed
+                        const randomOffsetCpu = Math.floor(Math.random() * 3) - 1;
+                        const alertStrengthCpu = Math.min(20, Math.max(1, 5 + randomOffsetCpu));
+                        if (game.player1) cpuVibeQueue.push({ uuid: game.player1.uuid, type: 'turn_alert', options: { strength: alertStrengthCpu, duration: 1 } });
                     }
                     gameIo.to(gameId).emit('update', { game, lastMove: { r: rCpu, c: cpuCol, player: 2 } });
                     cpuVibeQueue.forEach(item => {
-                        if (item.uuid) lovenseHelper.triggerVibration(item.uuid, item.type);
+                        if (item.uuid) lovenseHelper.triggerVibration(item.uuid, item.type, item.options);
                     });
                 }
             }, 1000);

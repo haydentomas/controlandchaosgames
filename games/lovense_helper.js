@@ -89,49 +89,55 @@ async function getQrCode(uuid, name) {
 /**
  * Trigger vibration on toy associated with uuid
  */
-async function triggerVibration(uid, type) {
+async function triggerVibration(uid, type, options = {}) {
     if (!uid || uid.startsWith('cpu-') || uid.startsWith('browser_') || uid === 'cpu-bot') {
         return; // Bypassed for CPU bots or browser mocks
     }
     
-    let strength = 0;
-    let duration = 0;
+    let strength = options.strength || 0;
+    let duration = options.duration || 0;
     
-    switch (type) {
-        case 'move':
-            strength = 5;
-            duration = 1;
-            break;
-        case 'turn_alert':
-            strength = 7;
-            duration = 1;
-            break;
-        case 'block':
-            strength = 12;
-            duration = 2;
-            break;
-        case 'threat':
-            strength = 15;
-            duration = 2;
-            break;
-        case 'hit':
-            strength = 18;
-            duration = 2;
-            break;
-        case 'miss':
-            strength = 2;
-            duration = 1;
-            break;
-        case 'win':
-            strength = 12;
-            duration = 3;
-            break;
-        case 'lose':
-            strength = 20;
-            duration = 4;
-            break;
-        default:
-            return;
+    if (!strength) {
+        switch (type) {
+            case 'move':
+                strength = 5;
+                duration = 1;
+                break;
+            case 'turn_alert':
+                strength = 7;
+                duration = 1;
+                break;
+            case 'block':
+                strength = 12;
+                duration = 2;
+                break;
+            case 'threat':
+                strength = 15;
+                duration = 2;
+                break;
+            case 'hit':
+                strength = 18;
+                duration = 2;
+                break;
+            case 'miss':
+                strength = 2;
+                duration = 1;
+                break;
+            case 'win':
+                strength = 12;
+                duration = 3;
+                break;
+            case 'lose':
+                strength = 20;
+                duration = 4;
+                break;
+            default:
+                return;
+        }
+    }
+    
+    if (!duration) {
+        duration = 1;
     }
     
     try {
@@ -189,9 +195,40 @@ function handleCallback(req, res) {
     res.send("OK");
 }
 
+/**
+ * Verify toy connection status directly with Lovense API
+ */
+async function verifyConnection(uid) {
+    if (!uid || uid.startsWith('cpu-') || uid.startsWith('browser_') || uid === 'cpu-bot') {
+        return { success: true }; // Treat mock players as connected
+    }
+    try {
+        console.log(`[Lovense Helper] Verifying connection for UID: ${uid}`);
+        // Send a command to check status. A vibration of 0 checks connection.
+        const resJson = await securePost('https://api.lovense-api.com/api/lan/v2/command', {
+            token: LOVENSE_TOKEN,
+            uid: uid,
+            command: "Function",
+            action: "Vibrate:0",
+            timeSec: 1,
+            apiVer: 2
+        });
+        console.log("[Lovense Helper] Verification response:", resJson);
+        // Code 0 or success message means connected!
+        if (resJson.code === 0 || resJson.message === "success") {
+            return { success: true };
+        } else {
+            return { success: false, error: resJson.message || `Code ${resJson.code}` };
+        }
+    } catch (err) {
+        return { success: false, error: err.message || "Failed to contact Lovense" };
+    }
+}
+
 module.exports = {
     registerModule,
     getQrCode,
     triggerVibration,
-    handleCallback
+    handleCallback,
+    verifyConnection
 };

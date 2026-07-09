@@ -552,6 +552,7 @@
                 </div>
             </div>
             <div id="lovense-toy-status" class="status-indicator offline" style="display: inline-block; margin: 10px auto;">Disconnected: Scan QR code</div>
+            <button id="btn-lovense-verify" class="btn-terminal" style="margin-top:12px; width:100%; border-color: var(--neon-purple); color: var(--neon-purple);">Verify Connection</button>
             <button id="btn-lovense-test" class="btn-terminal hidden" style="margin-top:12px; width:100%;">Test Vibe</button>
         </div>
     </div>
@@ -1447,6 +1448,7 @@
             const codeVal = document.getElementById('lovense-code-val');
             const statusIndicator = document.getElementById('lovense-toy-status');
             const testBtn = document.getElementById('btn-lovense-test');
+            const verifyBtn = document.getElementById('btn-lovense-verify');
 
             if (me.connected) {
                 qrImg.classList.add('hidden');
@@ -1455,8 +1457,10 @@
                 statusIndicator.innerText = "Connected: Toy Active";
                 statusIndicator.className = "status-indicator online";
                 testBtn.classList.remove('hidden');
+                if (verifyBtn) verifyBtn.classList.add('hidden');
             } else {
                 testBtn.classList.add('hidden');
+                if (verifyBtn) verifyBtn.classList.remove('hidden');
                 statusIndicator.innerText = "Disconnected: Scan QR code";
                 statusIndicator.className = "status-indicator offline";
 
@@ -1529,6 +1533,33 @@
                 body: JSON.stringify({ gameId, uuid: profile.uuid })
             });
         });
+
+        // Bind verify connection button click
+        const verifyBtn = document.getElementById('btn-lovense-verify');
+        if (verifyBtn) {
+            verifyBtn.addEventListener('click', () => {
+                verifyBtn.innerText = "Verifying...";
+                verifyBtn.disabled = true;
+                fetch(`${basePath}/api/vibe/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, uuid: profile.uuid })
+                }).then(async res => {
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerText = "Verify Connection";
+                    if (res.ok) {
+                        showToast("Toy connected successfully!", "success");
+                    } else {
+                        const err = await res.json();
+                        showToast(err.error || "Verify failed. Ensure app/toy is active.", "error");
+                    }
+                }).catch(() => {
+                    verifyBtn.disabled = false;
+                    verifyBtn.innerText = "Verify Connection";
+                    showToast("Failed to verify connection.", "error");
+                });
+            });
+        }
 
         window.closeLovenseModal = closeLovenseModal;
 
