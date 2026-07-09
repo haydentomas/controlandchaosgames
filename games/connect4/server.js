@@ -83,7 +83,8 @@ function init(app, io, mountPath = '') {
                 turn: 1, // Red starts
                 status: 'waiting', // waiting, playing, won, draw
                 winner: 0,
-                winCoords: []
+                winCoords: [],
+                lastActive: Date.now()
             };
         }
         return games[gameId];
@@ -94,6 +95,20 @@ function init(app, io, mountPath = '') {
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
     });
 
+    // List Active Rooms API
+    app.get(`${mountPath}/api/rooms`, (req, res) => {
+        const roomList = Object.values(games)
+            .filter(g => g.id !== 'lobby')
+            .map(g => ({
+                id: g.id,
+                player1: g.player1,
+                player2: g.player2,
+                status: g.status,
+                winner: g.winner
+            }));
+        res.json(roomList);
+    });
+
     // Join API
     app.post(`${mountPath}/api/join`, (req, res) => {
         const { gameId, uuid, name, role } = req.body;
@@ -102,6 +117,7 @@ function init(app, io, mountPath = '') {
         }
 
         const game = getGame(gameId);
+        game.lastActive = Date.now();
 
         if (!role) {
             if (game.player1 && game.player1.uuid === uuid) {
@@ -150,11 +166,52 @@ function init(app, io, mountPath = '') {
         res.json({ success: true, role: assignedRole, game });
     });
 
+    // Leave API
+    app.post(`${mountPath}/api/leave`, (req, res) => {
+        const { gameId, uuid } = req.body;
+        if (!gameId || !uuid) {
+            return res.status(400).json({ error: "Missing parameters." });
+        }
+
+        const game = games[gameId];
+        if (game) {
+            let playerLeft = false;
+            if (game.player1 && game.player1.uuid === uuid) {
+                game.player1 = null;
+                playerLeft = true;
+            } else if (game.player2 && game.player2.uuid === uuid) {
+                game.player2 = null;
+                playerLeft = true;
+            }
+
+            if (playerLeft) {
+                game.lastActive = Date.now();
+                if (game.status === 'playing') {
+                    game.status = 'abandoned';
+                    gameIo.to(gameId).emit('update', game);
+                    setTimeout(() => {
+                        delete games[gameId];
+                    }, 1000);
+                } else {
+                    if (!game.player1 && !game.player2) {
+                        console.log(`Both players left. Deleting game room: ${gameId}`);
+                        delete games[gameId];
+                        gameIo.to(gameId).emit('update', null);
+                    } else {
+                        gameIo.to(gameId).emit('update', game);
+                    }
+                }
+            }
+        }
+        res.json({ success: true });
+    });
+
     // Reset Game API
     app.post(`${mountPath}/api/reset`, (req, res) => {
         const { gameId } = req.body;
         const game = games[gameId];
         if (game) {
+            game.lastActive = Date.now();
             game.board = createEmptyBoard();
             game.turn = 1;
             game.status = game.player1 && game.player2 ? 'playing' : 'waiting';
@@ -171,6 +228,7 @@ function init(app, io, mountPath = '') {
         const game = games[gameId];
 
         if (!game) return res.status(404).json({ error: "Game not found." });
+        game.lastActive = Date.now();
         if (game.status !== 'playing') return res.status(400).json({ error: "Game is not active." });
 
         let activeRole = role;
@@ -231,12 +289,80 @@ function init(app, io, mountPath = '') {
     // Socket.io namespace configuration
     const gameIo = io.of(mountPath || '/');
     gameIo.on('connection', (socket) => {
-        socket.on('join_game', (gameId) => {
+        let currentRoom = null;
+        let playerUuid = null;
+
+        socket.on('join_game', (gameId, uuid) => {
+            currentRoom = gameId;
+            playerUuid = uuid;
             socket.join(gameId);
             const game = getGame(gameId);
+            game.lastActive = Date.now();
             socket.emit('update', game);
         });
+
+        socket.on('voice_signal', (data) => {
+            if (currentRoom) {
+                socket.to(currentRoom).emit('voice_signal', data);
+            }
+        });
+
+        socket.on('disconnect', () => {
+            if (currentRoom && playerUuid) {
+                const game = games[currentRoom];
+                if (game) {
+                    let playerLeft = false;
+                    if (game.player1 && game.player1.uuid === playerUuid) {
+                        game.player1 = null;
+                        playerLeft = true;
+                    } else if (game.player2 && game.player2.uuid === playerUuid) {
+                        game.player2 = null;
+                        playerLeft = true;
+                    }
+
+                    if (playerLeft) {
+                        game.lastActive = Date.now();
+                        if (game.status === 'playing') {
+                            game.status = 'abandoned';
+                            gameIo.to(currentRoom).emit('update', game);
+                            setTimeout(() => {
+                                delete games[currentRoom];
+                            }, 1000);
+                        } else {
+                            if (!game.player1 && !game.player2) {
+                                delete games[currentRoom];
+                                gameIo.to(currentRoom).emit('update', null);
+                            } else {
+                                gameIo.to(currentRoom).emit('update', game);
+                            }
+                        }
+                    }
+                }
+            }
+        });
     });
+
+    // Cleanup inactive games every 1 minute
+    const cleanupInterval = setInterval(() => {
+        const now = Date.now();
+        const inactiveTime = 30 * 60 * 1000; // 30 minutes
+        const emptyRoomInactiveTime = 2 * 60 * 1000; // 2 minutes if no sockets are connected
+        
+        for (const gameId in games) {
+            if (gameId === 'lobby') continue;
+            const game = games[gameId];
+            
+            const roomSockets = gameIo.adapter.rooms.get(gameId);
+            const numSockets = roomSockets ? roomSockets.size : 0;
+            
+            const currentInactiveLimit = numSockets === 0 ? emptyRoomInactiveTime : inactiveTime;
+            
+            if (game.lastActive && (now - game.lastActive > currentInactiveLimit)) {
+                console.log(`Cleaning up inactive Connect 4 game room (${numSockets} sockets): ${gameId}`);
+                delete games[gameId];
+            }
+        }
+    }, 60 * 1000);
 }
 
 // Standalone execution support

@@ -134,6 +134,86 @@
 <body>
 
     <!-- ========================================= -->
+    <!-- LOBBY / ROOM SELECTOR VIEW               -->
+    <!-- ========================================= -->
+    <div id="lobby-view" class="view hidden">
+        <header>
+            <h1 class="logo">CONTROL & CHAOS</h1>
+            <h2 class="sub-logo">CONNECT 4 LOBBY</h2>
+        </header>
+
+        <main class="lobby-container">
+            <!-- Top Controls Grid (2 Columns) -->
+            <div class="lobby-top-row">
+                <!-- Player Profile Editor -->
+                <div class="profile-card">
+                    <div class="lobby-card-header">YOUR ARCADE PROFILE</div>
+                    <div class="lobby-card-body">
+                        <div class="profile-input-group">
+                            <label for="profile-name-input">NICKNAME:</label>
+                            <input type="text" id="profile-name-input" maxlength="15" placeholder="Enter Nickname...">
+                        </div>
+                        <button id="btn-save-profile" class="btn-lobby">SAVE NICKNAME</button>
+                    </div>
+                </div>
+
+                <!-- Create / Join Actions -->
+                <div class="actions-card">
+                    <div class="lobby-card-header">MATCH ACTIONS</div>
+                    <div class="lobby-card-body">
+                        <div class="profile-input-group">
+                            <label for="join-room-input">ROOM CODE:</label>
+                            <input type="text" id="join-room-input" placeholder="Enter Room Code..." maxlength="10">
+                        </div>
+                        <div class="lobby-buttons-row">
+                            <button id="btn-create-room" class="btn-lobby btn-primary">CREATE MATCH</button>
+                            <button id="btn-join-room-code" class="btn-lobby">JOIN MATCH</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Games List -->
+            <div class="rooms-card">
+                <div class="rooms-header-row">
+                    <div class="rooms-header">ARCADE MATCH BROWSER</div>
+                    <div class="lobby-search-group">
+                        <input type="text" id="lobby-search-input" placeholder="Search player or code...">
+                    </div>
+                </div>
+                
+                <!-- Filter Tabs -->
+                <div class="lobby-filter-tabs">
+                    <button class="btn-tab active" data-tab="joinable">JOINABLE</button>
+                    <button class="btn-tab" data-tab="live">LIVE MATCHES</button>
+                    <button class="btn-tab" data-tab="all">ALL</button>
+                </div>
+
+                <div class="rooms-body">
+                    <!-- Table Header Columns -->
+                    <div class="rooms-table-header">
+                        <span class="col-code">ROOM CODE</span>
+                        <span class="col-players">PLAYERS</span>
+                        <span class="col-action">ACTION</span>
+                    </div>
+                    <div class="rooms-list-wrapper">
+                        <div id="no-rooms-message" class="no-rooms">No matches found. Create one to begin!</div>
+                        <div id="rooms-list-container" class="rooms-grid-list">
+                            <!-- Filled dynamically -->
+                        </div>
+                    </div>
+                    <!-- Pagination Controls -->
+                    <div class="lobby-pagination">
+                        <button id="btn-pagination-prev" class="btn-pagination-control">◀ PREV</button>
+                        <span id="lobby-pagination-info" class="pagination-info">PAGE 1 OF 1</span>
+                        <button id="btn-pagination-next" class="btn-pagination-control">NEXT ▶</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ========================================= -->
     <!-- SPECTATOR BOARD VIEW (Displayed on Prim)  -->
     <!-- ========================================= -->
     <div id="spectator-view" class="view hidden">
@@ -155,7 +235,12 @@
 
                 <div class="status-center">
                     <span id="game-status-text" class="status-badge">WAITING FOR PLAYERS</span>
-                    <button id="btn-reset-board" class="btn-reset">RESET MATCH</button>
+                    <div class="status-buttons">
+                        <button id="btn-reset-board" class="btn-reset">RESET MATCH</button>
+                        <button id="btn-copy-link" class="btn-reset btn-share">SHARE MATCH</button>
+                        <button id="btn-toggle-voice" class="btn-reset btn-voice" style="display: none;">🎙️ JOIN VOICE</button>
+                        <button id="btn-exit-lobby" class="btn-reset btn-exit">EXIT TO LOBBY</button>
+                    </div>
                 </div>
 
                 <div id="player-yellow-card" class="player-card yellow-card">
@@ -202,6 +287,10 @@
         </main>
     </div>
 
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+    <audio id="remote-audio" autoplay></audio>
+
     <!-- Client Logic -->
     <script>
         // Parse Route & detect base path dynamically
@@ -216,30 +305,312 @@
         const socket = io(basePath || '/');
         
         let gameTurn = 1;
+        let activeGame = null;
+
+        // WebRTC Voice Chat variables
+        let localStream = null;
+        let peerConnection = null;
+        let isVoiceConnected = false;
+        let isMuted = false;
+        const stunConfig = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' }
+            ]
+        };
         const isDebug = new URLSearchParams(window.location.search).get('debug') === 'true' || 
                         window.location.hostname === 'localhost' || 
                         window.location.hostname === '127.0.0.1';
 
+        // Retrieve or generate player session
+        function getPlayerProfile() {
+            let uuid = localStorage.getItem('c4_player_uuid');
+            let name = localStorage.getItem('c4_player_name');
+            
+            if (!uuid) {
+                uuid = 'web-' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('c4_player_uuid', uuid);
+            }
+            if (!name) {
+                name = 'Guest_' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                localStorage.setItem('c4_player_name', name);
+            }
+            return { uuid, name };
+        }
+
+        const profile = getPlayerProfile();
+
+        // Toast feedback system
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerText = message;
+            container.appendChild(toast);
+            
+            // Trigger transition
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            // Auto remove
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
         // Initialize Page
         document.addEventListener("DOMContentLoaded", () => {
-            socket.emit('join_game', gameId);
-
             // Hide header if loaded inside the terminal iframe
             if (window.self !== window.top) {
-                const headerEl = document.querySelector('#spectator-view header');
-                if (headerEl) headerEl.style.display = 'none';
+                document.querySelectorAll('header').forEach(h => {
+                    h.style.display = 'none';
+                });
             }
 
-            // Always display board view on the MOAP face
+            if (gameId === 'lobby') {
+                showLobbyView();
+            } else {
+                showBoardView();
+            }
+        });
+
+        // =========================================
+        // LOBBY STATE MANAGEMENT
+        // =========================================
+        let allRooms = [];
+        let currentTab = 'joinable';
+        let searchQuery = '';
+        let currentPage = 1;
+        const itemsPerPage = 6;
+
+        // =========================================
+        // LOBBY SELECTOR CONTROLLERS
+        // =========================================
+        function showLobbyView() {
+            document.getElementById('lobby-view').classList.remove('hidden');
+            document.getElementById('spectator-view').classList.add('hidden');
+            
+            const nameInput = document.getElementById('profile-name-input');
+            nameInput.value = profile.name;
+            
+            document.getElementById('btn-save-profile').addEventListener('click', () => {
+                const newName = nameInput.value.trim();
+                if (newName) {
+                    profile.name = newName;
+                    localStorage.setItem('c4_player_name', newName);
+                    showToast('Profile nickname updated!', 'success');
+                } else {
+                    showToast('Please enter a valid nickname.');
+                }
+            });
+            
+            document.getElementById('btn-create-room').addEventListener('click', () => {
+                const roomCode = 'C4-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                navigateToRoom(roomCode);
+            });
+            
+            document.getElementById('btn-join-room-code').addEventListener('click', () => {
+                const inputVal = document.getElementById('join-room-input').value.trim().toUpperCase();
+                if (inputVal) {
+                    navigateToRoom(inputVal);
+                } else {
+                    showToast('Please enter a valid room code.');
+                }
+            });
+
+            // Bind Search input
+            const searchInput = document.getElementById('lobby-search-input');
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.trim().toLowerCase();
+                currentPage = 1; // Reset to page 1 on search
+                filterAndRenderRooms();
+            });
+
+            // Bind Tab buttons
+            const tabs = document.querySelectorAll('.lobby-filter-tabs .btn-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentTab = e.target.getAttribute('data-tab');
+                    currentPage = 1; // Reset to page 1 on tab click
+                    filterAndRenderRooms();
+                });
+            });
+
+            // Bind Pagination buttons
+            document.getElementById('btn-pagination-prev').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    filterAndRenderRooms();
+                }
+            });
+
+            document.getElementById('btn-pagination-next').addEventListener('click', () => {
+                currentPage++;
+                filterAndRenderRooms();
+            });
+            
+            fetchActiveRooms();
+            const pollInterval = setInterval(fetchActiveRooms, 5000);
+            
+            window.addEventListener('beforeunload', () => clearInterval(pollInterval));
+        }
+
+        function navigateToRoom(code) {
+            const hasDebug = new URLSearchParams(window.location.search).get('debug') === 'true' || isDebug;
+            window.location.href = `${basePath}/board/${code}${hasDebug ? '?debug=true' : ''}`;
+        }
+        window.navigateToRoom = navigateToRoom; // Make globally accessible for room-item click handlers
+
+        async function fetchActiveRooms() {
+            try {
+                const res = await fetch(`${basePath}/api/rooms`);
+                if (!res.ok) throw new Error('Failed to fetch rooms');
+                allRooms = await res.json();
+                filterAndRenderRooms();
+            } catch (err) {
+                console.error('Error fetching rooms:', err);
+            }
+        }
+
+        function filterAndRenderRooms() {
+            // Filter out completed matches from all tabs in the Match Browser
+            const activeRooms = allRooms.filter(room => room.status !== 'won' && room.status !== 'draw');
+
+            // 1. Filter by status tabs
+            let filtered = activeRooms.filter(room => {
+                if (currentTab === 'joinable') {
+                    // Match has empty slots (waiting status and at least one null player)
+                    return room.status === 'waiting' && (!room.player1 || !room.player2);
+                }
+                if (currentTab === 'live') {
+                    // Match is active (playing status)
+                    return room.status === 'playing';
+                }
+                return true; // 'all'
+            });
+
+            // 2. Filter by search query (match room code or player names)
+            if (searchQuery) {
+                filtered = filtered.filter(room => {
+                    const p1 = room.player1 ? room.player1.name.toLowerCase() : '';
+                    const p2 = room.player2 ? room.player2.name.toLowerCase() : '';
+                    const rid = room.id.toLowerCase();
+                    return rid.includes(searchQuery) || p1.includes(searchQuery) || p2.includes(searchQuery);
+                });
+            }
+
+            // 3. Compute Pagination parameters
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const paginatedRooms = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+            // Update Pagination UI controls
+            document.getElementById('lobby-pagination-info').innerText = `PAGE ${currentPage} OF ${totalPages}`;
+            document.getElementById('btn-pagination-prev').disabled = (currentPage === 1);
+            document.getElementById('btn-pagination-next').disabled = (currentPage === totalPages);
+
+            renderRoomsList(paginatedRooms);
+        }
+
+        function renderRoomsList(rooms) {
+            const container = document.getElementById('rooms-list-container');
+            const noRoomsMsg = document.getElementById('no-rooms-message');
+            container.innerHTML = '';
+            
+            if (rooms.length === 0) {
+                noRoomsMsg.classList.remove('hidden');
+                return;
+            }
+            
+            noRoomsMsg.classList.add('hidden');
+            rooms.forEach(room => {
+                const row = document.createElement('div');
+                row.className = 'room-item';
+                
+                const p1Name = room.player1 ? room.player1.name : 'Waiting...';
+                const p2Name = room.player2 ? room.player2.name : 'Waiting...';
+                
+                const isFull = room.player1 && room.player2;
+                const joinBtnHtml = !isFull
+                    ? `<button class="btn-room-action btn-join-action" onclick="navigateToRoom('${room.id}')">JOIN</button>`
+                    : `<button class="btn-room-action btn-spec-action" onclick="navigateToRoom('${room.id}')">SPECTATE</button>`;
+                
+                row.innerHTML = `
+                    <div class="room-code-col">
+                        <span class="room-id-badge">${room.id}</span>
+                    </div>
+                    <div class="room-players-col">
+                        <span class="p-red">${p1Name}</span>
+                        <span class="vs">vs</span>
+                        <span class="p-yellow">${p2Name}</span>
+                    </div>
+                    <div class="room-action-col">
+                        ${joinBtnHtml}
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        // =========================================
+        // SPECTATOR BOARD CONTROLLERS
+        // =========================================
+        function showBoardView() {
+            document.getElementById('lobby-view').classList.add('hidden');
             document.getElementById('spectator-view').classList.remove('hidden');
             setupSpectatorBoard();
+            
+            socket.emit('join_game', gameId, profile.uuid);
+
+            // Bind Exit
+            document.getElementById('btn-exit-lobby').addEventListener('click', () => {
+                fetch(`${basePath}/api/leave`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, uuid: profile.uuid })
+                }).finally(() => {
+                    window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                });
+            });
+
+            // Bind Share Match Link
+            const copyLinkBtn = document.getElementById('btn-copy-link');
+            if (copyLinkBtn) {
+                copyLinkBtn.addEventListener('click', () => {
+                    const matchUrl = window.location.origin + basePath + '/board/' + gameId;
+                    navigator.clipboard.writeText(matchUrl).then(() => {
+                        showToast('Match link copied! Share it with a friend.', 'success');
+                    }).catch(err => {
+                        console.error('Failed to copy link:', err);
+                        // Fallback
+                        const el = document.createElement('textarea');
+                        el.value = matchUrl;
+                        document.body.appendChild(el);
+                        el.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(el);
+                        showToast('Match link copied!', 'success');
+                    });
+                });
+            }
 
             // Bind Overlay Join Buttons
             document.getElementById('btn-overlay-join-red').addEventListener('click', () => {
                 fetch(`${basePath}/api/join`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ gameId, uuid: 'debug_red', name: 'Player Red', role: 'red' })
+                    body: JSON.stringify({ gameId, uuid: profile.uuid, name: profile.name, role: 'red' })
+                }).then(async res => {
+                    if (!res.ok) {
+                        const errData = await res.json();
+                        showToast(errData.error || 'Failed to join as Red.');
+                    } else {
+                        showToast('Joined successfully as Red Player!', 'success');
+                    }
                 });
             });
             
@@ -247,7 +618,14 @@
                 fetch(`${basePath}/api/join`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ gameId, uuid: 'debug_yellow', name: 'Player Yellow', role: 'yellow' })
+                    body: JSON.stringify({ gameId, uuid: profile.uuid, name: profile.name, role: 'yellow' })
+                }).then(async res => {
+                    if (!res.ok) {
+                        const errData = await res.json();
+                        showToast(errData.error || 'Failed to join as Yellow.');
+                    } else {
+                        showToast('Joined successfully as Yellow Player!', 'success');
+                    }
                 });
             });
 
@@ -258,19 +636,55 @@
                 
                 const parts = slot.id.split('-');
                 const col = parts[2];
-                const uuid = gameTurn === 1 ? 'debug_red' : 'debug_yellow';
 
                 fetch(`${basePath}/api/move`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ gameId, uuid, col })
+                    body: JSON.stringify({ gameId, uuid: profile.uuid, col })
+                }).then(async res => {
+                    if (!res.ok) {
+                        const errData = await res.json();
+                        showToast(errData.error || 'Invalid move.');
+                    }
                 });
             });
-        });
 
-        // =========================================
-        // SPECTATOR BOARD RENDERING
-        // =========================================
+            // Initialize voice chat controls
+            initVoiceChat();
+            
+            // Listen to WebRTC signaling messages
+            socket.on('voice_signal', async (data) => {
+                if (!localStream) return;
+
+                const { type, sdp, candidate } = data;
+
+                if (type === 'ready') {
+                    const isInitiator = activeGame && activeGame.player1 && activeGame.player1.uuid === profile.uuid;
+                    if (isInitiator) {
+                        createPeerConnection();
+                        const offer = await peerConnection.createOffer();
+                        await peerConnection.setLocalDescription(offer);
+                        socket.emit('voice_signal', { type: 'offer', sdp: offer });
+                    }
+                } else if (type === 'offer') {
+                    createPeerConnection();
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    socket.emit('voice_signal', { type: 'answer', sdp: answer });
+                } else if (type === 'answer') {
+                    if (peerConnection) {
+                        await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+                    }
+                } else if (type === 'candidate') {
+                    if (peerConnection) {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    }
+                }
+            });
+        }
+
+        // Setup spectators/prim interface elements
         function setupSpectatorBoard() {
             const gridContainer = document.getElementById('connect4-grid');
             gridContainer.innerHTML = '';
@@ -300,7 +714,38 @@
             });
         }
 
+        let isRedirecting = false;
         function updateSpectatorBoard(game, lastMove) {
+            activeGame = game;
+
+            if (game.status === 'abandoned') {
+                if (isRedirecting) return;
+                isRedirecting = true;
+                
+                document.getElementById('game-status-text').innerText = "OPPONENT LEFT. ENDING MATCH...";
+                showToast('Opponent has left the match. Returning to lobby...', 'error');
+                
+                // Disable clicking on the board
+                document.getElementById('connect4-grid').style.pointerEvents = 'none';
+                closeVoiceChat();
+                
+                setTimeout(() => {
+                    window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                }, 3000);
+                return;
+            }
+
+            // Manage Voice Chat Button Visibility & Connections
+            const btnToggleVoice = document.getElementById('btn-toggle-voice');
+            const isParticipant = (game.player1 && game.player1.uuid === profile.uuid) || (game.player2 && game.player2.uuid === profile.uuid);
+            
+            if (game.status === 'playing' && isParticipant) {
+                if (btnToggleVoice) btnToggleVoice.style.display = 'inline-block';
+            } else {
+                if (btnToggleVoice) btnToggleVoice.style.display = 'none';
+                closeVoiceChat();
+            }
+
             gameTurn = game.turn;
 
             // Update Join Overlay status
@@ -308,25 +753,41 @@
             const joinRedBtn = document.getElementById('btn-overlay-join-red');
             const joinYellowBtn = document.getElementById('btn-overlay-join-yellow');
 
+            const isMeRed = game.player1 && game.player1.uuid === profile.uuid;
+            const isMeYellow = game.player2 && game.player2.uuid === profile.uuid;
+            const isMeInGame = isMeRed || isMeYellow;
+
             if (game.status === 'waiting') {
                 overlay.classList.remove('fade-out');
                 
-                // Red Join Button
-                if (game.player1) {
-                    joinRedBtn.innerText = `RED: ${game.player1.name.toUpperCase()}`;
-                    joinRedBtn.disabled = true;
+                if (isMeInGame) {
+                    document.querySelector('#join-overlay .overlay-title').innerText = "WAITING FOR OPPONENT";
+                    document.querySelector('#join-overlay .overlay-subtitle').innerText = "Share the room code or link with a friend to begin.";
+                    joinRedBtn.style.display = 'none';
+                    joinYellowBtn.style.display = 'none';
                 } else {
-                    joinRedBtn.innerText = `JOIN AS RED`;
-                    joinRedBtn.disabled = false;
-                }
+                    document.querySelector('#join-overlay .overlay-title').innerText = "WAITING FOR PLAYERS";
+                    document.querySelector('#join-overlay .overlay-subtitle').innerText = "Both players must join to start the match.";
+                    joinRedBtn.style.display = 'block';
+                    joinYellowBtn.style.display = 'block';
+                    
+                    // Red Join Button
+                    if (game.player1) {
+                        joinRedBtn.innerText = `RED: ${game.player1.name.toUpperCase()}`;
+                        joinRedBtn.disabled = true;
+                    } else {
+                        joinRedBtn.innerText = `JOIN AS RED`;
+                        joinRedBtn.disabled = false;
+                    }
 
-                // Yellow Join Button
-                if (game.player2) {
-                    joinYellowBtn.innerText = `YELLOW: ${game.player2.name.toUpperCase()}`;
-                    joinYellowBtn.disabled = true;
-                } else {
-                    joinYellowBtn.innerText = `JOIN AS YELLOW`;
-                    joinYellowBtn.disabled = false;
+                    // Yellow Join Button
+                    if (game.player2) {
+                        joinYellowBtn.innerText = `YELLOW: ${game.player2.name.toUpperCase()}`;
+                        joinYellowBtn.disabled = true;
+                    } else {
+                        joinYellowBtn.innerText = `JOIN AS YELLOW`;
+                        joinYellowBtn.disabled = false;
+                    }
                 }
             } else {
                 overlay.classList.add('fade-out');
@@ -397,12 +858,104 @@
         }
 
         // =========================================
+        // WEBRTC VOICE CHAT CONTROL HANDLERS
+        // =========================================
+        function initVoiceChat() {
+            const btnToggleVoice = document.getElementById('btn-toggle-voice');
+            if (!btnToggleVoice) return;
+
+            btnToggleVoice.addEventListener('click', async () => {
+                if (!localStream) {
+                    try {
+                        btnToggleVoice.className = 'btn-reset btn-voice voice-connecting';
+                        btnToggleVoice.innerText = '🎙️ CONNECTING...';
+                        
+                        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                        
+                        btnToggleVoice.className = 'btn-reset btn-voice voice-connected';
+                        btnToggleVoice.innerText = '🎙️ MUTE VOICE';
+                        isVoiceConnected = true;
+                        showToast('Microphone connected. Joining voice chat...', 'success');
+
+                        // Notify opponent
+                        socket.emit('voice_signal', { type: 'ready', uuid: profile.uuid });
+                    } catch (err) {
+                        console.error('Failed to get local audio stream:', err);
+                        showToast('Could not access microphone. Please check permissions.', 'error');
+                        btnToggleVoice.className = 'btn-reset btn-voice';
+                        btnToggleVoice.innerText = '🎙️ JOIN VOICE';
+                    }
+                } else {
+                    // Mute / Unmute Toggle
+                    isMuted = !isMuted;
+                    localStream.getAudioTracks().forEach(track => track.enabled = !isMuted);
+                    
+                    if (isMuted) {
+                        btnToggleVoice.className = 'btn-reset btn-voice voice-muted';
+                        btnToggleVoice.innerText = '🎙️ UNMUTE';
+                        showToast('Microphone muted.', 'success');
+                    } else {
+                        btnToggleVoice.className = 'btn-reset btn-voice voice-connected';
+                        btnToggleVoice.innerText = '🎙️ MUTE VOICE';
+                        showToast('Microphone unmuted.', 'success');
+                    }
+                }
+            });
+        }
+
+        function createPeerConnection() {
+            if (peerConnection) return;
+            
+            peerConnection = new RTCPeerConnection(stunConfig);
+            
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+            
+            peerConnection.ontrack = (event) => {
+                const remoteAudio = document.getElementById('remote-audio');
+                if (remoteAudio && event.streams[0]) {
+                    remoteAudio.srcObject = event.streams[0];
+                }
+            };
+            
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.emit('voice_signal', { type: 'candidate', candidate: event.candidate });
+                }
+            };
+        }
+
+        function closeVoiceChat() {
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            const btnToggleVoice = document.getElementById('btn-toggle-voice');
+            if (btnToggleVoice) {
+                btnToggleVoice.className = 'btn-reset btn-voice';
+                btnToggleVoice.innerText = '🎙️ JOIN VOICE';
+            }
+            isMuted = false;
+            isVoiceConnected = false;
+        }
+
+        // =========================================
         // WEBSOCKET SUBSCRIBER
         // =========================================
         socket.on('update', (data) => {
+            if (!data) {
+                // Room was deleted / both left
+                window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                return;
+            }
             const game = data.game || data; // Handle raw updates vs action updates
             const lastMove = data.lastMove || null;
-            updateSpectatorBoard(game, lastMove);
+            if (gameId !== 'lobby') {
+                updateSpectatorBoard(game, lastMove);
+            }
         });
     </script>
 </body>
