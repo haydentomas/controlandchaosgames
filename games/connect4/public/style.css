@@ -170,7 +170,7 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    min-width: 180px;
+    min-width: 300px;
 }
 
 .status-badge {
@@ -770,10 +770,18 @@ body {
 /* ========================================= */
 .status-buttons {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 8px;
-    align-items: center;
     margin-top: 10px;
+    max-width: 300px;
+    width: 100%;
+}
+
+.status-buttons .btn-reset {
+    flex: 1 1 135px;
+    text-align: center;
+    white-space: nowrap;
 }
 
 .btn-exit {
