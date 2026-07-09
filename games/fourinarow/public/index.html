@@ -612,20 +612,30 @@
             if (copyLinkBtn) {
                 copyLinkBtn.addEventListener('click', () => {
                     const matchUrl = window.location.origin + basePath + '/board/' + gameId;
-                    navigator.clipboard.writeText(matchUrl).then(() => {
-                        showToast('Match link copied! Share it with a friend.', 'success');
-                    }).catch(err => {
-                        console.error('Failed to copy link:', err);
-                        // Fallback
-                        const el = document.createElement('textarea');
-                        el.value = matchUrl;
-                        document.body.appendChild(el);
-                        el.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(el);
-                        showToast('Match link copied!', 'success');
-                    });
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(matchUrl).then(() => {
+                            showToast('Match link copied! Share it with a friend.', 'success');
+                        }).catch(err => {
+                            fallbackCopyText(matchUrl);
+                        });
+                    } else {
+                        fallbackCopyText(matchUrl);
+                    }
                 });
+            }
+
+            function fallbackCopyText(text) {
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('Match link copied!', 'success');
+                } catch (err) {
+                    window.prompt("Copy match link:", text);
+                }
+                document.body.removeChild(el);
             }
 
             // Bind Overlay Join Buttons

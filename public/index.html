@@ -65,6 +65,17 @@
                     </div>
                 </div>
 
+                <!-- Naval Clash Card (Playable) -->
+                <div class="game-card active-game" onclick="loadGame('navalclash')">
+                    <div class="game-card-glow"></div>
+                    <div class="game-card-content">
+                        <div class="game-icon">⚓</div>
+                        <h3 class="game-title">NAVAL CLASH</h3>
+                        <p class="game-desc">Position your battleships, randomize fleet setups, and launch tactical attacks to destroy enemy fleets.</p>
+                        <span class="status-indicator playable">PLAYABLE</span>
+                    </div>
+                </div>
+
             </div>
         </main>
 
@@ -76,7 +87,7 @@
                 <button class="btn-terminal" onclick="reloadCurrentGame()">🔄 RELOAD GAME</button>
             </div>
             <div class="iframe-wrapper">
-                <iframe id="game-frame" src="" frameborder="0" scrolling="no"></iframe>
+                <iframe id="game-frame" src="" allow="microphone; clipboard-write"></iframe>
             </div>
         </main>
     </div>
@@ -106,6 +117,10 @@
                 activeTitle.innerText = "CONTROL & CHAOS CHECKERS";
                 subtitle.innerText = "PLAYING CHECKERS";
                 iframe.src = "/games/checkers/board/lobby?debug=true";
+            } else if (gameKey === 'navalclash') {
+                activeTitle.innerText = "CONTROL & CHAOS: NAVAL CLASH";
+                subtitle.innerText = "PLAYING NAVAL CLASH";
+                iframe.src = "/games/navalclash/board/lobby?debug=true";
             }
 
             selector.classList.add('hidden');

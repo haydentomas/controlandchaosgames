@@ -71,6 +71,20 @@ try {
     console.error('Failed to load Checkers game module:', err);
 }
 
+// Mount Naval Clash Game
+const navalClashPath = path.join(__dirname, 'games', 'navalclash', 'server.js');
+try {
+    const navalclash = require(navalClashPath);
+    if (typeof navalclash.init === 'function') {
+        navalclash.init(app, io, '/games/navalclash');
+        console.log('Successfully mounted Naval Clash game at /games/navalclash');
+    } else {
+        console.error('Naval Clash module found but init function is missing.');
+    }
+} catch (err) {
+    console.error('Failed to load Naval Clash game module:', err);
+}
+
 // Global Terminal API / Sockets can be added here if needed
 
 const PORT = process.env.PORT || 4000;
@@ -78,4 +92,5 @@ server.listen(PORT, () => {
     console.log(`=== Game Terminal Server running on port ${PORT} ===`);
     console.log(`Lobby: http://localhost:${PORT}`);
     console.log(`Four in a Row PG directly: http://localhost:${PORT}/games/fourinarow/board/lobby?debug=true`);
+    console.log(`Naval Clash PG directly: http://localhost:${PORT}/games/navalclash/board/lobby?debug=true`);
 });
