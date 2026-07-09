@@ -15,7 +15,7 @@
         // Insert style tag
         const linkEl = document.createElement('link');
         linkEl.rel = 'stylesheet';
-        linkEl.href = (cssBasePath || '') + '/style.css';
+        linkEl.href = (cssBasePath || '') + '/style.css?v=' + Date.now();
         document.head.appendChild(linkEl);
     </script>
     <style>
