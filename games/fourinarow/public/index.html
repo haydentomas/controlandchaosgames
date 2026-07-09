@@ -139,7 +139,7 @@
     <div id="lobby-view" class="view hidden">
         <header>
             <h1 class="logo">CONTROL & CHAOS</h1>
-            <h2 class="sub-logo">CONNECT 4 LOBBY</h2>
+            <h2 class="sub-logo">FOUR IN A ROW LOBBY</h2>
         </header>
 
         <main class="lobby-container">
@@ -217,7 +217,7 @@
         <header class="game-controls-wrapper">
             <div class="game-controls">
                 <button class="btn-terminal" id="btn-standalone-back">◀ GO TO LOBBY</button>
-                <span class="active-game-banner">CONTROL & CHAOS CONNECT 4</span>
+                <span class="active-game-banner">CONTROL & CHAOS FOUR IN A ROW</span>
                 <button class="btn-terminal" id="btn-standalone-reload">🔄 RELOAD GAME</button>
             </div>
         </header>
@@ -269,7 +269,7 @@
                         </div>
                         
                         <!-- Coin Slots Grid (Drawn dynamically) -->
-                        <div id="connect4-grid" class="board-grid"></div>
+                        <div id="fourinarow-grid" class="board-grid"></div>
 
                         <!-- Over the Board Join Overlay -->
                         <div id="join-overlay" class="board-overlay">
@@ -336,16 +336,16 @@
 
         // Retrieve or generate player session
         function getPlayerProfile() {
-            let uuid = localStorage.getItem('c4_player_uuid');
-            let name = localStorage.getItem('c4_player_name');
+            let uuid = localStorage.getItem('fr_player_uuid');
+            let name = localStorage.getItem('fr_player_name');
             
             if (!uuid) {
                 uuid = 'web-' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('c4_player_uuid', uuid);
+                localStorage.setItem('fr_player_uuid', uuid);
             }
             if (!name) {
                 name = 'Guest_' + Math.random().toString(36).substr(2, 4).toUpperCase();
-                localStorage.setItem('c4_player_name', name);
+                localStorage.setItem('fr_player_name', name);
             }
             return { uuid, name };
         }
@@ -409,7 +409,7 @@
                 const newName = nameInput.value.trim();
                 if (newName) {
                     profile.name = newName;
-                    localStorage.setItem('c4_player_name', newName);
+                    localStorage.setItem('fr_player_name', newName);
                     showToast('Profile nickname updated!', 'success');
                 } else {
                     showToast('Please enter a valid nickname.');
@@ -417,7 +417,7 @@
             });
             
             document.getElementById('btn-create-room').addEventListener('click', () => {
-                const roomCode = 'C4-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                const roomCode = 'FR-' + Math.random().toString(36).substr(2, 4).toUpperCase();
                 navigateToRoom(roomCode);
             });
             
@@ -436,13 +436,13 @@
                     } else {
                         // Create a new match if none are available
                         showToast('No active rooms found. Creating a new match...', 'success');
-                        const roomCode = 'C4-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                        const roomCode = 'FR-' + Math.random().toString(36).substr(2, 4).toUpperCase();
                         setTimeout(() => navigateToRoom(roomCode), 800);
                     }
                 } catch (err) {
                     console.error('Error during quick play:', err);
                     showToast('Matchmaking error. Creating a new match instead...', 'error');
-                    const roomCode = 'C4-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                    const roomCode = 'FR-' + Math.random().toString(36).substr(2, 4).toUpperCase();
                     navigateToRoom(roomCode);
                 }
             });
@@ -660,7 +660,7 @@
             });
 
             // Add grid clicking to drop coins
-            document.getElementById('connect4-grid').addEventListener('click', (e) => {
+            document.getElementById('fourinarow-grid').addEventListener('click', (e) => {
                 const slot = e.target.closest('.slot');
                 if (!slot) return;
                 
@@ -782,7 +782,7 @@
 
         // Setup spectators/prim interface elements
         function setupSpectatorBoard() {
-            const gridContainer = document.getElementById('connect4-grid');
+            const gridContainer = document.getElementById('fourinarow-grid');
             gridContainer.innerHTML = '';
             
             // Generate board slots (6 rows x 7 cols)
@@ -822,7 +822,7 @@
                 showToast('Opponent has left the match. Returning to lobby...', 'error');
                 
                 // Disable clicking on the board
-                document.getElementById('connect4-grid').style.pointerEvents = 'none';
+                document.getElementById('fourinarow-grid').style.pointerEvents = 'none';
                 closeVoiceChat();
                 
                 setTimeout(() => {

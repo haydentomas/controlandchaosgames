@@ -6,6 +6,7 @@ function init(app, io, mountPath = '') {
     app.use(`${mountPath}`, express.static(path.join(__dirname, 'public')));
 
     const games = {};
+    const gameIo = io.of(mountPath || '/');
 
     // Standard Checkers Initial setup
     // 1 = Red, 2 = Red King
@@ -58,6 +59,63 @@ function init(app, io, mountPath = '') {
     app.get(`${mountPath}/board/:gameId`, (req, res) => {
         res.sendFile(path.join(__dirname, 'public', 'index.html'));
     });
+
+    // List Active Rooms API
+    app.get(`${mountPath}/api/rooms`, (req, res) => {
+        const roomList = Object.values(games)
+            .filter(g => g.id !== 'lobby')
+            .map(g => ({
+                id: g.id,
+                player1: g.player1,
+                player2: g.player2,
+                status: g.status,
+                winner: g.winner
+            }));
+        res.json(roomList);
+    });
+
+    // Leave Game / Exit Match
+    app.post(`${mountPath}/api/leave`, (req, res) => {
+        const { gameId, uuid } = req.body;
+        const game = games[gameId];
+        if (game) {
+            let playerLeft = false;
+            if (game.player1 && game.player1.uuid === uuid) {
+                game.player1 = null;
+                playerLeft = true;
+            }
+            if (game.player2 && game.player2.uuid === uuid) {
+                game.player2 = null;
+                playerLeft = true;
+            }
+            if (playerLeft) {
+                game.status = 'abandoned';
+                gameIo.to(gameId).emit('update', game);
+            }
+        }
+        res.json({ success: true });
+    });
+
+    // Inactive room cleanup (Runs every 1 minute)
+    setInterval(() => {
+        const now = Date.now();
+        Object.keys(games).forEach(gameId => {
+            const game = games[gameId];
+            const roomSockets = gameIo.adapter.rooms.get(gameId);
+            const activeSocketCount = roomSockets ? roomSockets.size : 0;
+            
+            if (activeSocketCount === 0) {
+                if (!game.emptySince) {
+                    game.emptySince = now;
+                } else if (now - game.emptySince > 120000) { // 2 minutes empty -> delete
+                    console.log(`Cleaning up inactive Checkers game room (0 sockets): ${gameId}`);
+                    delete games[gameId];
+                }
+            } else {
+                delete game.emptySince;
+            }
+        });
+    }, 60000);
 
     // Join Game
     app.post(`${mountPath}/api/join`, (req, res) => {
@@ -257,12 +315,49 @@ function init(app, io, mountPath = '') {
         res.json({ success: true, game });
     });
 
-    const gameIo = io.of(mountPath || '/');
     gameIo.on('connection', (socket) => {
-        socket.on('join_game', (gameId) => {
+        let currentRoom = null;
+        let playerUuid = null;
+
+        socket.on('join_game', (gameId, uuid) => {
+            currentRoom = gameId;
+            playerUuid = uuid;
             socket.join(gameId);
             const game = getGame(gameId);
             socket.emit('update', game);
+        });
+
+        socket.on('voice_signal', (data) => {
+            if (currentRoom) {
+                socket.to(currentRoom).emit('voice_signal', data);
+            }
+        });
+
+        socket.on('chat_message', (data) => {
+            if (currentRoom) {
+                gameIo.to(currentRoom).emit('chat_message', data);
+            }
+        });
+
+        socket.on('disconnect', () => {
+            if (currentRoom && playerUuid) {
+                const game = games[currentRoom];
+                if (game) {
+                    let playerLeft = false;
+                    if (game.player1 && game.player1.uuid === playerUuid) {
+                        game.player1 = null;
+                        playerLeft = true;
+                    }
+                    if (game.player2 && game.player2.uuid === playerUuid) {
+                        game.player2 = null;
+                        playerLeft = true;
+                    }
+                    if (playerLeft) {
+                        game.status = 'abandoned';
+                        gameIo.to(currentRoom).emit('update', game);
+                    }
+                }
+            }
         });
     });
 }

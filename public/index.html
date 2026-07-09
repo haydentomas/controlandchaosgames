@@ -21,12 +21,12 @@
             <h3 class="section-title">SELECT A 2-PLAYER GAME</h3>
             <div class="games-grid">
                 
-                <!-- Connect 4 Card (Playable) -->
-                <div class="game-card active-game" onclick="loadGame('connect4')">
+                <!-- Four in a Row Card (Playable) -->
+                <div class="game-card active-game" onclick="loadGame('fourinarow')">
                     <div class="game-card-glow"></div>
                     <div class="game-card-content">
                         <div class="game-icon">🔴</div>
-                        <h3 class="game-title">CONNECT 4</h3>
+                        <h3 class="game-title">FOUR IN A ROW</h3>
                         <p class="game-desc">Get four tokens in a row vertically, horizontally, or diagonally. Full browser and toy connection support.</p>
                         <span class="status-indicator playable">PLAYABLE</span>
                     </div>
@@ -72,7 +72,7 @@
         <main class="terminal-container hidden" id="game-screen">
             <div class="game-controls">
                 <button class="btn-terminal" onclick="unloadGame()">◀ BACK TO GAMES</button>
-                <span id="active-game-name" class="active-game-banner">CONNECT 4</span>
+                <span id="active-game-name" class="active-game-banner">FOUR IN A ROW</span>
                 <button class="btn-terminal" onclick="reloadCurrentGame()">🔄 RELOAD GAME</button>
             </div>
             <div class="iframe-wrapper">
@@ -90,10 +90,10 @@
             const subtitle = document.getElementById('terminal-subtitle');
             const mainHeader = document.querySelector('#terminal-view > header');
 
-            if (gameKey === 'connect4') {
-                activeTitle.innerText = "CONTROL & CHAOS CONNECT 4";
-                subtitle.innerText = "PLAYING CONNECT 4";
-                iframe.src = "/games/connect4/board/lobby?debug=true";
+            if (gameKey === 'fourinarow') {
+                activeTitle.innerText = "CONTROL & CHAOS FOUR IN A ROW";
+                subtitle.innerText = "PLAYING FOUR IN A ROW";
+                iframe.src = "/games/fourinarow/board/lobby?debug=true";
             } else if (gameKey === 'chess') {
                 activeTitle.innerText = "CONTROL & CHAOS CHESS";
                 subtitle.innerText = "PLAYING CHESS";

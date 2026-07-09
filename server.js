@@ -15,18 +15,18 @@ app.use(express.urlencoded({ extended: true }));
 // Serve Terminal Lobby static files at root
 app.use('/', express.static(path.join(__dirname, 'public')));
 
-// Mount Connect 4 Game
-const connect4Path = path.join(__dirname, 'games', 'connect4', 'server.js');
+// Mount Four in a Row Game
+const fourinarowPath = path.join(__dirname, 'games', 'fourinarow', 'server.js');
 try {
-    const connect4 = require(connect4Path);
-    if (typeof connect4.init === 'function') {
-        connect4.init(app, io, '/games/connect4');
-        console.log('Successfully mounted Connect 4 game at /games/connect4');
+    const fourinarow = require(fourinarowPath);
+    if (typeof fourinarow.init === 'function') {
+        fourinarow.init(app, io, '/games/fourinarow');
+        console.log('Successfully mounted Four in a Row game at /games/fourinarow');
     } else {
-        console.error('Connect 4 module found but init function is missing.');
+        console.error('Four in a Row module found but init function is missing.');
     }
 } catch (err) {
-    console.error('Failed to load Connect 4 game module:', err);
+    console.error('Failed to load Four in a Row game module:', err);
 }
 
 // Mount Chess Game
@@ -77,5 +77,5 @@ const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
     console.log(`=== Game Terminal Server running on port ${PORT} ===`);
     console.log(`Lobby: http://localhost:${PORT}`);
-    console.log(`Connect 4 PG directly: http://localhost:${PORT}/games/connect4/board/lobby?debug=true`);
+    console.log(`Four in a Row PG directly: http://localhost:${PORT}/games/fourinarow/board/lobby?debug=true`);
 });
