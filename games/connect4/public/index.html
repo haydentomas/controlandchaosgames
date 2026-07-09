@@ -161,13 +161,10 @@
                 <div class="actions-card">
                     <div class="lobby-card-header">MATCH ACTIONS</div>
                     <div class="lobby-card-body">
-                        <div class="profile-input-group">
-                            <label for="join-room-input">ROOM CODE:</label>
-                            <input type="text" id="join-room-input" placeholder="Enter Room Code..." maxlength="10">
-                        </div>
+                        <p class="lobby-actions-desc" style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.45;">Create a new match room or instantly auto-join the first available game waiting for an opponent.</p>
                         <div class="lobby-buttons-row">
                             <button id="btn-create-room" class="btn-lobby btn-primary">CREATE MATCH</button>
-                            <button id="btn-join-room-code" class="btn-lobby">JOIN MATCH</button>
+                            <button id="btn-quick-play" class="btn-lobby btn-quick">QUICK PLAY</button>
                         </div>
                     </div>
                 </div>
@@ -408,12 +405,29 @@
                 navigateToRoom(roomCode);
             });
             
-            document.getElementById('btn-join-room-code').addEventListener('click', () => {
-                const inputVal = document.getElementById('join-room-input').value.trim().toUpperCase();
-                if (inputVal) {
-                    navigateToRoom(inputVal);
-                } else {
-                    showToast('Please enter a valid room code.');
+            document.getElementById('btn-quick-play').addEventListener('click', async () => {
+                try {
+                    const res = await fetch(`${basePath}/api/rooms`);
+                    if (!res.ok) throw new Error('Failed to fetch rooms');
+                    const rooms = await res.json();
+                    
+                    // Find first waiting room that has space
+                    const joinableRoom = rooms.find(room => room.status === 'waiting' && (!room.player1 || !room.player2));
+                    
+                    if (joinableRoom) {
+                        showToast(`Match found! Joining room ${joinableRoom.id}...`, 'success');
+                        setTimeout(() => navigateToRoom(joinableRoom.id), 800);
+                    } else {
+                        // Create a new match if none are available
+                        showToast('No active rooms found. Creating a new match...', 'success');
+                        const roomCode = 'C4-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                        setTimeout(() => navigateToRoom(roomCode), 800);
+                    }
+                } catch (err) {
+                    console.error('Error during quick play:', err);
+                    showToast('Matchmaking error. Creating a new match instead...', 'error');
+                    const roomCode = 'C4-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                    navigateToRoom(roomCode);
                 }
             });
 

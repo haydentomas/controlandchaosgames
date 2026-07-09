@@ -1028,3 +1028,15 @@ body {
     border-color: var(--neon-red) !important;
     box-shadow: 0 0 10px rgba(255, 51, 102, 0.25) !important;
 }
+
+/* Quick Play Button Styles */
+.btn-lobby.btn-quick {
+    border-color: var(--neon-green) !important;
+    color: var(--neon-green) !important;
+}
+
+.btn-lobby.btn-quick:hover {
+    background: var(--neon-green) !important;
+    color: var(--text-dark) !important;
+    box-shadow: 0 0 12px rgba(57, 255, 20, 0.4) !important;
+}
