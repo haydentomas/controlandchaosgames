@@ -6,7 +6,13 @@
     <title>Control & Chaos Arcade Terminal</title>
     <!-- Premium Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css">
+    <script>
+        // Cache-bust terminal CSS so live deploys immediately reflect new styling.
+        const terminalStyle = document.createElement('link');
+        terminalStyle.rel = 'stylesheet';
+        terminalStyle.href = '/style.css?v=' + Date.now();
+        document.head.appendChild(terminalStyle);
+    </script>
 </head>
 <body>
 
