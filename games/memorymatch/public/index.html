@@ -151,6 +151,152 @@
         .toast.toast-error {
             border-left: 4px solid var(--neon-red);
         }
+    
+        /* Instructions Modal Styles */
+        .instructions-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(9, 9, 14, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .instructions-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .instructions-modal-card {
+            background: rgba(15, 15, 27, 0.95);
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 30px rgba(0, 238, 255, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 480px;
+            width: 90%;
+            position: relative;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            text-align: left;
+            animation: modal-slide-up 0.3s ease-out;
+        }
+
+        @keyframes modal-slide-up {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .instructions-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .instructions-modal-close:hover {
+            border-color: var(--neon-red);
+            color: var(--neon-red);
+            box-shadow: 0 0 10px rgba(255, 51, 102, 0.4);
+        }
+
+        .instructions-modal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--neon-blue);
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+        }
+
+        .instructions-modal-body {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .instructions-modal-body ul {
+            margin-left: 20px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .instructions-modal-body li strong {
+            color: var(--text-primary);
+        }
+
+        /* Lovense Badges and Statuses */
+        .lovense-badge-container {
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+        }
+        .btn-lovense-connect {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 238, 255, 0.4);
+            color: var(--neon-blue);
+            background: rgba(0, 238, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+        .btn-lovense-connect:hover {
+            background: var(--neon-blue);
+            color: var(--text-dark);
+            box-shadow: 0 0 10px rgba(0, 238, 255, 0.4);
+        }
+        .lovense-active-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(57, 255, 20, 0.4);
+            color: var(--neon-green);
+            background: rgba(57, 255, 20, 0.1);
+            text-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
+            cursor: pointer;
+        }
+        .lovense-passive-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(192, 0, 255, 0.4);
+            color: var(--neon-purple);
+            background: rgba(192, 0, 255, 0.1);
+            text-shadow: 0 0 5px rgba(192, 0, 255, 0.5);
+        }
     </style>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
@@ -187,6 +333,7 @@
                         <div class="lobby-buttons-row">
                             <button id="btn-create-room" class="btn-lobby btn-primary">CREATE MATCH</button>
                             <button id="btn-quick-play" class="btn-lobby btn-quick">QUICK PLAY</button>
+                            <button id="btn-play-cpu" class="btn-lobby btn-quick" style="border-color: var(--neon-purple); color: var(--neon-purple);">PLAY VS CPU</button>
                         </div>
                     </div>
                 </div>
@@ -235,7 +382,10 @@
             <div class="game-controls">
                 <button class="btn-terminal" id="btn-standalone-back">◀ GO TO LOBBY</button>
                 <span class="active-game-banner">CONTROL & CHAOS: MEMORY MATCH</span>
-                <button class="btn-terminal" id="btn-standalone-reload">🔄 RELOAD GAME</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-terminal" id="btn-standalone-instructions">📖 HOW TO PLAY</button>
+                    <button class="btn-terminal" id="btn-standalone-reload">🔄 RELOAD GAME</button>
+                </div>
             </div>
         </header>
 
@@ -247,6 +397,7 @@
                     <div class="player-info">
                         <span class="player-label">PLAYER 1</span>
                         <span id="player-1-name" class="player-name">Waiting...</span>
+                        <div id="lovense-red-status" class="lovense-badge-container"></div>
                     </div>
                     <span id="player-1-score" class="player-score">0</span>
                 </div>
@@ -266,6 +417,7 @@
                     <div class="player-info text-right">
                         <span class="player-label">PLAYER 2</span>
                         <span id="player-2-name" class="player-name">Waiting...</span>
+                        <div id="lovense-yellow-status" class="lovense-badge-container" style="justify-content: flex-end;"></div>
                     </div>
                     <div class="color-indicator"></div>
                 </div>
@@ -289,6 +441,19 @@
                                 <p class="overlay-desc">(Or join automatically from Second Life)</p>
                             </div>
                         </div>
+
+                        <!-- Over the Board CPU Difficulty Overlay -->
+                        <div id="cpu-overlay" class="board-overlay hidden">
+                            <div class="overlay-card">
+                                <h3 class="overlay-title">SELECT CPU DIFFICULTY</h3>
+                                <p class="overlay-subtitle">Choose how smart CyberBot 🤖 will play.</p>
+                                <div class="overlay-buttons">
+                                    <button class="btn-overlay-join join-1-color" onclick="setCpuDifficulty('easy')">EASY (Random)</button>
+                                    <button class="btn-overlay-join join-2-color" onclick="setCpuDifficulty('medium')">MEDIUM (Half Smart)</button>
+                                    <button class="btn-overlay-join join-1-color" style="border-color: var(--neon-purple) !important; color: var(--neon-purple) !important;" onclick="setCpuDifficulty('hard')">HARD (Smart Heuristics)</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -308,6 +473,26 @@
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
     <audio id="remote-audio" autoplay></audio>
+
+    <!-- Lovense Toy Connection Modal -->
+    <div id="lovense-modal" class="instructions-modal-overlay">
+        <div class="instructions-modal-card" style="text-align: center;">
+            <button class="instructions-modal-close" onclick="closeLovenseModal()">×</button>
+            <h3 class="instructions-modal-title">🔌 Lovense Connection</h3>
+            <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:15px; text-align: center;">
+                Scan the QR code in the Lovense app or enter the code to connect your toy.
+            </p>
+            <div style="text-align:center; margin:15px 0;">
+                <div id="lovense-qr-loading" style="font-size: 0.85rem; color: var(--text-secondary);">Generating QR Code...</div>
+                <img id="lovense-qr-img" class="hidden" style="max-width:180px; border:6px solid #fff; border-radius:8px; margin:0 auto; display: block;" />
+                <div id="lovense-code-text" class="hidden" style="margin-top:15px; font-family:'Orbitron',sans-serif; color:var(--neon-blue); font-weight:bold; font-size: 1.1rem; letter-spacing: 2px;">
+                    CODE: <span id="lovense-code-val">------</span>
+                </div>
+            </div>
+            <div id="lovense-toy-status" class="status-indicator offline" style="display: inline-block; margin: 10px auto;">Disconnected: Scan QR code</div>
+            <button id="btn-lovense-test" class="btn-terminal hidden" style="margin-top:12px; width:100%;">Test Vibe</button>
+        </div>
+    </div>
 
     <script>
         const pathParts = window.location.pathname.split('/');
@@ -398,6 +583,20 @@
             
             document.getElementById('btn-create-room').addEventListener('click', () => {
                 const roomCode = 'MM-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                navigateToRoom(roomCode);
+            });
+
+            document.getElementById('btn-play-cpu').addEventListener('click', async () => {
+                const roomCode = 'CPU-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                try {
+                    await fetch(`${basePath}/api/join-cpu`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId: roomCode, uuid: profile.uuid, name: profile.name })
+                    });
+                } catch (e) {
+                    console.error("Failed to pre-create CPU match:", e);
+                }
                 navigateToRoom(roomCode);
             });
             
@@ -747,6 +946,21 @@
             const join1Btn = document.getElementById('btn-overlay-join-1');
             const join2Btn = document.getElementById('btn-overlay-join-2');
 
+            // Sync CPU Difficulty selection overlay
+            const cpuOverlay = document.getElementById('cpu-overlay');
+            if (game.status === 'cpu_difficulty_select') {
+                overlay.classList.add('fade-out'); // hide join overlay
+                if (cpuOverlay) {
+                    cpuOverlay.classList.remove('hidden');
+                    cpuOverlay.classList.remove('fade-out');
+                }
+            } else {
+                if (cpuOverlay) {
+                    cpuOverlay.classList.add('fade-out');
+                    setTimeout(() => cpuOverlay.classList.add('hidden'), 300);
+                }
+            }
+
             if (game.status === 'waiting') {
                 overlay.classList.remove('fade-out');
                 if (game.player1) {
@@ -827,6 +1041,16 @@
                 const frontFace = cardContainer.querySelector('.card-front');
                 frontFace.innerText = emoji || '';
             }
+
+            // Update Lovense badges for Player 1 and Player 2
+            updateLovenseBadge('red', game.player1);
+            updateLovenseBadge('yellow', game.player2);
+
+            // Update open Lovense modal content dynamically
+            const lovenseModal = document.getElementById('lovense-modal');
+            if (lovenseModal && lovenseModal.classList.contains('show')) {
+                updateLovenseModalContent();
+            }
         }
 
         // =========================================
@@ -881,6 +1105,133 @@
             isVoiceConnected = false;
         }
 
+        // Set CPU Difficulty
+        window.setCpuDifficulty = function(diff) {
+            fetch(`${basePath}/api/set-difficulty`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gameId, difficulty: diff })
+            });
+        };
+
+        // =========================================
+        // LOVENSE MODAL MANAGEMENT
+        // =========================================
+        function openLovenseModal() {
+            const modal = document.getElementById('lovense-modal');
+            modal.classList.add('show');
+            updateLovenseModalContent();
+        }
+
+        function closeLovenseModal() {
+            const modal = document.getElementById('lovense-modal');
+            modal.classList.remove('show');
+        }
+
+        function updateLovenseModalContent() {
+            if (!activeGame) return;
+            const isMeRed = activeGame.player1 && activeGame.player1.uuid === profile.uuid;
+            const me = isMeRed ? activeGame.player1 : activeGame.player2;
+
+            if (!me) return;
+
+            const qrImg = document.getElementById('lovense-qr-img');
+            const qrLoading = document.getElementById('lovense-qr-loading');
+            const codeText = document.getElementById('lovense-code-text');
+            const codeVal = document.getElementById('lovense-code-val');
+            const statusIndicator = document.getElementById('lovense-toy-status');
+            const testBtn = document.getElementById('btn-lovense-test');
+
+            if (me.connected) {
+                qrImg.classList.add('hidden');
+                qrLoading.classList.add('hidden');
+                codeText.classList.add('hidden');
+                statusIndicator.innerText = "Connected: Toy Active";
+                statusIndicator.className = "status-indicator online";
+                testBtn.classList.remove('hidden');
+            } else {
+                testBtn.classList.add('hidden');
+                statusIndicator.innerText = "Disconnected: Scan QR code";
+                statusIndicator.className = "status-indicator offline";
+
+                if (me.qrCode) {
+                    qrImg.src = me.qrCode;
+                    qrImg.classList.remove('hidden');
+                    qrLoading.classList.add('hidden');
+                    
+                    if (me.linkCode) {
+                        codeVal.innerText = me.linkCode;
+                        codeText.classList.remove('hidden');
+                    } else {
+                        codeText.classList.add('hidden');
+                    }
+                } else {
+                    qrImg.classList.add('hidden');
+                    codeText.classList.add('hidden');
+                    if (me.qrError) {
+                        qrLoading.innerText = "Error: " + me.qrError;
+                        qrLoading.style.color = "var(--neon-red)";
+                    } else {
+                        qrLoading.innerText = "Generating QR Code...";
+                        qrLoading.style.color = "var(--text-secondary)";
+                    }
+                    qrLoading.classList.remove('hidden');
+                }
+            }
+        }
+
+        function updateLovenseBadge(role, player) {
+            const container = document.getElementById(`lovense-${role}-status`);
+            if (!container) return;
+            container.innerHTML = '';
+            if (!player) return;
+
+            // If CPU, no badge
+            if (player.uuid === 'cpu-bot') return;
+
+            // If it is the current player, show clickable connect/active button
+            if (player.uuid === profile.uuid) {
+                if (player.connected) {
+                    const badge = document.createElement('button');
+                    badge.className = 'lovense-active-badge';
+                    badge.innerText = '🟢 Toy Active';
+                    badge.onclick = (e) => { e.stopPropagation(); openLovenseModal(); };
+                    container.appendChild(badge);
+                } else {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-lovense-connect';
+                    btn.innerText = '🔌 Connect Toy';
+                    btn.onclick = (e) => { e.stopPropagation(); openLovenseModal(); };
+                    container.appendChild(btn);
+                }
+            } else {
+                // If it is another player, show static badge if connected
+                if (player.connected) {
+                    const badge = document.createElement('span');
+                    badge.className = 'lovense-passive-badge';
+                    badge.innerText = '🔌 Toy Connected';
+                    container.appendChild(badge);
+                }
+            }
+        }
+
+        // Bind test vibe button click
+        document.getElementById('btn-lovense-test').addEventListener('click', () => {
+            fetch(`${basePath}/api/vibe/test`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gameId, uuid: profile.uuid })
+            });
+        });
+
+        window.closeLovenseModal = closeLovenseModal;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeLovenseModal();
+            }
+        });
+
         socket.on('update', (data) => {
             if (!data) {
                 window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
@@ -889,6 +1240,45 @@
             const game = data.game || data;
             if (gameId !== 'lobby') updateBoard(game);
         });
+
+        // Instructions Modal Functions
+        function openInstructionsModal() {
+            document.getElementById('instructions-modal').classList.add('show');
+        }
+
+        function closeInstructionsModal() {
+            document.getElementById('instructions-modal').classList.remove('show');
+        }
+
+        const btnInstructions = document.getElementById('btn-standalone-instructions');
+        if (btnInstructions) {
+            btnInstructions.addEventListener('click', openInstructionsModal);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeInstructionsModal();
+            }
+        });
     </script>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="instructions-modal-overlay" onclick="closeInstructionsModal()">
+        <div class="instructions-modal-card" onclick="event.stopPropagation()">
+            <button class="instructions-modal-close" onclick="closeInstructionsModal()">&times;</button>
+            <h3 class="instructions-modal-title">HOW TO PLAY MEMORY MATCH</h3>
+            <div class="instructions-modal-body">
+                <p>Welcome to <strong>Memory Match</strong>! Here is how to play:</p>
+                <ul>
+                    <li><strong>Objective:</strong> Find and match pairs of identical cards to score points.</li>
+                    <li><strong>Gameplay:</strong> Take turns flipping two cards face-up. If the cards match, they are removed and you score 1 point. If they do not match, they flip back over.</li>
+                    <li><strong>Alternating Turns:</strong> If you find a match, you keep your turn! If not, the turn passes to your opponent.</li>
+                    <li><strong>Winning:</strong> The player with the most matches when all cards are cleared wins the game.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
 </body>
 </html>

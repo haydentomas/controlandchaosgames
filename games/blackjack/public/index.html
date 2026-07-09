@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack Duel Arcade</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <script>
+        const linkPathParts = window.location.pathname.split('/');
+        const linkBoardIndex = linkPathParts.indexOf('board');
+        const cssBasePath = linkBoardIndex !== -1 ? linkPathParts.slice(0, linkBoardIndex).join('/') : '';
+        
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'stylesheet';
+        linkEl.href = (cssBasePath || '') + '/style.css?v=' + Date.now();
+        document.head.appendChild(linkEl);
+    </script>
+    <style>
+        /* Spectator overlays */
+        .board-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(9, 9, 14, 0.93) !important;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100000 !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .board-overlay.fade-out {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        .overlay-card {
+            text-align: center;
+            padding: 30px;
+            background: rgba(20, 20, 35, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 380px;
+            width: 90%;
+            z-index: 100001 !important;
+        }
+
+        .overlay-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--neon-blue) !important;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .overlay-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary) !important;
+            margin-bottom: 24px;
+            line-height: 1.4;
+        }
+
+        .overlay-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .btn-overlay-join {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            background: transparent;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+
+        .btn-overlay-join.join-1-color {
+            border: 1px solid var(--neon-purple) !important;
+            color: var(--neon-purple) !important;
+        }
+        .btn-overlay-join.join-1-color:hover:not(:disabled) {
+            background: var(--neon-purple) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 15px rgba(192, 0, 255, 0.5);
+        }
+
+        .btn-overlay-join.join-2-color {
+            border: 1px solid var(--neon-blue) !important;
+            color: var(--neon-blue) !important;
+        }
+        .btn-overlay-join.join-2-color:hover:not(:disabled) {
+            background: var(--neon-blue) !important;
+            color: #000000 !important;
+            box-shadow: 0 0 15px rgba(0, 238, 255, 0.5);
+        }
+
+        .btn-overlay-join:disabled {
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            color: var(--text-secondary) !important;
+            cursor: not-allowed;
+            background: rgba(255, 255, 255, 0.02) !important;
+        }
+
+        /* Toast Container */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 999999;
+        }
+        .toast {
+            background: rgba(10, 10, 20, 0.95);
+            border: 1px solid var(--border-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast.toast-success {
+            border-left: 4px solid var(--neon-green);
+        }
+        .toast.toast-error {
+            border-left: 4px solid var(--neon-red);
+        }
+    
+        /* Instructions Modal Styles */
+        .instructions-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(9, 9, 14, 0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .instructions-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .instructions-modal-card {
+            background: rgba(15, 15, 27, 0.95);
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 30px rgba(0, 238, 255, 0.3);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 480px;
+            width: 90%;
+            position: relative;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            text-align: left;
+            animation: modal-slide-up 0.3s ease-out;
+        }
+
+        @keyframes modal-slide-up {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .instructions-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .instructions-modal-close:hover {
+            border-color: var(--neon-red);
+            color: var(--neon-red);
+            box-shadow: 0 0 10px rgba(255, 51, 102, 0.4);
+        }
+
+        .instructions-modal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--neon-blue);
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+        }
+
+        .instructions-modal-body {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .instructions-modal-body ul {
+            margin-left: 20px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .instructions-modal-body li strong {
+            color: var(--text-primary);
+        }
+    </style>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+
+    <!-- ========================================= -->
+    <!-- LOBBY / ROOM SELECTOR VIEW               -->
+    <!-- ========================================= -->
+    <div id="lobby-view" class="view hidden">
+        <header>
+            <h1 class="logo">CONTROL & CHAOS</h1>
+            <h2 class="sub-logo">BLACKJACK LOBBY</h2>
+        </header>
+
+        <main class="lobby-container">
+            <div class="lobby-top-row">
+                <!-- Profile -->
+                <div class="profile-card">
+                    <div class="lobby-card-header">YOUR ARCADE PROFILE</div>
+                    <div class="lobby-card-body">
+                        <div class="profile-input-group">
+                            <label for="profile-name-input">NICKNAME:</label>
+                            <input type="text" id="profile-name-input" maxlength="15" placeholder="Enter Nickname...">
+                        </div>
+                        <button id="btn-save-profile" class="btn-lobby">SAVE NICKNAME</button>
+                    </div>
+                </div>
+
+                <!-- Match Actions -->
+                <div class="actions-card">
+                    <div class="lobby-card-header">MATCH ACTIONS</div>
+                    <div class="lobby-card-body">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.45;">Create a new match or auto-join rooms looking for commanders.</p>
+                        <div class="lobby-buttons-row">
+                            <button id="btn-create-room" class="btn-lobby btn-primary">CREATE MATCH</button>
+                            <button id="btn-quick-play" class="btn-lobby btn-quick">QUICK PLAY</button>
+                            <button id="btn-play-cpu" class="btn-lobby btn-quick" style="border-color: var(--neon-purple); color: var(--neon-purple);">PLAY VS CPU</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Match Browser list -->
+            <div class="rooms-card">
+                <div class="rooms-header-row">
+                    <div class="rooms-header">ARCADE MATCH BROWSER</div>
+                    <div class="lobby-search-group">
+                        <input type="text" id="lobby-search-input" placeholder="Search player or code...">
+                    </div>
+                </div>
+                
+                <div class="lobby-filter-tabs">
+                    <button class="btn-tab active" data-tab="joinable">JOINABLE</button>
+                    <button class="btn-tab" data-tab="live">LIVE MATCHES</button>
+                    <button class="btn-tab" data-tab="all">ALL</button>
+                </div>
+
+                <div class="rooms-body">
+                    <div class="rooms-table-header">
+                        <span class="col-code">ROOM CODE</span>
+                        <span class="col-players">PLAYERS</span>
+                        <span class="col-action">ACTION</span>
+                    </div>
+                    <div class="rooms-list-wrapper">
+                        <div id="no-rooms-message" class="no-rooms">No matches found. Create one to begin!</div>
+                        <div id="rooms-list-container" class="rooms-grid-list"></div>
+                    </div>
+                    <div class="lobby-pagination">
+                        <button id="btn-pagination-prev" class="btn-pagination-control">◀ PREV</button>
+                        <span id="lobby-pagination-info" class="pagination-info">PAGE 1 OF 1</span>
+                        <button id="btn-pagination-next" class="btn-pagination-control">NEXT ▶</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- SPECTATOR BOARD VIEW                     -->
+    <!-- ========================================= -->
+    <div id="spectator-view" class="view hidden">
+        <header class="game-controls-wrapper">
+            <div class="game-controls">
+                <button class="btn-terminal" id="btn-standalone-back">◀ GO TO LOBBY</button>
+                <span class="active-game-banner">CONTROL & CHAOS: BLACKJACK</span>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-terminal" id="btn-standalone-instructions">📖 HOW TO PLAY</button>
+                    <button class="btn-terminal" id="btn-standalone-reload">🔄 RELOAD GAME</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="spectator-container">
+            <!-- Player Stats Header -->
+            <div class="players-bar">
+                <div id="player-1-card" class="player-card red-card">
+                    <div class="color-indicator"></div>
+                    <div class="player-info">
+                        <span class="player-label">PLAYER 1</span>
+                        <span id="player-1-name" class="player-name">Waiting...</span>
+                    </div>
+                    <span id="player-1-score" class="player-score">0</span>
+                </div>
+
+                <div class="status-center">
+                    <span id="game-status-text" class="status-badge">WAITING FOR PLAYERS</span>
+                    <div class="status-buttons">
+                        <button id="btn-reset-board" class="btn-reset">RESET MATCH</button>
+                        <button id="btn-copy-link" class="btn-reset btn-share">SHARE MATCH</button>
+                        <button id="btn-toggle-voice" class="btn-reset btn-voice" style="display: none;">🎙️ JOIN VOICE</button>
+                        <button id="btn-exit-lobby" class="btn-reset btn-exit">EXIT TO LOBBY</button>
+                    </div>
+                </div>
+
+                <div id="player-2-card" class="player-card black-card">
+                    <span id="player-2-score" class="player-score">0</span>
+                    <div class="player-info text-right">
+                        <span class="player-label">PLAYER 2</span>
+                        <span id="player-2-name" class="player-name">Waiting...</span>
+                    </div>
+                    <div class="color-indicator"></div>
+                </div>
+            </div>
+
+            <!-- Game Main Area -->
+            <div class="game-main-area">
+                <div class="board-frame-outer">
+                    <div class="board-frame">
+                        
+                        <!-- Top Hand (Opponent cards) -->
+                        <div class="cards-hand-wrapper">
+                            <span id="opponent-hand-label" class="cards-hand-label">OPPONENT HAND</span>
+                            <div id="opponent-cards-container" class="cards-hand"></div>
+                        </div>
+
+                        <!-- Table Middle actions -->
+                        <div class="table-middle">
+                            <div class="deck-stack">DECK</div>
+                            <div class="blackjack-action-row">
+                                <button id="btn-hit" class="btn-card-action btn-hit">HIT</button>
+                                <button id="btn-stand" class="btn-card-action btn-stand">STAND</button>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Hand (Your cards) -->
+                        <div class="cards-hand-wrapper">
+                            <span id="own-hand-label" class="cards-hand-label">YOUR HAND</span>
+                            <div id="own-cards-container" class="cards-hand"></div>
+                        </div>
+
+                        <!-- Over the Board Join Overlay -->
+                        <div id="join-overlay" class="board-overlay">
+                            <div class="overlay-card">
+                                <h3 class="overlay-title">WAITING FOR PLAYERS</h3>
+                                <p class="overlay-subtitle">Both players must join to start the match.</p>
+                                <div class="overlay-buttons">
+                                    <button id="btn-overlay-join-1" class="btn-overlay-join join-1-color">JOIN PLAYER 1</button>
+                                    <button id="btn-overlay-join-2" class="btn-overlay-join join-2-color">JOIN PLAYER 2</button>
+                                </div>
+                                <p class="overlay-desc">(Or join automatically from Second Life)</p>
+                            </div>
+                        </div>
+
+                        <div id="cpu-overlay" class="board-overlay hidden">
+                            <div class="overlay-card">
+                                <h3 class="overlay-title">SELECT CPU DIFFICULTY</h3>
+                                <p class="overlay-subtitle">Choose how smart CyberBot 🤖 will play.</p>
+                                <div class="overlay-buttons">
+                                    <button class="btn-overlay-join join-1-color" onclick="setCpuDifficulty('easy')">EASY (Random)</button>
+                                    <button class="btn-overlay-join join-2-color" onclick="setCpuDifficulty('medium')">MEDIUM (Half Smart)</button>
+                                    <button class="btn-overlay-join join-1-color" onclick="setCpuDifficulty('hard')">HARD (Smart Heuristics)</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Sidebar -->
+                <div id="chat-sidebar" class="chat-sidebar">
+                    <div class="chat-header">MATCH CHAT</div>
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="chat-input-row">
+                        <input type="text" id="chat-input" placeholder="Type message..." maxlength="80">
+                        <button id="btn-send-chat">SEND</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+    <audio id="remote-audio" autoplay></audio>
+
+    <script>
+        const pathParts = window.location.pathname.split('/');
+        const boardIndex = pathParts.indexOf('board');
+        const gameId = boardIndex !== -1 && pathParts[boardIndex + 1] ? pathParts[boardIndex + 1] : 'lobby';
+        const basePath = boardIndex !== -1 ? pathParts.slice(0, boardIndex).join('/') : '';
+        const socket = io(basePath || '/');
+
+        let activeTurn = 1;
+        let activeGame = null;
+        const isDebug = new URLSearchParams(window.location.search).get('debug') === 'true' || 
+                        window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1';
+
+        // WebRTC Voice
+        let localStream = null;
+        let peerConnection = null;
+        let isVoiceConnected = false;
+        let isMuted = false;
+        const stunConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+        function getPlayerProfile() {
+            let uuid = localStorage.getItem('blackjack_player_uuid');
+            let name = localStorage.getItem('blackjack_player_name');
+            if (!uuid) {
+                uuid = 'web-' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('blackjack_player_uuid', uuid);
+            }
+            if (!name) {
+                name = 'Card_' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                localStorage.setItem('blackjack_player_name', name);
+            }
+            return { uuid, name };
+        }
+
+        const profile = getPlayerProfile();
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerText = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            if (window.self !== window.top) {
+                document.querySelectorAll('header').forEach(h => h.style.display = 'none');
+            }
+
+            if (gameId === 'lobby') {
+                showLobbyView();
+            } else {
+                showBoardView();
+            }
+        });
+
+        // =========================================
+        // LOBBY STATE MANAGEMENT
+        // =========================================
+        let allRooms = [];
+        let currentTab = 'joinable';
+        let searchQuery = '';
+        let currentPage = 1;
+        const itemsPerPage = 6;
+
+        function showLobbyView() {
+            document.getElementById('lobby-view').classList.remove('hidden');
+            document.getElementById('spectator-view').classList.add('hidden');
+            
+            const nameInput = document.getElementById('profile-name-input');
+            nameInput.value = profile.name;
+            
+            document.getElementById('btn-save-profile').addEventListener('click', () => {
+                const newName = nameInput.value.trim();
+                if (newName) {
+                    profile.name = newName;
+                    localStorage.setItem('blackjack_player_name', newName);
+                    showToast('Profile nickname saved!', 'success');
+                }
+            });
+            
+            document.getElementById('btn-create-room').addEventListener('click', () => {
+                const roomCode = 'BJ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                navigateToRoom(roomCode);
+            });
+
+            document.getElementById('btn-play-cpu').addEventListener('click', async () => {
+                const roomCode = 'CPU-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                try {
+                    const res = await fetch(`${basePath}/api/join-cpu`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId: roomCode, uuid: profile.uuid, name: profile.name })
+                    });
+                    if (!res.ok) {
+                        const err = await readErrorResponse(res);
+                        throw new Error(err || 'Failed to create CPU match.');
+                    }
+                    navigateToRoom(roomCode);
+                } catch (err) {
+                    showToast(err.message || 'Failed to create CPU match.', 'error');
+                }
+            });
+            
+            document.getElementById('btn-quick-play').addEventListener('click', async () => {
+                try {
+                    const res = await fetch(`${basePath}/api/rooms`);
+                    if (!res.ok) throw new Error('Failed to fetch rooms');
+                    const rooms = await res.json();
+                    const joinableRoom = rooms.find(room => room.status === 'waiting' && (!room.player1 || !room.player2));
+                    
+                    if (joinableRoom) {
+                        showToast(`Match found! Joining room ${joinableRoom.id}...`, 'success');
+                        setTimeout(() => navigateToRoom(joinableRoom.id), 800);
+                    } else {
+                        showToast('No active rooms found. Spawning new match...', 'success');
+                        const roomCode = 'BJ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                        setTimeout(() => navigateToRoom(roomCode), 800);
+                    }
+                } catch (err) {
+                    const roomCode = 'BJ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                    navigateToRoom(roomCode);
+                }
+            });
+
+            const searchInput = document.getElementById('lobby-search-input');
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value.trim().toLowerCase();
+                currentPage = 1;
+                filterAndRenderRooms();
+            });
+
+            const tabs = document.querySelectorAll('.lobby-filter-tabs .btn-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentTab = e.target.getAttribute('data-tab');
+                    currentPage = 1;
+                    filterAndRenderRooms();
+                });
+            });
+
+            document.getElementById('btn-pagination-prev').addEventListener('click', () => {
+                if (currentPage > 1) { currentPage--; filterAndRenderRooms(); }
+            });
+            document.getElementById('btn-pagination-next').addEventListener('click', () => {
+                currentPage++; filterAndRenderRooms();
+            });
+            
+            fetchActiveRooms();
+            const pollInterval = setInterval(fetchActiveRooms, 5000);
+            window.addEventListener('beforeunload', () => clearInterval(pollInterval));
+        }
+
+        function navigateToRoom(code) {
+            const hasDebug = new URLSearchParams(window.location.search).get('debug') === 'true' || isDebug;
+            window.location.href = `${basePath}/board/${code}${hasDebug ? '?debug=true' : ''}`;
+        }
+
+        async function fetchActiveRooms() {
+            try {
+                const res = await fetch(`${basePath}/api/rooms`);
+                if (res.ok) {
+                    allRooms = await res.json();
+                    filterAndRenderRooms();
+                }
+            } catch (err) {}
+        }
+
+        function filterAndRenderRooms() {
+            const activeRooms = allRooms.filter(r => r.status !== 'won' && r.status !== 'abandoned');
+            let filtered = activeRooms.filter(room => {
+                if (currentTab === 'joinable') return room.status === 'waiting' && (!room.player1 || !room.player2);
+                if (currentTab === 'live') return room.status === 'playing';
+                return true;
+            });
+
+            if (searchQuery) {
+                filtered = filtered.filter(room => {
+                    const p1 = room.player1 ? room.player1.name.toLowerCase() : '';
+                    const p2 = room.player2 ? room.player2.name.toLowerCase() : '';
+                    return room.id.toLowerCase().includes(searchQuery) || p1.includes(searchQuery) || p2.includes(searchQuery);
+                });
+            }
+
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const paginatedRooms = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+            document.getElementById('lobby-pagination-info').innerText = `PAGE ${currentPage} OF ${totalPages}`;
+            document.getElementById('btn-pagination-prev').disabled = (currentPage === 1);
+            document.getElementById('btn-pagination-next').disabled = (currentPage === totalPages);
+
+            const container = document.getElementById('rooms-list-container');
+            const noRoomsMsg = document.getElementById('no-rooms-message');
+            container.innerHTML = '';
+            
+            if (paginatedRooms.length === 0) {
+                noRoomsMsg.classList.remove('hidden');
+                return;
+            }
+            
+            noRoomsMsg.classList.add('hidden');
+            paginatedRooms.forEach(room => {
+                const row = document.createElement('div');
+                row.className = 'room-item';
+                const p1 = room.player1 ? room.player1.name : 'Waiting...';
+                const p2 = room.player2 ? room.player2.name : 'Waiting...';
+                const isFull = room.player1 && room.player2;
+                const joinBtn = !isFull
+                    ? `<button class="btn-room-action btn-join-action" onclick="navigateToRoom('${room.id}')">JOIN</button>`
+                    : `<button class="btn-room-action btn-spec-action" onclick="navigateToRoom('${room.id}')">SPECTATE</button>`;
+                row.innerHTML = `
+                    <div class="room-code-col"><span class="room-id-badge">${room.id}</span></div>
+                    <div class="room-players-col"><span class="p-red">${p1}</span><span class="vs">vs</span><span class="p-yellow">${p2}</span></div>
+                    <div class="room-action-col">${joinBtn}</div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        // =========================================
+        // SPECTATOR BOARD CONTROLLERS
+        // =========================================
+        function showBoardView() {
+            document.getElementById('lobby-view').classList.add('hidden');
+            document.getElementById('spectator-view').classList.remove('hidden');
+            
+            socket.emit('join_game', gameId, profile.uuid);
+
+            // Bind Exit
+            document.getElementById('btn-exit-lobby').addEventListener('click', () => {
+                fetch(`${basePath}/api/leave`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, uuid: profile.uuid })
+                }).finally(() => {
+                    window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                });
+            });
+
+            // Bind Share Link
+            const copyLinkBtn = document.getElementById('btn-copy-link');
+            if (copyLinkBtn) {
+                copyLinkBtn.addEventListener('click', () => {
+                    const matchUrl = window.location.origin + basePath + '/board/' + gameId;
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(matchUrl).then(() => {
+                            showToast('Match link copied! Share it with a friend.', 'success');
+                        }).catch(err => {
+                            fallbackCopyText(matchUrl);
+                        });
+                    } else {
+                        fallbackCopyText(matchUrl);
+                    }
+                });
+            }
+
+            function fallbackCopyText(text) {
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('Match link copied!', 'success');
+                } catch (err) {
+                    window.prompt("Copy match link:", text);
+                }
+                document.body.removeChild(el);
+            }
+
+            // Bind Overlays Join
+            document.getElementById('btn-overlay-join-1').addEventListener('click', () => joinRole('1'));
+            document.getElementById('btn-overlay-join-2').addEventListener('click', () => joinRole('2'));
+
+            document.getElementById('btn-reset-board').addEventListener('click', () => {
+                fetch(`${basePath}/api/reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId })
+                });
+            });
+
+            // Hit / Stand Clicks
+            document.getElementById('btn-hit').addEventListener('click', () => makeGameMove('hit'));
+            document.getElementById('btn-stand').addEventListener('click', () => makeGameMove('stand'));
+
+            initVoiceChat();
+
+            socket.on('voice_signal', async (data) => {
+                if (!localStream) return;
+                const { type, sdp, candidate } = data;
+                if (type === 'ready') {
+                    if (activeGame && activeGame.player1 && activeGame.player1.uuid === profile.uuid) {
+                        createPeerConnection();
+                        const offer = await peerConnection.createOffer();
+                        await peerConnection.setLocalDescription(offer);
+                        socket.emit('voice_signal', { type: 'offer', sdp: offer });
+                    }
+                } else if (type === 'offer') {
+                    createPeerConnection();
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    socket.emit('voice_signal', { type: 'answer', sdp: answer });
+                } else if (type === 'answer') {
+                    if (peerConnection) await peerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+                } else if (type === 'candidate') {
+                    if (peerConnection) await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                }
+            });
+
+            const isSecondLife = new URLSearchParams(window.location.search).get('sl') === 'true';
+            if (isSecondLife) document.getElementById('chat-sidebar').style.display = 'none';
+
+            const chatInput = document.getElementById('chat-input');
+            const chatMessages = document.getElementById('chat-messages');
+            const btnSendChat = document.getElementById('btn-send-chat');
+
+            function sendChatMessage() {
+                const text = chatInput.value.trim();
+                if (text) {
+                    socket.emit('chat_message', { sender: profile.name, text });
+                    chatInput.value = '';
+                }
+            }
+
+            if (btnSendChat && chatInput) {
+                btnSendChat.addEventListener('click', sendChatMessage);
+                chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+            }
+
+            socket.on('chat_message', (data) => {
+                if (gameId !== 'lobby') {
+                    const isMe = data.sender === profile.name;
+                    const msgEl = document.createElement('div');
+                    msgEl.className = `chat-msg${isMe ? ' me' : ''}`;
+                    msgEl.innerHTML = `<span class="msg-sender">${escapeHtml(data.sender)}:</span> <span class="msg-text">${escapeHtml(data.text)}</span>`;
+                    chatMessages.appendChild(msgEl);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            });
+
+            document.getElementById('btn-standalone-back').addEventListener('click', () => {
+                window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+            });
+            document.getElementById('btn-standalone-reload').addEventListener('click', () => {
+                window.location.reload();
+            });
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        async function readErrorResponse(res) {
+            const text = await res.text();
+            try {
+                const data = JSON.parse(text);
+                return data.error || text;
+            } catch (_) {
+                if (text.includes('Cannot POST')) {
+                    return 'Blackjack CPU route is unavailable on the running server. Restart the game terminal host.';
+                }
+                return text || `Request failed with status ${res.status}`;
+            }
+        }
+
+        function joinRole(roleNum) {
+            fetch(`${basePath}/api/join`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gameId, uuid: profile.uuid, name: profile.name, role: roleNum })
+            }).then(async res => {
+                if (!res.ok) {
+                    const err = await res.json();
+                    showToast(err.error || 'Failed to join.', 'error');
+                } else {
+                    showToast(`Joined as Player ${roleNum}!`, 'success');
+                }
+            });
+        }
+
+        function makeGameMove(actionType) {
+            fetch(`${basePath}/api/move`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gameId, uuid: profile.uuid, action: actionType })
+            }).then(async res => {
+                if (!res.ok) {
+                    const err = await res.json();
+                    showToast(err.error || 'Invalid move.', 'error');
+                }
+            });
+        }
+
+        function getCardHtml(card) {
+            if (!card || card.hidden || !card.rank || !card.suit) {
+                return `
+                    <div class="playing-card black-suit">
+                        <div class="card-corner top-left">
+                            <span class="rank-label">?</span>
+                            <span class="suit-icon">?</span>
+                        </div>
+                        <div class="card-suit-center">?</div>
+                        <div class="card-corner bottom-right">
+                            <span class="rank-label">?</span>
+                            <span class="suit-icon">?</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const isRed = ['H', 'D'].includes(card.suit);
+            const suitSymbols = { 'S': '♠', 'H': '♥', 'D': '♦', 'C': '♣' };
+            const suitSymbol = suitSymbols[card.suit] || card.suit;
+            const suitClass = isRed ? 'red-suit' : 'black-suit';
+            return `
+                <div class="playing-card ${suitClass}">
+                    <div class="card-corner top-left">
+                        <span class="rank-label">${card.rank}</span>
+                        <span class="suit-icon">${suitSymbol}</span>
+                    </div>
+                    <div class="card-suit-center">${suitSymbol}</div>
+                    <div class="card-corner bottom-right">
+                        <span class="rank-label">${card.rank}</span>
+                        <span class="suit-icon">${suitSymbol}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        let isRedirecting = false;
+        function updateBoard(game) {
+            activeGame = game;
+
+            if (game.status === 'abandoned') {
+                if (isRedirecting) return;
+                isRedirecting = true;
+                document.getElementById('game-status-text').innerText = "OPPONENT LEFT. ENDING MATCH...";
+                showToast('Opponent left. Returning to lobby...', 'error');
+                closeVoiceChat();
+                setTimeout(() => {
+                    window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                }, 3000);
+                return;
+            }
+
+            const isParticipant = (game.player1 && game.player1.uuid === profile.uuid) || (game.player2 && game.player2.uuid === profile.uuid);
+            const btnVoice = document.getElementById('btn-toggle-voice');
+            if (game.status === 'playing' && isParticipant) {
+                if (btnVoice) btnVoice.style.display = 'inline-block';
+            } else {
+                if (btnVoice) btnVoice.style.display = 'none';
+                closeVoiceChat();
+            }
+
+            activeTurn = game.turn;
+
+            // Sync Overlay
+            const overlay = document.getElementById('join-overlay');
+            const join1Btn = document.getElementById('btn-overlay-join-1');
+            const join2Btn = document.getElementById('btn-overlay-join-2');
+
+            if (game.status === 'waiting') {
+                overlay.classList.remove('fade-out');
+                if (game.player1) {
+                    join1Btn.innerText = `P1: ${game.player1.name.toUpperCase()}`;
+                    join1Btn.disabled = true;
+                } else {
+                    join1Btn.innerText = `JOIN PLAYER 1`;
+                    join1Btn.disabled = false;
+                }
+                if (game.player2) {
+                    join2Btn.innerText = `P2: ${game.player2.name.toUpperCase()}`;
+                    join2Btn.disabled = true;
+                } else {
+                    join2Btn.innerText = `JOIN PLAYER 2`;
+                    join2Btn.disabled = false;
+                }
+                const isAlreadyJoined = (game.player1 && game.player1.uuid === profile.uuid) || (game.player2 && game.player2.uuid === profile.uuid);
+                if (isAlreadyJoined) {
+                    overlay.innerHTML = `
+                        <div class="overlay-card">
+                            <h3 class="overlay-title">WAITING FOR OPPONENT</h3>
+                            <p class="overlay-subtitle">Provide your opponent with the room code to start.</p>
+                            <p class="overlay-desc">(Or auto-commissions inside Second Life)</p>
+                        </div>
+                    `;
+                }
+            } else {
+                overlay.classList.add('fade-out');
+            }
+
+            const cpuOverlay = document.getElementById('cpu-overlay');
+            if (game.status === 'cpu_difficulty_select') {
+                overlay.classList.add('fade-out');
+                if (cpuOverlay) {
+                    cpuOverlay.classList.remove('hidden');
+                    cpuOverlay.classList.remove('fade-out');
+                }
+            } else if (cpuOverlay) {
+                cpuOverlay.classList.add('fade-out');
+                setTimeout(() => cpuOverlay.classList.add('hidden'), 300);
+            }
+
+            // Sync Cards names & scores
+            document.getElementById('player-1-name').innerText = game.player1 ? game.player1.name : 'Waiting...';
+            document.getElementById('player-2-name').innerText = game.player2 ? game.player2.name : 'Waiting...';
+            
+            document.getElementById('player-1-score').innerText = game.score1;
+            document.getElementById('player-2-score').innerText = game.score2;
+
+            document.getElementById('player-1-card').classList.remove('active');
+            document.getElementById('player-2-card').classList.remove('active');
+
+            // Find role
+            const myRole = (game.player1 && game.player1.uuid === profile.uuid) ? '1' : 
+                           (game.player2 && game.player2.uuid === profile.uuid) ? '2' : 'spectator';
+
+            // Sync Hit/Stand Button States
+            const isMyTurn = (myRole === '1' && game.turn === 1) || (myRole === '2' && game.turn === 2);
+            const isPlayState = game.status === 'playing';
+            
+            document.getElementById('btn-hit').disabled = !isPlayState || !isMyTurn || game.lockBoard;
+            document.getElementById('btn-stand').disabled = !isPlayState || !isMyTurn || game.lockBoard;
+
+            if (isPlayState) {
+                if (game.turn === 1) {
+                    document.getElementById('player-1-card').classList.add('active');
+                    document.getElementById('game-status-text').innerText = "PLAYER 1'S TURN";
+                } else {
+                    document.getElementById('player-2-card').classList.add('active');
+                    document.getElementById('game-status-text').innerText = "PLAYER 2'S TURN";
+                }
+            } else if (game.status === 'won') {
+                if (game.winner === 1) {
+                    const winnerName = game.player1 ? game.player1.name : 'PLAYER 1';
+                    document.getElementById('game-status-text').innerText = `${winnerName.toUpperCase()} WINS DUEL!`;
+                    document.getElementById('player-1-card').classList.add('active');
+                } else if (game.winner === 2) {
+                    const winnerName = game.player2 ? game.player2.name : 'PLAYER 2';
+                    document.getElementById('game-status-text').innerText = `${winnerName.toUpperCase()} WINS DUEL!`;
+                    document.getElementById('player-2-card').classList.add('active');
+                } else {
+                    document.getElementById('game-status-text').innerText = "DUEL DRAW!";
+                }
+            } else {
+                document.getElementById('game-status-text').innerText = "WAITING FOR PLAYERS";
+            }
+
+            // Sync Cards Containers (relative to player role)
+            const ownContainer = document.getElementById('own-cards-container');
+            const oppContainer = document.getElementById('opponent-cards-container');
+            const ownLabel = document.getElementById('own-hand-label');
+            const oppLabel = document.getElementById('opponent-hand-label');
+
+            ownContainer.innerHTML = '';
+            oppContainer.innerHTML = '';
+
+            let ownHand = [];
+            let oppHand = [];
+
+            if (myRole === '2') {
+                ownHand = game.hand2;
+                oppHand = game.hand1;
+                ownLabel.innerText = "YOUR HAND (P2)";
+                oppLabel.innerText = `${game.player1 ? game.player1.name.toUpperCase() : 'OPPONENT'} HAND (P1)`;
+            } else {
+                // P1 or Spectator defaults
+                ownHand = game.hand1;
+                oppHand = game.hand2;
+                ownLabel.innerText = `${game.player1 ? game.player1.name.toUpperCase() : 'P1'} HAND`;
+                oppLabel.innerText = `${game.player2 ? game.player2.name.toUpperCase() : 'P2'} HAND`;
+            }
+
+            ownHand.forEach(card => ownContainer.innerHTML += getCardHtml(card));
+            oppHand.forEach(card => oppContainer.innerHTML += getCardHtml(card));
+        }
+
+        // =========================================
+        // WEBRTC VOICE CONTROLLER
+        // =========================================
+        function initVoiceChat() {
+            const btnVoice = document.getElementById('btn-toggle-voice');
+            if (!btnVoice) return;
+            btnVoice.addEventListener('click', async () => {
+                if (!localStream) {
+                    try {
+                        btnVoice.className = 'btn-reset btn-voice voice-connecting';
+                        btnVoice.innerText = '🎙️ CONNECTING...';
+                        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        btnVoice.className = 'btn-reset btn-voice voice-connected';
+                        btnVoice.innerText = '🎙️ MUTE VOICE';
+                        isVoiceConnected = true;
+                        socket.emit('voice_signal', { type: 'ready', uuid: profile.uuid });
+                    } catch (err) {
+                        showToast('Microphone request denied.', 'error');
+                        btnVoice.className = 'btn-reset btn-voice';
+                        btnVoice.innerText = '🎙️ JOIN VOICE';
+                    }
+                } else {
+                    isMuted = !isMuted;
+                    localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+                    btnVoice.className = isMuted ? 'btn-reset btn-voice voice-muted' : 'btn-reset btn-voice voice-connected';
+                    btnVoice.innerText = isMuted ? '🎙️ UNMUTE' : '🎙️ MUTE VOICE';
+                }
+            });
+        }
+
+        function createPeerConnection() {
+            if (peerConnection) return;
+            peerConnection = new RTCPeerConnection(stunConfig);
+            localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+            peerConnection.ontrack = (e) => {
+                const aud = document.getElementById('remote-audio');
+                if (aud && e.streams[0]) aud.srcObject = e.streams[0];
+            };
+            peerConnection.onicecandidate = (e) => {
+                if (e.candidate) socket.emit('voice_signal', { type: 'candidate', candidate: e.candidate });
+            };
+        }
+
+        function closeVoiceChat() {
+            if (peerConnection) { peerConnection.close(); peerConnection = null; }
+            if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+            const btn = document.getElementById('btn-toggle-voice');
+            if (btn) { btn.className = 'btn-reset btn-voice'; btn.innerText = '🎙️ JOIN VOICE'; }
+            isMuted = false;
+            isVoiceConnected = false;
+        }
+
+        socket.on('update', (data) => {
+            if (!data) {
+                window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                return;
+            }
+            const game = data.game || data;
+            if (gameId !== 'lobby') updateBoard(game);
+        });
+
+        window.setCpuDifficulty = function(diff) {
+            fetch(`${basePath}/api/set-difficulty`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gameId, difficulty: diff })
+            }).then(async res => {
+                if (!res.ok) {
+                    const err = await readErrorResponse(res);
+                    showToast(err || 'Failed to set CPU difficulty.', 'error');
+                }
+            });
+        };
+
+        // Instructions Modal Functions
+        function openInstructionsModal() {
+            document.getElementById('instructions-modal').classList.add('show');
+        }
+
+        function closeInstructionsModal() {
+            document.getElementById('instructions-modal').classList.remove('show');
+        }
+
+        const btnInstructions = document.getElementById('btn-standalone-instructions');
+        if (btnInstructions) {
+            btnInstructions.addEventListener('click', openInstructionsModal);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeInstructionsModal();
+            }
+        });
+    </script>
+
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="instructions-modal-overlay" onclick="closeInstructionsModal()">
+        <div class="instructions-modal-card" onclick="event.stopPropagation()">
+            <button class="instructions-modal-close" onclick="closeInstructionsModal()">&times;</button>
+            <h3 class="instructions-modal-title">HOW TO PLAY BLACKJACK</h3>
+            <div class="instructions-modal-body">
+                <p>Welcome to <strong>Blackjack Duel</strong>! Here is how to play:</p>
+                <ul>
+                    <li><strong>Objective:</strong> Get a hand value closer to 21 than your opponent without going over (busting).</li>
+                    <li><strong>Gameplay:</strong> On your turn, choose to <strong>HIT</strong> to draw another card, or <strong>STAND</strong> to lock in your score and pass the turn.</li>
+                    <li><strong>Card Values:</strong> Aces count as 1 or 11, face cards (J, Q, K) count as 10, and numeric cards are worth their face value.</li>
+                    <li><strong>Turn Flow:</strong> Both players take turns to build their score. Once both stand or bust, the player with the higher valid score wins the round.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

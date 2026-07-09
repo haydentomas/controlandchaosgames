@@ -1,12 +1,14 @@
-// server.js (Multiplayer Memory Match Game Module)
 const express = require('express');
 const path = require('path');
+const cpuAi = require('../cpu_ai.js');
+const lovenseHelper = require('../lovense_helper.js');
 
 function init(app, io, mountPath = '') {
     app.use(`${mountPath}`, express.static(path.join(__dirname, 'public')));
 
     const games = {};
     const gameIo = io.of(mountPath || '/');
+    lovenseHelper.registerModule('memorymatch', games, gameIo);
 
     const EMOJIS = [
         '🤖', '👽', '👻', '👾', '🚀', '🛸', 
@@ -142,14 +144,27 @@ function init(app, io, mountPath = '') {
 
         let assignedRole = null;
         if (!game.player1 && role !== '2') {
-            game.player1 = { uuid, name };
+            game.player1 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = '1';
         } else if (!game.player2 && role !== '1') {
-            game.player2 = { uuid, name };
+            game.player2 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = '2';
         }
 
         if (assignedRole) {
+            const targetPlayer = assignedRole === '1' ? game.player1 : game.player2;
+            if (targetPlayer && !uuid.startsWith('cpu-') && !uuid.startsWith('browser_')) {
+                lovenseHelper.getQrCode(uuid, name).then(result => {
+                    const p = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
+                    if (p) {
+                        p.qrCode = result.qrCode;
+                        p.linkCode = result.linkCode;
+                        p.qrError = result.error;
+                        gameIo.to(gameId).emit('update', sanitizeGameState(game));
+                    }
+                });
+            }
+
             if (game.player1 && game.player2) {
                 game.status = 'playing';
             }
@@ -158,6 +173,60 @@ function init(app, io, mountPath = '') {
         }
 
         res.json({ success: true, role: 'spectator', game: sanitizeGameState(game) });
+    });
+
+    // Join CPU API
+    app.post(`${mountPath}/api/join-cpu`, (req, res) => {
+        const { gameId, uuid, name } = req.body;
+        const game = getGame(gameId);
+        game.lastActive = Date.now();
+
+        game.player1 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
+        game.player2 = { uuid: 'cpu-bot', name: 'CyberBot 🤖' };
+        game.isCpuMatch = true;
+        game.status = 'cpu_difficulty_select';
+        game.turn = 1;
+        game.board = createShuffledBoard(); // Reset board
+        game.winner = 0;
+        game.score1 = 0;
+        game.score2 = 0;
+
+        if (!uuid.startsWith('cpu-') && !uuid.startsWith('browser_')) {
+            lovenseHelper.getQrCode(uuid, name).then(result => {
+                if (game.player1 && game.player1.uuid === uuid) {
+                    game.player1.qrCode = result.qrCode;
+                    game.player1.linkCode = result.linkCode;
+                    game.player1.qrError = result.error;
+                    gameIo.to(gameId).emit('update', sanitizeGameState(game));
+                }
+            });
+        }
+
+        gameIo.to(gameId).emit('update', sanitizeGameState(game));
+        res.json({ success: true, role: '1', game: sanitizeGameState(game) });
+    });
+
+    // Set CPU Difficulty API
+    app.post(`${mountPath}/api/set-difficulty`, (req, res) => {
+        const { gameId, difficulty } = req.body;
+        const game = games[gameId];
+        if (game) {
+            game.difficulty = difficulty || 'medium';
+            game.status = 'playing';
+            gameIo.to(gameId).emit('update', sanitizeGameState(game));
+        }
+        res.json({ success: true, game: sanitizeGameState(game) });
+    });
+
+    // Test Lovense Vibration API
+    app.post(`${mountPath}/api/vibe/test`, async (req, res) => {
+        const { gameId, uuid } = req.body;
+        const game = games[gameId];
+        if (!game) return res.status(404).json({ error: "Game not found." });
+        const player = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
+        if (!player) return res.status(400).json({ error: "Player not registered." });
+        await lovenseHelper.triggerVibration(player.uuid, 'move');
+        res.json({ success: true });
     });
 
     // Reset Match
@@ -211,6 +280,11 @@ function init(app, io, mountPath = '') {
         if (game.flippedCards.length === 1) {
             // First card flipped
             gameIo.to(gameId).emit('update', sanitizeGameState(game));
+            if (playerNum === 1) {
+                if (game.player1) lovenseHelper.triggerVibration(game.player1.uuid, 'move');
+            } else {
+                if (game.player2) lovenseHelper.triggerVibration(game.player2.uuid, 'move');
+            }
             return res.json({ success: true, game: sanitizeGameState(game) });
         }
 
@@ -229,22 +303,56 @@ function init(app, io, mountPath = '') {
                 if (playerNum === 1) game.score1++;
                 else game.score2++;
 
+                const vibeQueue = [];
+
                 // Check if all 18 pairs are matched
                 const matchedCount = game.board.filter(c => c.state === 'matched').length;
                 if (matchedCount === 36) {
                     game.status = 'won';
-                    if (game.score1 > game.score2) game.winner = 1;
-                    else if (game.score2 > game.score1) game.winner = 2;
-                    else game.winner = 3; // Draw
+                    if (game.score1 > game.score2) {
+                        game.winner = 1;
+                        if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'win' });
+                        if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'lose' });
+                    } else if (game.score2 > game.score1) {
+                        game.winner = 2;
+                        if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'lose' });
+                        if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'win' });
+                    } else {
+                        game.winner = 3; // Draw
+                    }
+                } else {
+                    // Match extra turn
+                    if (playerNum === 1) {
+                        if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'move' });
+                    } else {
+                        if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'move' });
+                    }
                 }
 
                 // Player gets another turn
                 gameIo.to(gameId).emit('update', sanitizeGameState(game));
+
+                vibeQueue.forEach(item => {
+                    if (item.uuid) lovenseHelper.triggerVibration(item.uuid, item.type);
+                });
+
+                // If CPU match and turn remains CPU (2)
+                if (game.isCpuMatch && game.status === 'playing' && game.turn === 2) {
+                    cpuAi.makeMove('memorymatch', game, gameIo);
+                }
+
                 return res.json({ success: true, game: sanitizeGameState(game) });
             } else {
                 // Mismatch! Lock and delay
                 game.lockBoard = true;
                 gameIo.to(gameId).emit('update', sanitizeGameState(game));
+
+                // Trigger mismatch move feedback immediately for the active player
+                if (playerNum === 1) {
+                    if (game.player1) lovenseHelper.triggerVibration(game.player1.uuid, 'move');
+                } else {
+                    if (game.player2) lovenseHelper.triggerVibration(game.player2.uuid, 'move');
+                }
 
                 setTimeout(() => {
                     // Turn cards back down
@@ -257,6 +365,18 @@ function init(app, io, mountPath = '') {
                     game.turn = playerNum === 1 ? 2 : 1;
 
                     gameIo.to(gameId).emit('update', sanitizeGameState(game));
+
+                    // Trigger turn alert vibration for the player who now gets their turn
+                    if (game.turn === 1) {
+                        if (game.player1) lovenseHelper.triggerVibration(game.player1.uuid, 'turn_alert');
+                    } else {
+                        if (game.player2) lovenseHelper.triggerVibration(game.player2.uuid, 'turn_alert');
+                    }
+
+                    // If CPU match and it is now CPU's turn
+                    if (game.isCpuMatch && game.status === 'playing' && game.turn === 2) {
+                        cpuAi.makeMove('memorymatch', game, gameIo);
+                    }
                 }, 1500);
 
                 return res.json({ success: true, game: sanitizeGameState(game) });

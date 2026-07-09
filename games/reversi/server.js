@@ -1,12 +1,15 @@
 // server.js (Multiplayer Reversi Game Module)
 const express = require('express');
 const path = require('path');
+const cpuAi = require('../cpu_ai.js');
+const lovenseHelper = require('../lovense_helper.js');
 
 function init(app, io, mountPath = '') {
     app.use(`${mountPath}`, express.static(path.join(__dirname, 'public')));
 
     const games = {};
     const gameIo = io.of(mountPath || '/');
+    lovenseHelper.registerModule('reversi', games, gameIo);
 
     function createEmptyBoard() {
         const board = Array(8).fill(null).map(() => Array(8).fill(0));
@@ -141,14 +144,27 @@ function init(app, io, mountPath = '') {
 
         let assignedRole = null;
         if (!game.player1 && role !== 'O') {
-            game.player1 = { uuid, name };
+            game.player1 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'X';
         } else if (!game.player2 && role !== 'X') {
-            game.player2 = { uuid, name };
+            game.player2 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'O';
         }
 
         if (assignedRole) {
+            const targetPlayer = assignedRole === 'X' ? game.player1 : game.player2;
+            if (targetPlayer && !uuid.startsWith('cpu-') && !uuid.startsWith('browser_')) {
+                lovenseHelper.getQrCode(uuid, name).then(result => {
+                    const p = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
+                    if (p) {
+                        p.qrCode = result.qrCode;
+                        p.linkCode = result.linkCode;
+                        p.qrError = result.error;
+                        gameIo.to(gameId).emit('update', game);
+                    }
+                });
+            }
+
             if (game.player1 && game.player2) {
                 game.status = 'playing';
             }
@@ -159,6 +175,58 @@ function init(app, io, mountPath = '') {
         res.json({ success: true, role: 'spectator', game });
     });
 
+    // Join CPU API
+    app.post(`${mountPath}/api/join-cpu`, (req, res) => {
+        const { gameId, uuid, name } = req.body;
+        const game = getGame(gameId);
+        game.lastActive = Date.now();
+
+        game.player1 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
+        game.player2 = { uuid: 'cpu-bot', name: 'CyberBot 🤖' };
+        game.isCpuMatch = true;
+        game.status = 'cpu_difficulty_select';
+        game.turn = 1;
+        game.board = createEmptyBoard();
+        game.winner = 0;
+
+        if (!uuid.startsWith('cpu-') && !uuid.startsWith('browser_')) {
+            lovenseHelper.getQrCode(uuid, name).then(result => {
+                if (game.player1 && game.player1.uuid === uuid) {
+                    game.player1.qrCode = result.qrCode;
+                    game.player1.linkCode = result.linkCode;
+                    game.player1.qrError = result.error;
+                    gameIo.to(gameId).emit('update', game);
+                }
+            });
+        }
+
+        gameIo.to(gameId).emit('update', game);
+        res.json({ success: true, role: 'X', game });
+    });
+
+    // Set CPU Difficulty API
+    app.post(`${mountPath}/api/set-difficulty`, (req, res) => {
+        const { gameId, difficulty } = req.body;
+        const game = games[gameId];
+        if (game) {
+            game.difficulty = difficulty || 'medium';
+            game.status = 'playing';
+            gameIo.to(gameId).emit('update', game);
+        }
+        res.json({ success: true, game });
+    });
+
+    // Test Lovense Vibration API
+    app.post(`${mountPath}/api/vibe/test`, async (req, res) => {
+        const { gameId, uuid } = req.body;
+        const game = games[gameId];
+        if (!game) return res.status(404).json({ error: "Game not found." });
+        const player = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
+        if (!player) return res.status(400).json({ error: "Player not registered." });
+        await lovenseHelper.triggerVibration(player.uuid, 'move');
+        res.json({ success: true });
+    });
+
     // Reset Match
     app.post(`${mountPath}/api/reset`, (req, res) => {
         const { gameId } = req.body;
@@ -167,6 +235,9 @@ function init(app, io, mountPath = '') {
             game.board = createEmptyBoard();
             game.turn = 1;
             game.status = game.player1 && game.player2 ? 'playing' : 'waiting';
+            if (game.isCpuMatch) {
+                game.status = 'playing';
+            }
             game.winner = 0;
             gameIo.to(gameId).emit('update', game);
         }
@@ -206,13 +277,29 @@ function init(app, io, mountPath = '') {
         });
 
         // Determine next turn
+        // Determine next turn
         const nextPlayer = playerNum === 1 ? 2 : 1;
+        const vibeQueue = [];
         
         if (hasValidMoves(game.board, nextPlayer)) {
             game.turn = nextPlayer;
+            // standard turns
+            if (playerNum === 1) {
+                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'move' });
+                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'turn_alert' });
+            } else {
+                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'move' });
+                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'turn_alert' });
+            }
         } else if (hasValidMoves(game.board, playerNum)) {
             // Next player has no valid moves, current player goes again (turn skip!)
             game.turn = playerNum;
+            // standard turn for player, but turn alert for same player? Actually skip, player gets 'move' vibe, other gets nothing
+            if (playerNum === 1) {
+                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'move' });
+            } else {
+                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'move' });
+            }
         } else {
             // Neither player has valid moves -> Game Over
             let p1Count = 0;
@@ -224,12 +311,30 @@ function init(app, io, mountPath = '') {
                 }
             }
             game.status = 'won';
-            if (p1Count > p2Count) game.winner = 1;
-            else if (p2Count > p1Count) game.winner = 2;
-            else game.winner = 3; // Draw
+            if (p1Count > p2Count) {
+                game.winner = 1;
+                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'win' });
+                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'lose' });
+            } else if (p2Count > p1Count) {
+                game.winner = 2;
+                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'lose' });
+                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'win' });
+            } else {
+                game.winner = 3; // Draw
+            }
         }
 
         gameIo.to(gameId).emit('update', game);
+
+        // Trigger vibrations
+        vibeQueue.forEach(item => {
+            if (item.uuid) lovenseHelper.triggerVibration(item.uuid, item.type);
+        });
+
+        // If CPU match and turn shifts to CPU (Player 2 / turn === 2)
+        if (game.isCpuMatch && game.status === 'playing' && game.turn === 2) {
+            cpuAi.makeMove('reversi', game, gameIo);
+        }
         res.json({ success: true, game });
     });
 

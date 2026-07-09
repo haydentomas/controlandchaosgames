@@ -1,12 +1,15 @@
 // server.js (Multiplayer Naval Clash Game Module)
 const express = require('express');
 const path = require('path');
+const cpuAi = require('../cpu_ai.js');
+const lovenseHelper = require('../lovense_helper.js');
 
 function init(app, io, mountPath = '') {
     app.use(`${mountPath}`, express.static(path.join(__dirname, 'public')));
 
     const games = {};
     const gameIo = io.of(mountPath || '/');
+    lovenseHelper.registerModule('navalclash', games, gameIo);
 
     function createEmptyBoard() {
         // Return 10x10 empty matrix
@@ -185,14 +188,27 @@ function init(app, io, mountPath = '') {
 
         let assignedRole = null;
         if (!game.player1 && role !== '2') {
-            game.player1 = { uuid, name, ready: false, ships: [] };
+            game.player1 = { uuid, name, ready: false, ships: [], connected: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = '1';
         } else if (!game.player2 && role !== '1') {
-            game.player2 = { uuid, name, ready: false, ships: [] };
+            game.player2 = { uuid, name, ready: false, ships: [], connected: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = '2';
         }
 
         if (assignedRole) {
+            const targetPlayer = assignedRole === '1' ? game.player1 : game.player2;
+            if (targetPlayer && !uuid.startsWith('cpu-') && !uuid.startsWith('browser_')) {
+                lovenseHelper.getQrCode(uuid, name).then(result => {
+                    const p = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
+                    if (p) {
+                        p.qrCode = result.qrCode;
+                        p.linkCode = result.linkCode;
+                        p.qrError = result.error;
+                        gameIo.to(gameId).emit('update', game);
+                    }
+                });
+            }
+
             if (game.player1 && game.player2) {
                 game.status = 'placement';
             }
@@ -201,6 +217,102 @@ function init(app, io, mountPath = '') {
         }
 
         res.json({ success: true, role: 'spectator', game: sanitizeGameForPlayer(game, uuid) });
+    });
+
+    // Helper: Generate CPU Ships
+    function generateCpuShips() {
+        const shipSizes = {
+            'carrier': 5,
+            'battleship': 4,
+            'destroyer': 3,
+            'submarine': 3,
+            'patrol': 2
+        };
+        const ships = [];
+        const grid = Array(10).fill(null).map(() => Array(10).fill(false));
+
+        for (const [name, size] of Object.entries(shipSizes)) {
+            let placed = false;
+            while (!placed) {
+                const horizontal = Math.random() < 0.5;
+                const r = Math.floor(Math.random() * (horizontal ? 10 : (10 - size + 1)));
+                const c = Math.floor(Math.random() * (horizontal ? (10 - size + 1) : 10));
+
+                const coords = [];
+                let overlap = false;
+                for (let i = 0; i < size; i++) {
+                    const currR = r + (horizontal ? 0 : i);
+                    const currC = c + (horizontal ? i : 0);
+                    if (grid[currR][currC]) {
+                        overlap = true;
+                        break;
+                    }
+                    coords.push([currR, currC]);
+                }
+
+                if (!overlap) {
+                    coords.forEach(([currR, currC]) => {
+                        grid[currR][currC] = true;
+                    });
+                    ships.push({ name, coords });
+                    placed = true;
+                }
+            }
+        }
+        return ships;
+    }
+
+    // Join CPU API
+    app.post(`${mountPath}/api/join-cpu`, (req, res) => {
+        const { gameId, uuid, name } = req.body;
+        const game = getGame(gameId);
+        game.lastActive = Date.now();
+
+        game.player1 = { uuid, name, ready: false, ships: [], connected: false, qrCode: null, linkCode: null, qrError: null };
+        game.player2 = { uuid: 'cpu-bot', name: 'CyberBot 🤖', ready: false, ships: [] };
+        game.isCpuMatch = true;
+        game.status = 'cpu_difficulty_select';
+        game.turn = 1;
+        game.shots1 = [];
+        game.shots2 = [];
+        game.winner = 0;
+
+        if (!uuid.startsWith('cpu-') && !uuid.startsWith('browser_')) {
+            lovenseHelper.getQrCode(uuid, name).then(result => {
+                if (game.player1 && game.player1.uuid === uuid) {
+                    game.player1.qrCode = result.qrCode;
+                    game.player1.linkCode = result.linkCode;
+                    game.player1.qrError = result.error;
+                    gameIo.to(gameId).emit('update', game);
+                }
+            });
+        }
+
+        gameIo.to(gameId).emit('update', game);
+        res.json({ success: true, role: '1', game: sanitizeGameForPlayer(game, uuid) });
+    });
+
+    // Set CPU Difficulty API
+    app.post(`${mountPath}/api/set-difficulty`, (req, res) => {
+        const { gameId, difficulty } = req.body;
+        const game = games[gameId];
+        if (game) {
+            game.difficulty = difficulty || 'medium';
+            game.status = 'placement'; // Advance to placement step
+            gameIo.to(gameId).emit('update', game);
+        }
+        res.json({ success: true, game });
+    });
+
+    // Test Lovense Vibration API
+    app.post(`${mountPath}/api/vibe/test`, async (req, res) => {
+        const { gameId, uuid } = req.body;
+        const game = games[gameId];
+        if (!game) return res.status(404).json({ error: "Game not found." });
+        const player = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
+        if (!player) return res.status(400).json({ error: "Player not registered." });
+        await lovenseHelper.triggerVibration(player.uuid, 'move');
+        res.json({ success: true });
     });
 
     // Lock / Ready Fleet Placement
@@ -221,6 +333,13 @@ function init(app, io, mountPath = '') {
 
         player.ships = ships;
         player.ready = true;
+
+        if (game.isCpuMatch && game.player1.ready) {
+            game.player2.ships = generateCpuShips();
+            game.player2.ready = true;
+            game.status = 'playing';
+            game.turn = 1;
+        }
 
         if (game.player1.ready && game.player2.ready) {
             game.status = 'playing';
@@ -285,16 +404,48 @@ function init(app, io, mountPath = '') {
         // Check Win Condition
         const opponentReceivedShots = playerNum === 1 ? game.shots1 : game.shots2;
         const opponentShips = playerNum === 1 ? game.player2.ships : game.player1.ships;
+        const vibeQueue = [];
 
         if (allShipsSunk(opponentShips, opponentReceivedShots)) {
             game.status = 'won';
             game.winner = playerNum;
+            if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: game.winner === 1 ? 'win' : 'lose' });
+            if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: game.winner === 2 ? 'win' : 'lose' });
         } else {
             // Toggle turn
             game.turn = playerNum === 1 ? 2 : 1;
+            
+            // Queue hit/miss/turn alert vibes
+            if (playerNum === 1) {
+                if (isHit) {
+                    if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'move' });
+                    if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'hit' });
+                } else {
+                    if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'miss' });
+                    if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'turn_alert' });
+                }
+            } else {
+                if (isHit) {
+                    if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'move' });
+                    if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'hit' });
+                } else {
+                    if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'miss' });
+                    if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'turn_alert' });
+                }
+            }
         }
 
         gameIo.to(gameId).emit('update', game);
+
+        // Trigger player vibrations
+        vibeQueue.forEach(item => {
+            if (item.uuid) lovenseHelper.triggerVibration(item.uuid, item.type);
+        });
+
+        // If CPU match and turn shifts to CPU (Player 2 / turn === 2)
+        if (game.isCpuMatch && game.status === 'playing' && game.turn === 2) {
+            cpuAi.makeMove('navalclash', game, gameIo);
+        }
         res.json({ success: true, game: sanitizeGameForPlayer(game, uuid) });
     });
 

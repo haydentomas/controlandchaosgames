@@ -1,14 +1,16 @@
 // server.js (Simple Connect 4)
 const express = require('express');
 const path = require('path');
+const lovenseHelper = require('../lovense_helper.js');
 
 // Wrap everything in an init function to mount it dynamically
 function init(app, io, mountPath = '') {
     // Static files handled by parent server, but we can also register it here:
     app.use(`${mountPath}`, express.static(path.join(__dirname, 'public')));
 
-    // Game Store (In-Memory)
     const games = {};
+    const gameIo = io.of(mountPath || '/');
+    lovenseHelper.registerModule('fourinarow', games, gameIo);
 
     // Helper: Initialize an empty board (7 columns, 6 rows)
     function createEmptyBoard() {
@@ -139,23 +141,36 @@ function init(app, io, mountPath = '') {
 
         if (role === 'red') {
             if (game.player1) return res.status(400).json({ error: "Red slot already taken." });
-            game.player1 = { uuid, name };
+            game.player1 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'red';
         } else if (role === 'yellow') {
             if (game.player2) return res.status(400).json({ error: "Yellow slot already taken." });
-            game.player2 = { uuid, name };
+            game.player2 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'yellow';
         } else {
             // Auto assign
             if (!game.player1) {
-                game.player1 = { uuid, name };
+                game.player1 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
                 assignedRole = 'red';
             } else if (!game.player2) {
-                game.player2 = { uuid, name };
+                game.player2 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
                 assignedRole = 'yellow';
             } else {
                 return res.status(400).json({ error: "Game is full." });
             }
+        }
+
+        const targetPlayer = assignedRole === 'red' ? game.player1 : game.player2;
+        if (targetPlayer && !uuid.startsWith('cpu-') && !uuid.startsWith('browser_')) {
+            lovenseHelper.getQrCode(uuid, name).then(result => {
+                const p = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
+                if (p) {
+                    p.qrCode = result.qrCode;
+                    p.linkCode = result.linkCode;
+                    p.qrError = result.error;
+                    gameIo.to(gameId).emit('update', game);
+                }
+            });
         }
 
         if (game.player1 && game.player2) {
@@ -164,6 +179,59 @@ function init(app, io, mountPath = '') {
 
         gameIo.to(gameId).emit('update', game);
         res.json({ success: true, role: assignedRole, game });
+    });
+
+    // Join CPU API
+    app.post(`${mountPath}/api/join-cpu`, (req, res) => {
+        const { gameId, uuid, name } = req.body;
+        const game = getGame(gameId);
+        game.lastActive = Date.now();
+
+        game.player1 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
+        game.player2 = { uuid: 'cpu-bot', name: 'CyberBot 🤖' };
+        game.isCpuMatch = true;
+        game.status = 'cpu_difficulty_select';
+        game.turn = 1;
+        game.board = createEmptyBoard();
+        game.winner = 0;
+        game.winCoords = [];
+
+        if (!uuid.startsWith('cpu-') && !uuid.startsWith('browser_')) {
+            lovenseHelper.getQrCode(uuid, name).then(result => {
+                if (game.player1 && game.player1.uuid === uuid) {
+                    game.player1.qrCode = result.qrCode;
+                    game.player1.linkCode = result.linkCode;
+                    game.player1.qrError = result.error;
+                    gameIo.to(gameId).emit('update', game);
+                }
+            });
+        }
+
+        gameIo.to(gameId).emit('update', game);
+        res.json({ success: true, role: 'red', game });
+    });
+
+    // Set CPU Difficulty API
+    app.post(`${mountPath}/api/set-difficulty`, (req, res) => {
+        const { gameId, difficulty } = req.body;
+        const game = games[gameId];
+        if (game) {
+            game.difficulty = difficulty || 'medium';
+            game.status = 'playing';
+            gameIo.to(gameId).emit('update', game);
+        }
+        res.json({ success: true, game });
+    });
+
+    // Test Lovense Vibration API
+    app.post(`${mountPath}/api/vibe/test`, async (req, res) => {
+        const { gameId, uuid } = req.body;
+        const game = games[gameId];
+        if (!game) return res.status(404).json({ error: "Game not found." });
+        const player = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
+        if (!player) return res.status(400).json({ error: "Player not registered." });
+        await lovenseHelper.triggerVibration(player.uuid, 'move');
+        res.json({ success: true });
     });
 
     // Leave API
@@ -215,6 +283,9 @@ function init(app, io, mountPath = '') {
             game.board = createEmptyBoard();
             game.turn = 1;
             game.status = game.player1 && game.player2 ? 'playing' : 'waiting';
+            if (game.isCpuMatch) {
+                game.status = 'playing';
+            }
             game.winner = 0;
             game.winCoords = [];
             gameIo.to(gameId).emit('update', game);
@@ -270,24 +341,125 @@ function init(app, io, mountPath = '') {
 
         // Check for Win or Draw
         const winResult = checkWin(game.board);
+        const vibeQueue = [];
+
         if (winResult) {
             game.status = 'won';
             game.winner = winResult.winner;
             game.winCoords = winResult.coords;
+            if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: game.winner === 1 ? 'win' : 'lose' });
+            if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: game.winner === 2 ? 'win' : 'lose' });
         } else if (checkDraw(game.board)) {
             game.status = 'draw';
         } else {
             game.turn = playerNum === 1 ? 2 : 1;
+            // Queue move vibration for current player, turn alert for opponent
+            if (playerNum === 1) {
+                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'move' });
+                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'turn_alert' });
+            } else {
+                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'move' });
+                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'turn_alert' });
+            }
         }
 
         // Broadcast update
         gameIo.to(gameId).emit('update', { game, lastMove: { r, c, player: playerNum } });
 
+        // Trigger player vibrations
+        vibeQueue.forEach(item => {
+            if (item.uuid) lovenseHelper.triggerVibration(item.uuid, item.type);
+        });
+
+        // If CPU match and now it is CPU's turn (Player 2)
+        if (game.isCpuMatch && game.status === 'playing' && game.turn === 2) {
+            setTimeout(() => {
+                const cpuCol = getBestCpuMove(game.board, 2, 1, game.difficulty);
+                const rCpu = getLowestEmptyRow(game.board, cpuCol);
+                if (rCpu !== -1) {
+                    game.board[rCpu][cpuCol] = 2;
+                    const winResultCpu = checkWin(game.board);
+                    const cpuVibeQueue = [];
+                    if (winResultCpu) {
+                        game.status = 'won';
+                        game.winner = 2;
+                        game.winCoords = winResultCpu.coords;
+                        if (game.player1) cpuVibeQueue.push({ uuid: game.player1.uuid, type: 'lose' });
+                    } else if (checkDraw(game.board)) {
+                        game.status = 'draw';
+                    } else {
+                        game.turn = 1;
+                        if (game.player1) cpuVibeQueue.push({ uuid: game.player1.uuid, type: 'turn_alert' });
+                    }
+                    gameIo.to(gameId).emit('update', { game, lastMove: { r: rCpu, c: cpuCol, player: 2 } });
+                    cpuVibeQueue.forEach(item => {
+                        if (item.uuid) lovenseHelper.triggerVibration(item.uuid, item.type);
+                    });
+                }
+            }, 1000);
+        }
+
         res.json({ success: true, game });
     });
 
+    function getLowestEmptyRow(board, c) {
+        for (let row = 0; row < 6; row++) {
+            if (board[row][c] === 0) return row;
+        }
+        return -1;
+    }
+
+    function getBestCpuMove(board, cpuVal, playerVal, difficulty) {
+        // Easy: 100% random moves
+        if (difficulty === 'easy') {
+            const validCols = [];
+            for (let c = 0; c < 7; c++) {
+                if (getLowestEmptyRow(board, c) !== -1) validCols.push(c);
+            }
+            return validCols[Math.floor(Math.random() * validCols.length)] || 3;
+        }
+        
+        // Medium: 50% random chance
+        if (difficulty === 'medium') {
+            if (Math.random() < 0.5) {
+                const validCols = [];
+                for (let c = 0; c < 7; c++) {
+                    if (getLowestEmptyRow(board, c) !== -1) validCols.push(c);
+                }
+                return validCols[Math.floor(Math.random() * validCols.length)] || 3;
+            }
+        }
+
+        // Hard / Smart path
+        // 1. Can CPU win in 1 move?
+        for (let c = 0; c < 7; c++) {
+            let r = getLowestEmptyRow(board, c);
+            if (r !== -1) {
+                board[r][c] = cpuVal;
+                const win = checkWin(board);
+                board[r][c] = 0;
+                if (win) return c;
+            }
+        }
+        // 2. Can Player win in 1 move? Block them!
+        for (let c = 0; c < 7; c++) {
+            let r = getLowestEmptyRow(board, c);
+            if (r !== -1) {
+                board[r][c] = playerVal;
+                const win = checkWin(board);
+                board[r][c] = 0;
+                if (win) return c;
+            }
+        }
+        // 3. Prefer center, then outer columns
+        const preferred = [3, 2, 4, 1, 5, 0, 6];
+        for (let c of preferred) {
+            if (getLowestEmptyRow(board, c) !== -1) return c;
+        }
+        return 0;
+    }
+
     // Socket.io namespace configuration
-    const gameIo = io.of(mountPath || '/');
     gameIo.on('connection', (socket) => {
         let currentRoom = null;
         let playerUuid = null;

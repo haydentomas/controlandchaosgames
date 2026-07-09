@@ -12,6 +12,9 @@ const io = socketIo(server);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const lovenseHelper = require('./games/lovense_helper.js');
+app.post('/api/lovense/callback', lovenseHelper.handleCallback);
+
 // Serve Terminal Lobby static files at root
 app.use('/', express.static(path.join(__dirname, 'public')));
 
@@ -126,6 +129,26 @@ try {
 } catch (err) {
     console.error('Failed to load Memory Match game module:', err);
 }
+
+// Mount Card Games (Suppressed for now to save credits and focus on board games)
+/*
+const cardGames = ['blackjack', 'uno', 'poker', 'ginrummy', 'solitaire', 'speed', 'gofish', 'war'];
+cardGames.forEach(game => {
+    const gamePath = path.join(__dirname, 'games', game, 'server.js');
+    try {
+        const mod = require(gamePath);
+        if (typeof mod.init === 'function') {
+            mod.init(app, io, `/games/${game}`);
+            console.log(`Successfully mounted Card Game [${game}] at /games/${game}`);
+        } else {
+            console.error(`Card Game [${game}] module found but init function is missing.`);
+        }
+    } catch (err) {
+        // Log but don't crash if modules aren't written yet
+        console.warn(`Card Game [${game}] not fully implemented or failed to load.`);
+    }
+});
+*/
 
 // Global Terminal API / Sockets can be added here if needed
 

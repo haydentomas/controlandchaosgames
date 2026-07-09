@@ -19,10 +19,12 @@
         <!-- GAME SELECTOR SCREEN -->
         <main class="terminal-container" id="selector-screen">
             <h3 class="section-title">SELECT A 2-PLAYER GAME</h3>
+            
             <div class="games-grid">
                 
+                <!-- BOARD GAMES SET -->
                 <!-- Four in a Row Card (Playable) -->
-                <div class="game-card active-game" onclick="loadGame('fourinarow')">
+                <div class="game-card active-game board-game-card" onclick="loadGame('fourinarow')">
                     <div class="game-card-glow"></div>
                     <div class="game-card-content">
                         <div class="game-icon">🔴</div>
@@ -33,7 +35,7 @@
                 </div>
 
                 <!-- Chess Card (Playable) -->
-                <div class="game-card active-game" onclick="loadGame('chess')">
+                <div class="game-card active-game board-game-card" onclick="loadGame('chess')">
                     <div class="game-card-glow"></div>
                     <div class="game-card-content">
                         <div class="game-icon">👑</div>
@@ -44,7 +46,7 @@
                 </div>
 
                 <!-- Checkers Card (Playable) -->
-                <div class="game-card active-game" onclick="loadGame('checkers')">
+                <div class="game-card active-game board-game-card" onclick="loadGame('checkers')">
                     <div class="game-card-glow"></div>
                     <div class="game-card-content">
                         <div class="game-icon">🏁</div>
@@ -55,7 +57,7 @@
                 </div>
 
                 <!-- Tic Tac Toe Card (Playable) -->
-                <div class="game-card active-game" onclick="loadGame('tictactoe')">
+                <div class="game-card active-game board-game-card" onclick="loadGame('tictactoe')">
                     <div class="game-card-glow"></div>
                     <div class="game-card-content">
                         <div class="game-icon">❌</div>
@@ -66,7 +68,7 @@
                 </div>
 
                 <!-- Naval Clash Card (Playable) -->
-                <div class="game-card active-game" onclick="loadGame('navalclash')">
+                <div class="game-card active-game board-game-card" onclick="loadGame('navalclash')">
                     <div class="game-card-glow"></div>
                     <div class="game-card-content">
                         <div class="game-icon">⚓</div>
@@ -77,7 +79,7 @@
                 </div>
 
                 <!-- Reversi Card (Playable) -->
-                <div class="game-card active-game" onclick="loadGame('reversi')">
+                <div class="game-card active-game board-game-card" onclick="loadGame('reversi')">
                     <div class="game-card-glow"></div>
                     <div class="game-card-content">
                         <div class="game-icon">☯️</div>
@@ -88,7 +90,7 @@
                 </div>
 
                 <!-- Dots and Boxes Card (Playable) -->
-                <div class="game-card active-game" onclick="loadGame('dotsandboxes')">
+                <div class="game-card active-game board-game-card" onclick="loadGame('dotsandboxes')">
                     <div class="game-card-glow"></div>
                     <div class="game-card-content">
                         <div class="game-icon">✏️</div>
@@ -99,7 +101,7 @@
                 </div>
 
                 <!-- Memory Match Card (Playable) -->
-                <div class="game-card active-game" onclick="loadGame('memorymatch')">
+                <div class="game-card active-game board-game-card" onclick="loadGame('memorymatch')">
                     <div class="game-card-glow"></div>
                     <div class="game-card-content">
                         <div class="game-icon">🧠</div>
@@ -117,7 +119,10 @@
             <div class="game-controls">
                 <button class="btn-terminal" onclick="unloadGame()">◀ BACK TO GAMES</button>
                 <span id="active-game-name" class="active-game-banner">FOUR IN A ROW</span>
-                <button class="btn-terminal" onclick="reloadCurrentGame()">🔄 RELOAD GAME</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-terminal" onclick="showRules()">📖 GAME RULES</button>
+                    <button class="btn-terminal" onclick="reloadCurrentGame()">🔄 RELOAD GAME</button>
+                </div>
             </div>
             <div class="iframe-wrapper">
                 <iframe id="game-frame" src="" allow="microphone; clipboard-write"></iframe>
@@ -191,6 +196,24 @@
         function reloadCurrentGame() {
             const iframe = document.getElementById('game-frame');
             iframe.src = iframe.src;
+        }
+
+        function showRules() {
+            const iframe = document.getElementById('game-frame');
+            if (iframe && iframe.contentWindow) {
+                try {
+                    if (typeof iframe.contentWindow.openInstructionsModal === 'function') {
+                        iframe.contentWindow.openInstructionsModal();
+                    } else {
+                        const modal = iframe.contentDocument.getElementById('instructions-modal');
+                        if (modal) {
+                            modal.classList.add('show');
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to show rules: ", e);
+                }
+            }
         }
     </script>
 </body>

@@ -1,12 +1,15 @@
 // server.js (Multiplayer Checkers Game Module)
 const express = require('express');
 const path = require('path');
+const cpuAi = require('../cpu_ai.js');
+const lovenseHelper = require('../lovense_helper.js');
 
 function init(app, io, mountPath = '') {
     app.use(`${mountPath}`, express.static(path.join(__dirname, 'public')));
 
     const games = {};
     const gameIo = io.of(mountPath || '/');
+    lovenseHelper.registerModule('checkers', games, gameIo);
 
     // Standard Checkers Initial setup
     // 1 = Red, 2 = Red King
@@ -146,22 +149,35 @@ function init(app, io, mountPath = '') {
 
         if (role === 'red') {
             if (game.player1) return res.status(400).json({ error: "Red slot already taken." });
-            game.player1 = { uuid, name };
+            game.player1 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'red';
         } else if (role === 'black') {
             if (game.player2) return res.status(400).json({ error: "Black slot already taken." });
-            game.player2 = { uuid, name };
+            game.player2 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'black';
         } else {
             if (!game.player1) {
-                game.player1 = { uuid, name };
+                game.player1 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
                 assignedRole = 'red';
             } else if (!game.player2) {
-                game.player2 = { uuid, name };
+                game.player2 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
                 assignedRole = 'black';
             } else {
                 return res.status(400).json({ error: "Game is full." });
             }
+        }
+
+        const targetPlayer = assignedRole === 'red' ? game.player1 : game.player2;
+        if (targetPlayer && !uuid.startsWith('cpu-') && !uuid.startsWith('browser_')) {
+            lovenseHelper.getQrCode(uuid, name).then(result => {
+                const p = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
+                if (p) {
+                    p.qrCode = result.qrCode;
+                    p.linkCode = result.linkCode;
+                    p.qrError = result.error;
+                    gameIo.to(gameId).emit('update', game);
+                }
+            });
         }
 
         if (game.player1 && game.player2) {
@@ -172,6 +188,58 @@ function init(app, io, mountPath = '') {
         res.json({ success: true, role: assignedRole, game });
     });
 
+    // Join CPU API
+    app.post(`${mountPath}/api/join-cpu`, (req, res) => {
+        const { gameId, uuid, name } = req.body;
+        const game = getGame(gameId);
+        game.lastActive = Date.now();
+
+        game.player1 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
+        game.player2 = { uuid: 'cpu-bot', name: 'CyberBot 🤖' };
+        game.isCpuMatch = true;
+        game.status = 'cpu_difficulty_select';
+        game.turn = 1;
+        game.board = createInitialBoard();
+        game.winner = 0;
+
+        if (!uuid.startsWith('cpu-') && !uuid.startsWith('browser_')) {
+            lovenseHelper.getQrCode(uuid, name).then(result => {
+                if (game.player1 && game.player1.uuid === uuid) {
+                    game.player1.qrCode = result.qrCode;
+                    game.player1.linkCode = result.linkCode;
+                    game.player1.qrError = result.error;
+                    gameIo.to(gameId).emit('update', game);
+                }
+            });
+        }
+
+        gameIo.to(gameId).emit('update', game);
+        res.json({ success: true, role: 'red', game });
+    });
+
+    // Set CPU Difficulty API
+    app.post(`${mountPath}/api/set-difficulty`, (req, res) => {
+        const { gameId, difficulty } = req.body;
+        const game = games[gameId];
+        if (game) {
+            game.difficulty = difficulty || 'medium';
+            game.status = 'playing';
+            gameIo.to(gameId).emit('update', game);
+        }
+        res.json({ success: true, game });
+    });
+
+    // Test Lovense Vibration API
+    app.post(`${mountPath}/api/vibe/test`, async (req, res) => {
+        const { gameId, uuid } = req.body;
+        const game = games[gameId];
+        if (!game) return res.status(404).json({ error: "Game not found." });
+        const player = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
+        if (!player) return res.status(400).json({ error: "Player not registered." });
+        await lovenseHelper.triggerVibration(player.uuid, 'move');
+        res.json({ success: true });
+    });
+
     // Reset Game
     app.post(`${mountPath}/api/reset`, (req, res) => {
         const { gameId } = req.body;
@@ -180,6 +248,9 @@ function init(app, io, mountPath = '') {
             game.board = createInitialBoard();
             game.turn = 1;
             game.status = game.player1 && game.player2 ? 'playing' : 'waiting';
+            if (game.isCpuMatch) {
+                game.status = 'playing';
+            }
             game.winner = 0;
             gameIo.to(gameId).emit('update', game);
         }
@@ -300,18 +371,42 @@ function init(app, io, mountPath = '') {
 
         // Verify remaining pieces to check win
         const counts = countPieces(game.board);
+        const vibeQueue = [];
+
         if (counts.red === 0) {
             game.status = 'won';
             game.winner = -1; // Black wins
+            if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'lose' });
+            if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'win' });
         } else if (counts.black === 0) {
             game.status = 'won';
             game.winner = 1; // Red wins
+            if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'win' });
+            if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'lose' });
         } else {
             // Switch Turn
             game.turn = expectedTurn === 1 ? -1 : 1;
+            // standard turns
+            if (expectedTurn === 1) {
+                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'move' });
+                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'turn_alert' });
+            } else {
+                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'move' });
+                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'turn_alert' });
+            }
         }
 
         gameIo.to(gameId).emit('update', { game, lastMove: { from: [fr, fc], to: [tr, tc] } });
+
+        // Trigger player vibrations
+        vibeQueue.forEach(item => {
+            if (item.uuid) lovenseHelper.triggerVibration(item.uuid, item.type);
+        });
+
+        // If CPU match and turn shifts to CPU (Black / -1)
+        if (game.isCpuMatch && game.status === 'playing' && game.turn === -1) {
+            cpuAi.makeMove('checkers', game, gameIo);
+        }
         res.json({ success: true, game });
     });
 

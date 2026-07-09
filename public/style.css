@@ -284,3 +284,39 @@ iframe {
         height: 540px;
     }
 }
+
+/* ========================================= */
+/* SEGMENTED TABS STYLING                    */
+/* ========================================= */
+.tab-control {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.tab-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    padding: 10px 24px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(20, 20, 35, 0.45);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    color: var(--neon-blue);
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 15px rgba(0, 238, 255, 0.2);
+    background: rgba(0, 238, 255, 0.05);
+}
+
+.tab-btn:hover:not(.active) {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+}
