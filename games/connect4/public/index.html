@@ -249,34 +249,47 @@
                 </div>
             </div>
 
-            <!-- In-World Connect 4 Grid -->
-            <div class="board-frame-outer">
-                <div class="board-frame">
-                    <!-- Drop Slot Columns (Visual only) -->
-                    <div class="board-columns-guide">
-                        <div class="guide-col"></div>
-                        <div class="guide-col"></div>
-                        <div class="guide-col"></div>
-                        <div class="guide-col"></div>
-                        <div class="guide-col"></div>
-                        <div class="guide-col"></div>
-                        <div class="guide-col"></div>
-                    </div>
-                    
-                    <!-- Coin Slots Grid (Drawn dynamically) -->
-                    <div id="connect4-grid" class="board-grid"></div>
-
-                    <!-- Over the Board Join Overlay -->
-                    <div id="join-overlay" class="board-overlay">
-                        <div class="overlay-card">
-                            <h3 class="overlay-title">WAITING FOR PLAYERS</h3>
-                            <p class="overlay-subtitle">Both players must join to start the match.</p>
-                            <div class="overlay-buttons">
-                                <button id="btn-overlay-join-red" class="btn-overlay-join join-red-color">JOIN AS RED</button>
-                                <button id="btn-overlay-join-yellow" class="btn-overlay-join join-yellow-color">JOIN AS YELLOW</button>
-                            </div>
-                            <p class="overlay-desc">(Or join automatically from Second Life)</p>
+            <!-- Game Main Area wrapping Board and Chat side-by-side -->
+            <div class="game-main-area">
+                <!-- In-World Connect 4 Grid -->
+                <div class="board-frame-outer">
+                    <div class="board-frame">
+                        <!-- Drop Slot Columns (Visual only) -->
+                        <div class="board-columns-guide">
+                            <div class="guide-col"></div>
+                            <div class="guide-col"></div>
+                            <div class="guide-col"></div>
+                            <div class="guide-col"></div>
+                            <div class="guide-col"></div>
+                            <div class="guide-col"></div>
+                            <div class="guide-col"></div>
                         </div>
+                        
+                        <!-- Coin Slots Grid (Drawn dynamically) -->
+                        <div id="connect4-grid" class="board-grid"></div>
+
+                        <!-- Over the Board Join Overlay -->
+                        <div id="join-overlay" class="board-overlay">
+                            <div class="overlay-card">
+                                <h3 class="overlay-title">WAITING FOR PLAYERS</h3>
+                                <p class="overlay-subtitle">Both players must join to start the match.</p>
+                                <div class="overlay-buttons">
+                                    <button id="btn-overlay-join-red" class="btn-overlay-join join-red-color">JOIN AS RED</button>
+                                    <button id="btn-overlay-join-yellow" class="btn-overlay-join join-yellow-color">JOIN AS YELLOW</button>
+                                </div>
+                                <p class="overlay-desc">(Or join automatically from Second Life)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Sidebar -->
+                <div id="chat-sidebar" class="chat-sidebar">
+                    <div class="chat-header">MATCH CHAT</div>
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="chat-input-row">
+                        <input type="text" id="chat-input" placeholder="Type message..." maxlength="80">
+                        <button id="btn-send-chat">SEND</button>
                     </div>
                 </div>
             </div>
@@ -694,6 +707,57 @@
                     if (peerConnection) {
                         await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
                     }
+            });
+
+            // Check if inside Second Life to disable chat
+            const isSecondLife = new URLSearchParams(window.location.search).get('sl') === 'true';
+            const chatSidebar = document.getElementById('chat-sidebar');
+            if (isSecondLife && chatSidebar) {
+                chatSidebar.style.display = 'none';
+            }
+
+            // Chat UI & Socket listeners
+            const chatInput = document.getElementById('chat-input');
+            const chatMessages = document.getElementById('chat-messages');
+            const btnSendChat = document.getElementById('btn-send-chat');
+
+            function appendMessage(senderName, text, isMe) {
+                if (!chatMessages) return;
+                const msgEl = document.createElement('div');
+                msgEl.className = `chat-msg${isMe ? ' me' : ''}`;
+                msgEl.innerHTML = `<span class="msg-sender">${escapeHtml(senderName)}:</span> <span class="msg-text">${escapeHtml(text)}</span>`;
+                chatMessages.appendChild(msgEl);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            function escapeHtml(unsafe) {
+                return unsafe
+                     .replace(/&/g, "&amp;")
+                     .replace(/</g, "&lt;")
+                     .replace(/>/g, "&gt;")
+                     .replace(/"/g, "&quot;")
+                     .replace(/'/g, "&#039;");
+            }
+
+            function sendChatMessage() {
+                const text = chatInput.value.trim();
+                if (text) {
+                    socket.emit('chat_message', { sender: profile.name, text });
+                    chatInput.value = '';
+                }
+            }
+
+            if (btnSendChat && chatInput) {
+                btnSendChat.addEventListener('click', sendChatMessage);
+                chatInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') sendChatMessage();
+                });
+            }
+
+            socket.on('chat_message', (data) => {
+                if (gameId !== 'lobby') {
+                    const isMe = data.sender === profile.name;
+                    appendMessage(data.sender, data.text, isMe);
                 }
             });
         }

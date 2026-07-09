@@ -307,6 +307,12 @@ function init(app, io, mountPath = '') {
             }
         });
 
+        socket.on('chat_message', (msg) => {
+            if (currentRoom) {
+                gameIo.to(currentRoom).emit('chat_message', msg);
+            }
+        });
+
         socket.on('disconnect', () => {
             if (currentRoom && playerUuid) {
                 const game = games[currentRoom];
