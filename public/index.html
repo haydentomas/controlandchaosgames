@@ -98,6 +98,17 @@
                     </div>
                 </div>
 
+                <!-- Memory Match Card (Playable) -->
+                <div class="game-card active-game" onclick="loadGame('memorymatch')">
+                    <div class="game-card-glow"></div>
+                    <div class="game-card-content">
+                        <div class="game-icon">🧠</div>
+                        <h3 class="game-title">MEMORY MATCH</h3>
+                        <p class="game-desc">Flip cards to match emoji pairs. Score matches to retain your turn and test your speed-memory skills.</p>
+                        <span class="status-indicator playable">PLAYABLE</span>
+                    </div>
+                </div>
+
             </div>
         </main>
 
@@ -151,6 +162,10 @@
                 activeTitle.innerText = "CONTROL & CHAOS: DOTS & BOXES";
                 subtitle.innerText = "PLAYING DOTS & BOXES";
                 iframe.src = "/games/dotsandboxes/board/lobby?debug=true";
+            } else if (gameKey === 'memorymatch') {
+                activeTitle.innerText = "CONTROL & CHAOS: MEMORY MATCH";
+                subtitle.innerText = "PLAYING MEMORY MATCH";
+                iframe.src = "/games/memorymatch/board/lobby?debug=true";
             }
 
             selector.classList.add('hidden');

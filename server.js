@@ -113,6 +113,20 @@ try {
     console.error('Failed to load Dots and Boxes game module:', err);
 }
 
+// Mount Memory Match Game
+const memoryMatchPath = path.join(__dirname, 'games', 'memorymatch', 'server.js');
+try {
+    const memorymatch = require(memoryMatchPath);
+    if (typeof memorymatch.init === 'function') {
+        memorymatch.init(app, io, '/games/memorymatch');
+        console.log('Successfully mounted Memory Match game at /games/memorymatch');
+    } else {
+        console.error('Memory Match module found but init function is missing.');
+    }
+} catch (err) {
+    console.error('Failed to load Memory Match game module:', err);
+}
+
 // Global Terminal API / Sockets can be added here if needed
 
 const PORT = process.env.PORT || 4000;
@@ -123,4 +137,5 @@ server.listen(PORT, () => {
     console.log(`Naval Clash PG directly: http://localhost:${PORT}/games/navalclash/board/lobby?debug=true`);
     console.log(`Reversi PG directly: http://localhost:${PORT}/games/reversi/board/lobby?debug=true`);
     console.log(`Dots and Boxes PG directly: http://localhost:${PORT}/games/dotsandboxes/board/lobby?debug=true`);
+    console.log(`Memory Match PG directly: http://localhost:${PORT}/games/memorymatch/board/lobby?debug=true`);
 });
