@@ -76,6 +76,28 @@
                     </div>
                 </div>
 
+                <!-- Reversi Card (Playable) -->
+                <div class="game-card active-game" onclick="loadGame('reversi')">
+                    <div class="game-card-glow"></div>
+                    <div class="game-card-content">
+                        <div class="game-icon">☯️</div>
+                        <h3 class="game-title">REVERSI</h3>
+                        <p class="game-desc">Trapped opponent disks between your colors to flip them. Out-populate the board to claim victory.</p>
+                        <span class="status-indicator playable">PLAYABLE</span>
+                    </div>
+                </div>
+
+                <!-- Dots and Boxes Card (Playable) -->
+                <div class="game-card active-game" onclick="loadGame('dotsandboxes')">
+                    <div class="game-card-glow"></div>
+                    <div class="game-card-content">
+                        <div class="game-icon">✏️</div>
+                        <h3 class="game-title">DOTS & BOXES</h3>
+                        <p class="game-desc">Draw lines between dots to claim boxes. Score extra turns on closed boxes and capture the grid.</p>
+                        <span class="status-indicator playable">PLAYABLE</span>
+                    </div>
+                </div>
+
             </div>
         </main>
 
@@ -121,6 +143,14 @@
                 activeTitle.innerText = "CONTROL & CHAOS: NAVAL CLASH";
                 subtitle.innerText = "PLAYING NAVAL CLASH";
                 iframe.src = "/games/navalclash/board/lobby?debug=true";
+            } else if (gameKey === 'reversi') {
+                activeTitle.innerText = "CONTROL & CHAOS: REVERSI";
+                subtitle.innerText = "PLAYING REVERSI";
+                iframe.src = "/games/reversi/board/lobby?debug=true";
+            } else if (gameKey === 'dotsandboxes') {
+                activeTitle.innerText = "CONTROL & CHAOS: DOTS & BOXES";
+                subtitle.innerText = "PLAYING DOTS & BOXES";
+                iframe.src = "/games/dotsandboxes/board/lobby?debug=true";
             }
 
             selector.classList.add('hidden');

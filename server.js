@@ -85,6 +85,34 @@ try {
     console.error('Failed to load Naval Clash game module:', err);
 }
 
+// Mount Reversi Game
+const reversiPath = path.join(__dirname, 'games', 'reversi', 'server.js');
+try {
+    const reversi = require(reversiPath);
+    if (typeof reversi.init === 'function') {
+        reversi.init(app, io, '/games/reversi');
+        console.log('Successfully mounted Reversi game at /games/reversi');
+    } else {
+        console.error('Reversi module found but init function is missing.');
+    }
+} catch (err) {
+    console.error('Failed to load Reversi game module:', err);
+}
+
+// Mount Dots and Boxes Game
+const dotsAndBoxesPath = path.join(__dirname, 'games', 'dotsandboxes', 'server.js');
+try {
+    const dotsandboxes = require(dotsAndBoxesPath);
+    if (typeof dotsandboxes.init === 'function') {
+        dotsandboxes.init(app, io, '/games/dotsandboxes');
+        console.log('Successfully mounted Dots and Boxes game at /games/dotsandboxes');
+    } else {
+        console.error('Dots and Boxes module found but init function is missing.');
+    }
+} catch (err) {
+    console.error('Failed to load Dots and Boxes game module:', err);
+}
+
 // Global Terminal API / Sockets can be added here if needed
 
 const PORT = process.env.PORT || 4000;
@@ -93,4 +121,6 @@ server.listen(PORT, () => {
     console.log(`Lobby: http://localhost:${PORT}`);
     console.log(`Four in a Row PG directly: http://localhost:${PORT}/games/fourinarow/board/lobby?debug=true`);
     console.log(`Naval Clash PG directly: http://localhost:${PORT}/games/navalclash/board/lobby?debug=true`);
+    console.log(`Reversi PG directly: http://localhost:${PORT}/games/reversi/board/lobby?debug=true`);
+    console.log(`Dots and Boxes PG directly: http://localhost:${PORT}/games/dotsandboxes/board/lobby?debug=true`);
 });
