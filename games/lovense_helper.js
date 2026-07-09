@@ -214,8 +214,12 @@ async function verifyConnection(uid) {
             apiVer: 2
         });
         console.log("[Lovense Helper] Verification response:", resJson);
-        // Code 0 or success message means connected!
-        if (resJson.code === 0 || resJson.message === "success") {
+        // Lovense LAN responses vary by endpoint/version:
+        // some return code 0, others return code 200/result true/message "Success".
+        const message = (resJson.message || "").toString().toLowerCase();
+        const isSuccessCode = (resJson.code === 0 || resJson.code === 200);
+        const isSuccessMessage = (message === "success" || message.includes("success"));
+        if (resJson.result === true || isSuccessCode || isSuccessMessage) {
             return { success: true };
         } else {
             return { success: false, error: resJson.message || `Code ${resJson.code}` };

@@ -389,6 +389,7 @@
                     <div class="status-buttons">
                         <button id="btn-reset-board" class="btn-reset">RESET MATCH</button>
                         <button id="btn-copy-link" class="btn-reset btn-share">SHARE MATCH</button>
+                        <button id="btn-vibe-mode" class="btn-reset">VIBE: FUN</button>
                         <button id="btn-toggle-voice" class="btn-reset btn-voice" style="display: none;">🎙️ JOIN VOICE</button>
                         <button id="btn-exit-lobby" class="btn-reset btn-exit">EXIT TO LOBBY</button>
                     </div>
@@ -486,6 +487,7 @@
             </div>
             <div id="lovense-toy-status" class="status-indicator offline" style="display: inline-block; margin: 10px auto;">Disconnected: Scan QR code</div>
             <button id="btn-lovense-verify" class="btn-terminal" style="margin-top:12px; width:100%; border-color: var(--neon-purple); color: var(--neon-purple);">Verify Connection</button>
+            <button id="btn-lovense-disconnect" class="btn-terminal hidden" style="margin-top:12px; width:100%; border-color: var(--neon-red); color: var(--neon-red);">Disconnect Toy</button>
             <button id="btn-lovense-test" class="btn-terminal hidden" style="margin-top:12px; width:100%;">Test Vibe</button>
         </div>
     </div>
@@ -537,6 +539,10 @@
         }
 
         const profile = getPlayerProfile();
+
+        function isToyConnectedForUi(player) {
+            return !!(player && player.connected && player.toyEnabled !== false);
+        }
 
         // Toast feedback system
         function showToast(message, type = 'error') {
@@ -1018,6 +1024,28 @@
                     body: JSON.stringify({ gameId })
                 });
             });
+
+            const vibeBtn = document.getElementById('btn-vibe-mode');
+            if (vibeBtn) {
+                vibeBtn.addEventListener('click', () => {
+                    const currentMode = (activeGame && activeGame.vibeMode) ? activeGame.vibeMode : 'fun';
+                    const nextMode = currentMode === 'fun' ? 'normal' : 'fun';
+                    fetch(`${basePath}/api/vibe/mode`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId, mode: nextMode })
+                    }).then(async res => {
+                        if (!res.ok) {
+                            const errData = await res.json();
+                            showToast(errData.error || 'Failed to change vibe mode.', 'error');
+                        } else {
+                            showToast(`Vibe mode: ${nextMode.toUpperCase()}`, 'success');
+                        }
+                    }).catch(() => {
+                        showToast('Failed to change vibe mode.', 'error');
+                    });
+                });
+            }
         }
 
         let isRedirecting = false;
@@ -1113,6 +1141,13 @@
             // Update names
             document.getElementById('player-red-name').innerText = game.player1 ? game.player1.name : 'Waiting...';
             document.getElementById('player-yellow-name').innerText = game.player2 ? game.player2.name : 'Waiting...';
+
+            // Sync vibe mode button label
+            const vibeModeBtn = document.getElementById('btn-vibe-mode');
+            if (vibeModeBtn) {
+                const mode = game.vibeMode || 'fun';
+                vibeModeBtn.innerText = `VIBE: ${mode.toUpperCase()}`;
+            }
 
             // Reset cards highlight
             document.getElementById('player-red-card').classList.remove('active');
@@ -1326,18 +1361,22 @@
             const statusIndicator = document.getElementById('lovense-toy-status');
             const testBtn = document.getElementById('btn-lovense-test');
             const verifyBtn = document.getElementById('btn-lovense-verify');
+            const disconnectBtn = document.getElementById('btn-lovense-disconnect');
+            const toyConnected = isToyConnectedForUi(me);
 
-            if (me.connected) {
+            if (toyConnected) {
                 qrImg.classList.add('hidden');
                 qrLoading.classList.add('hidden');
                 codeText.classList.add('hidden');
-                statusIndicator.innerText = "Connected: Toy Active";
+                statusIndicator.innerText = "Connected: Toy Linked";
                 statusIndicator.className = "status-indicator online";
                 testBtn.classList.remove('hidden');
                 if (verifyBtn) verifyBtn.classList.add('hidden');
+                if (disconnectBtn) disconnectBtn.classList.remove('hidden');
             } else {
                 testBtn.classList.add('hidden');
                 if (verifyBtn) verifyBtn.classList.remove('hidden');
+                if (disconnectBtn) disconnectBtn.classList.add('hidden');
                 statusIndicator.innerText = "Disconnected: Scan QR code";
                 statusIndicator.className = "status-indicator offline";
 
@@ -1378,10 +1417,10 @@
 
             // If it is the current player, show clickable connect/active button
             if (player.uuid === profile.uuid) {
-                if (player.connected) {
+                if (isToyConnectedForUi(player)) {
                     const badge = document.createElement('button');
                     badge.className = 'lovense-active-badge';
-                    badge.innerText = '🟢 Toy Active';
+                    badge.innerText = '🟢 Toy Connected';
                     badge.onclick = (e) => { e.stopPropagation(); openLovenseModal(); };
                     container.appendChild(badge);
                 } else {
@@ -1393,7 +1432,7 @@
                 }
             } else {
                 // If it is another player, show static badge if connected
-                if (player.connected) {
+                if (isToyConnectedForUi(player)) {
                     const badge = document.createElement('span');
                     badge.className = 'lovense-passive-badge';
                     badge.innerText = '🔌 Toy Connected';
@@ -1434,6 +1473,34 @@
                     verifyBtn.disabled = false;
                     verifyBtn.innerText = "Verify Connection";
                     showToast("Failed to verify connection.", "error");
+                });
+            });
+        }
+
+        // Bind disconnect toy button click
+        const disconnectBtn = document.getElementById('btn-lovense-disconnect');
+        if (disconnectBtn) {
+            disconnectBtn.addEventListener('click', () => {
+                disconnectBtn.innerText = "Disconnecting...";
+                disconnectBtn.disabled = true;
+                fetch(`${basePath}/api/vibe/disconnect`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, uuid: profile.uuid })
+                }).then(async res => {
+                    disconnectBtn.disabled = false;
+                    disconnectBtn.innerText = "Disconnect Toy";
+                    if (res.ok) {
+                        showToast("Toy disconnected for this match.", "success");
+                        updateLovenseModalContent();
+                    } else {
+                        const err = await res.json();
+                        showToast(err.error || "Failed to disconnect toy.", "error");
+                    }
+                }).catch(() => {
+                    disconnectBtn.disabled = false;
+                    disconnectBtn.innerText = "Disconnect Toy";
+                    showToast("Failed to disconnect toy.", "error");
                 });
             });
         }

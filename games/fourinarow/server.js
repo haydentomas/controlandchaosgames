@@ -74,6 +74,60 @@ function init(app, io, mountPath = '') {
         return board[5].every(cell => cell !== 0);
     }
 
+    function getPlayerByUuid(game, uuid) {
+        if (game.player1 && game.player1.uuid === uuid) return game.player1;
+        if (game.player2 && game.player2.uuid === uuid) return game.player2;
+        return null;
+    }
+
+    function isToyActive(player) {
+        return !!(player && player.connected && player.toyEnabled !== false);
+    }
+
+    function addVibeIfActive(vibeQueue, player, type, options) {
+        if (isToyActive(player)) {
+            vibeQueue.push({ uuid: player.uuid, type, options });
+        }
+    }
+
+    // Returns max contiguous chain length (1-4) created by the latest move.
+    function getMaxChainFromMove(board, row, col, playerNum) {
+        const directions = [
+            [1, 0],
+            [0, 1],
+            [1, 1],
+            [1, -1]
+        ];
+
+        let maxChain = 1;
+
+        for (const [dr, dc] of directions) {
+            let chain = 1;
+
+            let r = row + dr;
+            let c = col + dc;
+            while (r >= 0 && r < 6 && c >= 0 && c < 7 && board[r][c] === playerNum) {
+                chain++;
+                r += dr;
+                c += dc;
+            }
+
+            r = row - dr;
+            c = col - dc;
+            while (r >= 0 && r < 6 && c >= 0 && c < 7 && board[r][c] === playerNum) {
+                chain++;
+                r -= dr;
+                c -= dc;
+            }
+
+            if (chain > maxChain) {
+                maxChain = chain;
+            }
+        }
+
+        return Math.min(4, maxChain);
+    }
+
     // Retrieve or Initialize Game
     function getGame(gameId) {
         if (!games[gameId]) {
@@ -84,6 +138,7 @@ function init(app, io, mountPath = '') {
                 board: createEmptyBoard(),
                 turn: 1, // Red starts
                 status: 'waiting', // waiting, playing, won, draw
+                vibeMode: 'fun', // fun, normal
                 winner: 0,
                 winCoords: [],
                 lastActive: Date.now()
@@ -141,19 +196,19 @@ function init(app, io, mountPath = '') {
 
         if (role === 'red') {
             if (game.player1) return res.status(400).json({ error: "Red slot already taken." });
-            game.player1 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
+            game.player1 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'red';
         } else if (role === 'yellow') {
             if (game.player2) return res.status(400).json({ error: "Yellow slot already taken." });
-            game.player2 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
+            game.player2 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'yellow';
         } else {
             // Auto assign
             if (!game.player1) {
-                game.player1 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
+                game.player1 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
                 assignedRole = 'red';
             } else if (!game.player2) {
-                game.player2 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
+                game.player2 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
                 assignedRole = 'yellow';
             } else {
                 return res.status(400).json({ error: "Game is full." });
@@ -187,7 +242,7 @@ function init(app, io, mountPath = '') {
         const game = getGame(gameId);
         game.lastActive = Date.now();
 
-        game.player1 = { uuid, name, connected: false, qrCode: null, linkCode: null, qrError: null };
+        game.player1 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
         game.player2 = { uuid: 'cpu-bot', name: 'CyberBot 🤖' };
         game.isCpuMatch = true;
         game.status = 'cpu_difficulty_select';
@@ -228,10 +283,60 @@ function init(app, io, mountPath = '') {
         const { gameId, uuid } = req.body;
         const game = games[gameId];
         if (!game) return res.status(404).json({ error: "Game not found." });
-        const player = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
+        const player = getPlayerByUuid(game, uuid);
         if (!player) return res.status(400).json({ error: "Player not registered." });
+        if (!isToyActive(player)) return res.status(400).json({ error: "Toy is not connected." });
         await lovenseHelper.triggerVibration(player.uuid, 'move');
         res.json({ success: true });
+    });
+
+    // Verify Lovense Connection API
+    app.post(`${mountPath}/api/vibe/verify`, async (req, res) => {
+        const { gameId, uuid } = req.body;
+        const game = games[gameId];
+        if (!game) return res.status(404).json({ error: "Game not found." });
+        const player = getPlayerByUuid(game, uuid);
+        if (!player) return res.status(400).json({ error: "Player not registered." });
+
+        const result = await lovenseHelper.verifyConnection(player.uuid);
+        if (result.success) {
+            player.connected = true;
+            player.toyEnabled = true;
+            gameIo.to(gameId).emit('update', game);
+            return res.json({ success: true });
+        }
+
+        res.status(400).json({ error: result.error || "Verification failed." });
+    });
+
+    // Manual local disconnect from this game (stops all game-triggered vibrations)
+    app.post(`${mountPath}/api/vibe/disconnect`, (req, res) => {
+        const { gameId, uuid } = req.body;
+        const game = games[gameId];
+        if (!game) return res.status(404).json({ error: "Game not found." });
+        const player = getPlayerByUuid(game, uuid);
+        if (!player) return res.status(400).json({ error: "Player not registered." });
+
+        player.connected = false;
+        player.toyEnabled = false;
+        gameIo.to(gameId).emit('update', game);
+        res.json({ success: true });
+    });
+
+    // Set room vibration mode (fun / normal)
+    app.post(`${mountPath}/api/vibe/mode`, (req, res) => {
+        const { gameId, mode } = req.body;
+        const game = games[gameId];
+        if (!game) return res.status(404).json({ error: "Game not found." });
+
+        const nextMode = (mode || '').toLowerCase();
+        if (nextMode !== 'fun' && nextMode !== 'normal') {
+            return res.status(400).json({ error: "Invalid vibe mode." });
+        }
+
+        game.vibeMode = nextMode;
+        gameIo.to(gameId).emit('update', game);
+        res.json({ success: true, mode: nextMode, game });
     });
 
     // Leave API
@@ -347,28 +452,79 @@ function init(app, io, mountPath = '') {
             game.status = 'won';
             game.winner = winResult.winner;
             game.winCoords = winResult.coords;
-            if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: game.winner === 1 ? 'win' : 'lose' });
-            if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: game.winner === 2 ? 'win' : 'lose' });
+            addVibeIfActive(vibeQueue, game.player1, game.winner === 1 ? 'win' : 'lose');
+            addVibeIfActive(vibeQueue, game.player2, game.winner === 2 ? 'win' : 'lose');
         } else if (checkDraw(game.board)) {
             game.status = 'draw';
         } else {
             game.turn = playerNum === 1 ? 2 : 1;
-            
-            // Calculate dynamic move vibration strength:
-            // - Bottom row (r = 0) is a low buzz (strength 3-4).
-            // - Top row (r = 5) goes up to strength 15-16.
-            // - Random offset adds organic difference.
+            const vibeMode = (game.vibeMode || 'fun');
+
+            // Dynamic vibration profile tuned for a more playful feel:
+            // - Main pulse scales hard with chain pressure.
+            // - Combo plays add a quick echo pulse.
+            // - Threatening plays send a stronger alert to the opponent.
+            const chain = getMaxChainFromMove(game.board, r, c, playerNum);
             const randomOffset = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
-            const calculatedStrength = Math.min(20, Math.max(1, 4 + (r * 2) + randomOffset));
-            const alertStrength = Math.min(20, Math.max(1, 5 + randomOffset));
+            const moveStrength = vibeMode === 'fun'
+                ? Math.min(20, Math.max(3, 4 + (chain * 4) + Math.floor(r / 2) + randomOffset))
+                : Math.min(20, Math.max(2, 3 + (chain * 4) + Math.floor(r / 2) + randomOffset));
+            const alertStrength = vibeMode === 'fun'
+                ? Math.min(20, Math.max(3, 5 + ((chain - 1) * 4) + randomOffset))
+                : Math.min(20, Math.max(2, 4 + ((chain - 1) * 3) + randomOffset));
+            const moveDuration = (vibeMode === 'fun' && chain >= 3) ? 2 : 1;
 
             // Queue move vibration for current player, turn alert for opponent
             if (playerNum === 1) {
-                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'move', options: { strength: calculatedStrength, duration: 1 } });
-                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'turn_alert', options: { strength: alertStrength, duration: 1 } });
+                addVibeIfActive(vibeQueue, game.player1, 'move', { strength: moveStrength, duration: moveDuration });
+                addVibeIfActive(vibeQueue, game.player2, 'turn_alert', { strength: alertStrength, duration: 1 });
+
+                // Combo echo pulse for satisfying streak buildup
+                if (vibeMode === 'fun' && chain >= 2) {
+                    addVibeIfActive(vibeQueue, game.player1, 'move', {
+                        strength: Math.max(2, moveStrength - 2),
+                        duration: 1,
+                        delayMs: 220
+                    });
+                }
+
+                // Strong pressure pulse to opponent when a dangerous line appears
+                if (vibeMode === 'fun' && chain >= 3) {
+                    addVibeIfActive(vibeQueue, game.player2, 'turn_alert', {
+                        strength: Math.min(20, alertStrength + 4),
+                        duration: 1,
+                        delayMs: 140
+                    });
+                }
             } else {
-                if (game.player2) vibeQueue.push({ uuid: game.player2.uuid, type: 'move', options: { strength: calculatedStrength, duration: 1 } });
-                if (game.player1) vibeQueue.push({ uuid: game.player1.uuid, type: 'turn_alert', options: { strength: alertStrength, duration: 1 } });
+                addVibeIfActive(vibeQueue, game.player2, 'move', { strength: moveStrength, duration: moveDuration });
+                addVibeIfActive(vibeQueue, game.player1, 'turn_alert', { strength: alertStrength, duration: 1 });
+
+                if (vibeMode === 'fun' && chain >= 2) {
+                    addVibeIfActive(vibeQueue, game.player2, 'move', {
+                        strength: Math.max(2, moveStrength - 2),
+                        duration: 1,
+                        delayMs: 220
+                    });
+                }
+
+                if (vibeMode === 'fun' && chain >= 3) {
+                    addVibeIfActive(vibeQueue, game.player1, 'turn_alert', {
+                        strength: Math.min(20, alertStrength + 4),
+                        duration: 1,
+                        delayMs: 140
+                    });
+                }
+            }
+
+            // High-stack drop adds a tiny rumble tail to make tense late-game moves feel heavier.
+            if (vibeMode === 'fun' && r >= 4) {
+                const actor = playerNum === 1 ? game.player1 : game.player2;
+                addVibeIfActive(vibeQueue, actor, 'move', {
+                    strength: Math.min(20, moveStrength + 1),
+                    duration: 1,
+                    delayMs: 420
+                });
             }
         }
 
@@ -377,7 +533,17 @@ function init(app, io, mountPath = '') {
 
         // Trigger player vibrations
         vibeQueue.forEach(item => {
-            if (item.uuid) lovenseHelper.triggerVibration(item.uuid, item.type, item.options);
+            if (!item.uuid) return;
+            const options = item.options ? { ...item.options } : {};
+            const delayMs = options.delayMs || 0;
+            delete options.delayMs;
+
+            const trigger = () => lovenseHelper.triggerVibration(item.uuid, item.type, options);
+            if (delayMs > 0) {
+                setTimeout(trigger, delayMs);
+            } else {
+                trigger();
+            }
         });
 
         // If CPU match and now it is CPU's turn (Player 2)
@@ -401,11 +567,21 @@ function init(app, io, mountPath = '') {
                         // Calculate alerts for CPU turn completed
                         const randomOffsetCpu = Math.floor(Math.random() * 3) - 1;
                         const alertStrengthCpu = Math.min(20, Math.max(1, 5 + randomOffsetCpu));
-                        if (game.player1) cpuVibeQueue.push({ uuid: game.player1.uuid, type: 'turn_alert', options: { strength: alertStrengthCpu, duration: 1 } });
+                        addVibeIfActive(cpuVibeQueue, game.player1, 'turn_alert', { strength: alertStrengthCpu, duration: 1 });
                     }
                     gameIo.to(gameId).emit('update', { game, lastMove: { r: rCpu, c: cpuCol, player: 2 } });
                     cpuVibeQueue.forEach(item => {
-                        if (item.uuid) lovenseHelper.triggerVibration(item.uuid, item.type, item.options);
+                        if (!item.uuid) return;
+                        const options = item.options ? { ...item.options } : {};
+                        const delayMs = options.delayMs || 0;
+                        delete options.delayMs;
+
+                        const trigger = () => lovenseHelper.triggerVibration(item.uuid, item.type, options);
+                        if (delayMs > 0) {
+                            setTimeout(trigger, delayMs);
+                        } else {
+                            trigger();
+                        }
                     });
                 }
             }, 1000);
