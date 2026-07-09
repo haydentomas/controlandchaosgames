@@ -214,9 +214,12 @@
     <!-- SPECTATOR BOARD VIEW (Displayed on Prim)  -->
     <!-- ========================================= -->
     <div id="spectator-view" class="view hidden">
-        <header>
-            <h1 class="logo">CONTROL & CHAOS</h1>
-            <h2 class="sub-logo">CONNECT 4 ARCADE</h2>
+        <header class="game-controls-wrapper">
+            <div class="game-controls">
+                <button class="btn-terminal" id="btn-standalone-back">◀ GO TO LOBBY</button>
+                <span class="active-game-banner">CONTROL & CHAOS CONNECT 4</span>
+                <button class="btn-terminal" id="btn-standalone-reload">🔄 RELOAD GAME</button>
+            </div>
         </header>
 
         <main class="spectator-container">
@@ -761,6 +764,20 @@
                     appendMessage(data.sender, data.text, isMe);
                 }
             });
+
+            // Bind standalone header navigation
+            const btnBack = document.getElementById('btn-standalone-back');
+            const btnReload = document.getElementById('btn-standalone-reload');
+            if (btnBack) {
+                btnBack.addEventListener('click', () => {
+                    window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                });
+            }
+            if (btnReload) {
+                btnReload.addEventListener('click', () => {
+                    window.location.reload();
+                });
+            }
         }
 
         // Setup spectators/prim interface elements

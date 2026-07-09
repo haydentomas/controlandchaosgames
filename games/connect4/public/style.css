@@ -97,7 +97,7 @@ body {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    max-width: 800px;
+    max-width: 1080px;
     margin-bottom: 8px;
     gap: 20px;
 }
@@ -214,9 +214,8 @@ body {
     padding: 12px;
     border: 1px solid var(--border-color);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-    max-width: 780px;
-    width: 100%;
-    margin: 0 auto;
+    width: 780px;
+    flex-shrink: 0;
 }
 
 .board-frame {
@@ -1056,7 +1055,7 @@ body {
     align-items: stretch;
     gap: 20px;
     width: 100%;
-    max-width: 1100px;
+    max-width: 1080px;
     margin: 0 auto;
 }
 
@@ -1163,4 +1162,51 @@ body {
 .chat-input-row button:hover {
     background: var(--neon-blue);
     color: var(--text-dark);
+}
+
+/* Standalone Header Styling (Match Terminal) */
+.game-controls-wrapper {
+    width: 100%;
+    max-width: 1080px;
+    margin-bottom: 15px;
+}
+
+.game-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+    width: 100%;
+}
+
+.active-game-banner {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--neon-purple);
+    text-shadow: 0 0 10px rgba(192, 0, 255, 0.3);
+    text-transform: uppercase;
+}
+
+.btn-terminal {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: all 0.2s ease;
+}
+
+.btn-terminal:hover {
+    background: rgba(0, 238, 255, 0.1);
+    border-color: var(--neon-blue);
+    color: var(--neon-blue);
+    box-shadow: 0 0 15px rgba(0, 238, 255, 0.2);
 }
