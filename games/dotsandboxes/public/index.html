@@ -250,6 +250,34 @@
             color: var(--text-primary);
         }
 
+        @media (max-width: 768px) {
+            .instructions-modal-overlay {
+                align-items: flex-start;
+                overflow-y: auto;
+                padding: 16px 10px;
+            }
+
+            .instructions-modal-card {
+                width: 100%;
+                max-width: none;
+                max-height: calc(100dvh - 32px);
+                padding: 20px 18px;
+                margin: 0 auto;
+                overflow: hidden;
+            }
+
+            .instructions-modal-title {
+                font-size: 1rem;
+                padding-right: 36px;
+            }
+
+            .instructions-modal-body {
+                max-height: calc(100dvh - 150px);
+                overflow-y: auto;
+                padding-right: 6px;
+            }
+        }
+
         /* Lovense Badges and Statuses */
         .lovense-badge-container {
             margin-top: 5px;
@@ -448,9 +476,9 @@
                                 <h3 class="overlay-title">SELECT CPU DIFFICULTY</h3>
                                 <p class="overlay-subtitle">Choose how smart CyberBot 🤖 will play.</p>
                                 <div class="overlay-buttons">
-                                    <button class="btn-overlay-join join-1-color" onclick="setCpuDifficulty('easy')">EASY (Random)</button>
-                                    <button class="btn-overlay-join join-2-color" onclick="setCpuDifficulty('medium')">MEDIUM (Half Smart)</button>
-                                    <button class="btn-overlay-join join-1-color" style="border-color: var(--neon-purple) !important; color: var(--neon-purple) !important;" onclick="setCpuDifficulty('hard')">HARD (Smart Heuristics)</button>
+                                    <button class="btn-overlay-join join-1-color" onclick="setCpuDifficulty('easy')">Easy</button>
+                                    <button class="btn-overlay-join join-2-color" onclick="setCpuDifficulty('medium')">Medium</button>
+                                    <button class="btn-overlay-join join-1-color" style="border-color: var(--neon-purple) !important; color: var(--neon-purple) !important;" onclick="setCpuDifficulty('hard')">Hard</button>
                                 </div>
                             </div>
                         </div>
@@ -873,9 +901,22 @@
         // Draw dots, lines, and boxes dynamically in absolute pixels
         function renderBoardStructure() {
             const container = document.getElementById('dots-board');
+            const boardFrame = document.querySelector('.board-frame');
             container.innerHTML = '';
-            
-            const spacing = 120; // 120px separation
+
+            const frameSize = boardFrame ? Math.min(boardFrame.clientWidth || 580, boardFrame.clientHeight || 580, 580) : 580;
+            const scale = frameSize / 580;
+            const boardSize = 480 * scale;
+            const spacing = 120 * scale;
+            const inset = 10 * scale;
+            const cellSize = 100 * scale;
+            const lineThickness = Math.max(6, 8 * scale);
+            const dotSize = Math.max(10, 14 * scale);
+            const boardMargin = (frameSize - boardSize) / 2;
+
+            container.style.width = `${boardSize}px`;
+            container.style.height = `${boardSize}px`;
+            container.style.margin = `${boardMargin}px auto`;
 
             // 1. Draw 16 Boxes
             for (let r = 0; r < 4; r++) {
@@ -883,10 +924,11 @@
                     const box = document.createElement('div');
                     box.className = 'box';
                     box.id = `box-${r}-${c}`;
-                    box.style.top = `${r * spacing + 10}px`;
-                    box.style.left = `${c * spacing + 10}px`;
-                    box.style.width = `100px`;
-                    box.style.height = `100px`;
+                    box.style.top = `${r * spacing + inset}px`;
+                    box.style.left = `${c * spacing + inset}px`;
+                    box.style.width = `${cellSize}px`;
+                    box.style.height = `${cellSize}px`;
+                    box.style.fontSize = `${Math.max(22, 35 * scale)}px`;
                     container.appendChild(box);
                 }
             }
@@ -898,9 +940,9 @@
                     line.className = 'line horizontal';
                     line.id = `line-H-${r}-${c}`;
                     line.style.top = `${r * spacing}px`;
-                    line.style.left = `${c * spacing + 10}px`;
-                    line.style.width = `100px`;
-                    line.style.height = `8px`;
+                    line.style.left = `${c * spacing + inset}px`;
+                    line.style.width = `${cellSize}px`;
+                    line.style.height = `${lineThickness}px`;
                     line.addEventListener('click', () => handleLineClick('H', r, c));
                     container.appendChild(line);
                 }
@@ -912,10 +954,10 @@
                     const line = document.createElement('div');
                     line.className = 'line vertical';
                     line.id = `line-V-${r}-${c}`;
-                    line.style.top = `${r * spacing + 10}px`;
+                    line.style.top = `${r * spacing + inset}px`;
                     line.style.left = `${c * spacing}px`;
-                    line.style.width = `8px`;
-                    line.style.height = `100px`;
+                    line.style.width = `${lineThickness}px`;
+                    line.style.height = `${cellSize}px`;
                     line.addEventListener('click', () => handleLineClick('V', r, c));
                     container.appendChild(line);
                 }
@@ -928,10 +970,19 @@
                     dot.className = 'dot';
                     dot.style.top = `${r * spacing}px`;
                     dot.style.left = `${c * spacing}px`;
+                    dot.style.width = `${dotSize}px`;
+                    dot.style.height = `${dotSize}px`;
                     container.appendChild(dot);
                 }
             }
         }
+
+        window.addEventListener('resize', () => {
+            if (gameId !== 'lobby') {
+                renderBoardStructure();
+                if (activeGame) updateBoard(activeGame);
+            }
+        });
 
         function handleLineClick(type, r, c) {
             const myRole = (activeGame && activeGame.player1 && activeGame.player1.uuid === profile.uuid) ? '1' : 

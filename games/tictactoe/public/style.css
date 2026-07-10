@@ -939,3 +939,236 @@ body {
     color: var(--neon-blue);
     box-shadow: 0 0 15px rgba(0, 238, 255, 0.2);
 }
+
+/* Mobile lobby overflow guard */
+@media (max-width: 768px) {
+    html, body {
+        height: auto;
+        overflow-y: auto !important;
+    }
+
+    .view {
+        height: auto;
+        min-height: 100vh;
+        justify-content: flex-start;
+        overflow: visible;
+    }
+
+    .lobby-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .spectator-container {
+        display: block;
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .lobby-top-row {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .lobby-card-body {
+        height: auto !important;
+        min-height: 0;
+    }
+
+    .profile-input-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .profile-input-group label {
+        width: auto;
+    }
+
+    .profile-input-group input {
+        width: 100%;
+    }
+
+    .profile-card,
+    .actions-card,
+    .rooms-card {
+        height: auto;
+        min-height: 0;
+    }
+
+    .profile-card,
+    .actions-card {
+        overflow: visible;
+    }
+
+    .lobby-buttons-row {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .lobby-buttons-row .btn-lobby {
+        width: 100%;
+    }
+
+    .rooms-header-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .lobby-search-group,
+    .lobby-search-group input {
+        width: 100%;
+    }
+
+    .lobby-filter-tabs {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-tab {
+        width: 100%;
+        text-align: center;
+    }
+
+    .rooms-table-header {
+        display: none;
+    }
+
+    .room-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 12px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .room-code-col,
+    .room-players-col,
+    .room-action-col {
+        width: 100%;
+    }
+
+    .room-code-col::before,
+    .room-players-col::before,
+    .room-action-col::before {
+        display: block;
+        margin-bottom: 6px;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: var(--text-secondary);
+    }
+
+    .room-code-col::before {
+        content: 'ROOM CODE';
+    }
+
+    .room-players-col::before {
+        content: 'PLAYERS';
+    }
+
+    .room-action-col::before {
+        content: 'ACTION';
+    }
+
+    .room-players-col {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .room-action-col {
+        justify-content: stretch;
+    }
+
+    .btn-room-action {
+        width: 100%;
+        padding: 10px 12px;
+    }
+
+    .lobby-pagination {
+        gap: 10px;
+    }
+
+    .btn-pagination-control {
+        flex: 1 1 0;
+    }
+
+    .rooms-list-wrapper {
+        max-height: none;
+    }
+
+    .game-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .game-controls > div {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .active-game-banner {
+        order: -1;
+        width: 100%;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .players-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .player-card {
+        width: 100%;
+    }
+
+    .status-center {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .status-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .game-main-area {
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .board-frame-outer {
+        width: 100%;
+        max-width: 520px;
+    }
+
+    .board-frame {
+        width: min(92vw, 520px);
+        height: min(92vw, 520px);
+    }
+
+    .chat-sidebar {
+        width: 100%;
+        max-width: 520px;
+    }
+}

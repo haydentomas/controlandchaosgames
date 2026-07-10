@@ -241,7 +241,7 @@ body {
 .board-frame {
     position: relative;
     width: var(--board-size);
-    height: auto;
+    height: var(--board-size);
     aspect-ratio: 1 / 1;
     border: 2px solid var(--neon-blue);
     border-radius: 8px;
@@ -1164,13 +1164,173 @@ body {
 
 @media (max-width: 768px) {
     html, body {
+        height: auto;
         overflow-y: auto !important;
     }
 
     .view {
+        height: auto;
         padding: 8px 10px 12px;
         justify-content: flex-start;
         min-height: 100vh;
+        overflow: visible;
+    }
+
+    .lobby-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .spectator-container {
+        display: block;
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .lobby-top-row {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .lobby-card-body {
+        height: auto !important;
+        min-height: 0;
+    }
+
+    .profile-input-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .profile-input-group label {
+        width: auto;
+    }
+
+    .profile-input-group input {
+        width: 100%;
+    }
+
+    .profile-card,
+    .actions-card,
+    .rooms-card {
+        height: auto;
+        min-height: 0;
+    }
+
+    .profile-card,
+    .actions-card {
+        overflow: visible;
+    }
+
+    .lobby-buttons-row {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .lobby-buttons-row .btn-lobby {
+        width: 100%;
+    }
+
+    .rooms-header-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .lobby-search-group,
+    .lobby-search-group input {
+        width: 100%;
+    }
+
+    .lobby-filter-tabs {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-tab {
+        width: 100%;
+        text-align: center;
+    }
+
+    .rooms-table-header {
+        display: none;
+    }
+
+    .room-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 12px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .room-code-col,
+    .room-players-col,
+    .room-action-col {
+        width: 100%;
+    }
+
+    .room-code-col::before,
+    .room-players-col::before,
+    .room-action-col::before {
+        display: block;
+        margin-bottom: 6px;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: var(--text-secondary);
+    }
+
+    .room-code-col::before {
+        content: 'ROOM CODE';
+    }
+
+    .room-players-col::before {
+        content: 'PLAYERS';
+    }
+
+    .room-action-col::before {
+        content: 'ACTION';
+    }
+
+    .room-players-col {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .room-action-col {
+        justify-content: stretch;
+    }
+
+    .btn-room-action {
+        width: 100%;
+        padding: 10px 12px;
+    }
+
+    .lobby-pagination {
+        gap: 10px;
+    }
+
+    .btn-pagination-control {
+        flex: 1 1 0;
+    }
+
+    .rooms-list-wrapper {
+        max-height: none;
     }
 
     .game-controls {
@@ -1226,7 +1386,7 @@ body {
 
     .board-frame {
         width: min(92vw, 520px);
-        height: auto;
+        height: min(92vw, 520px);
         aspect-ratio: 1 / 1;
     }
 
@@ -1235,3 +1395,4 @@ body {
         max-width: 520px;
     }
 }
+

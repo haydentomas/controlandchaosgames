@@ -258,6 +258,34 @@
             gap: 8px;
         }
 
+        @media (max-width: 768px) {
+            .instructions-modal-overlay {
+                align-items: flex-start;
+                overflow-y: auto;
+                padding: 16px 10px;
+            }
+
+            .instructions-modal-card {
+                width: 100%;
+                max-width: none;
+                max-height: calc(100dvh - 32px);
+                padding: 20px 18px;
+                margin: 0 auto;
+                overflow: hidden;
+            }
+
+            .instructions-modal-title {
+                font-size: 1rem;
+                padding-right: 36px;
+            }
+
+            .instructions-modal-body {
+                max-height: calc(100dvh - 150px);
+                overflow-y: auto;
+                padding-right: 6px;
+            }
+        }
+
         .instructions-modal-body li strong {
             color: var(--text-primary);
         }
@@ -463,9 +491,9 @@
                                 <h3 class="overlay-title">SELECT CPU DIFFICULTY</h3>
                                 <p class="overlay-subtitle">Choose how smart CyberBot 🤖 will play.</p>
                                 <div class="overlay-buttons">
-                                    <button class="btn-overlay-join join-white-color" onclick="setCpuDifficulty('easy')">EASY (Random)</button>
-                                    <button class="btn-overlay-join join-black-color" onclick="setCpuDifficulty('medium')">MEDIUM (Half Smart)</button>
-                                    <button class="btn-overlay-join join-white-color" style="border-color: var(--neon-purple) !important; color: var(--neon-purple) !important;" onclick="setCpuDifficulty('hard')">HARD (Smart Heuristics)</button>
+                                    <button class="btn-overlay-join join-white-color" onclick="setCpuDifficulty('easy')">Easy</button>
+                                    <button class="btn-overlay-join join-black-color" onclick="setCpuDifficulty('medium')">Medium</button>
+                                    <button class="btn-overlay-join join-white-color" style="border-color: var(--neon-purple) !important; color: var(--neon-purple) !important;" onclick="setCpuDifficulty('hard')">Hard</button>
                                 </div>
                             </div>
                         </div>

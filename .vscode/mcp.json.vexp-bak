@@ -1,0 +1,14 @@
+{
+  "servers": {
+    "vexp": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "C:\\Users\\htomas\\AppData\\Roaming\\npm\\node_modules\\vexp-cli\\mcp\\mcp-server.cjs"
+      ],
+      "env": {
+        "VEXP_WORKSPACE": "E:\\CandCFiles\\LovenseSimGame\\gameterminal"
+      }
+    }
+  }
+}

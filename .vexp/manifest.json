@@ -1,0 +1,35 @@
+{
+  "file_hashes": {
+    "XCLOUD_DEPLOYMENT.md": "8b8634cacd05ec278f943050e55223bda46a28f3119f2a1809e5d14d2b8ecd04",
+    "game_ideas.md": "e600f6f5a9703839369bba1faceea345d2e8a761a3ab3ac4e829ef5234ca5e6a",
+    "games/blackjack/server.js": "f803bdac0f565644a6e3d865141c24227204500aec6b68d1e6b4e5679d9a686c",
+    "games/checkers/server.js": "b9ffe0d917ce7483d648690732c3cbc732ee35ef2faf6adf0d3e6ffa8750e4ec",
+    "games/chess/server.js": "11265ff5fa2c1a7c12929700f593872dece3e7f3623f1126eb9b0a1bc0a6f683",
+    "games/cpu_ai.js": "595499e156bf695e43bcd8bfb4bd79df06c26927f8b565d73d675e783edab3e1",
+    "games/dotsandboxes/server.js": "8d86cec7c14416c2668877abc4df3f0fb95617dca4884461d43ab1ab2d496565",
+    "games/fourinarow/README.md": "54a9e96355f736827d4c89f3ddba6b78c17fe32e05457efdb3124482500f3bd3",
+    "games/fourinarow/server.js": "8943dc12cb8b5a0b9336b7fb6a94f02e87c4a86b70a2ef319f251406c46f8c25",
+    "games/ginrummy/server.js": "156d993fb39ddd00c94db7d92c4bce76a9444a76dc035c2008d635d95dd2add0",
+    "games/gofish/server.js": "733b7faf67a07669bdec94c869a5e8c96baa10ad3187481e04ac14996c10274c",
+    "games/lovense_helper.js": "48a606d277974ffd978bd3d6df2ece75ef80718a55ccdc00f4587c2398eb45d5",
+    "games/memorymatch/server.js": "bd6e579fb4e0d382838095727c5670dad26ea8e85cf233814bc958a988806e30",
+    "games/navalclash/server.js": "b5db5ca10c8ededbf680cfc2ab30d38edcdc76a8c46a5566b5801735a4a7bd35",
+    "games/poker/server.js": "1c5d4ffcceb0e3b19b92df94fc3895cdad2bb3bcaf03bacdc9c7945ab6784b2e",
+    "games/reversi/server.js": "5844079eb0fceefb89ba3924408cd0abc042f97e6d443b11142722490e6a1b03",
+    "games/solitaire/server.js": "810b667b537257edd46ea0907df7f4260ca3d2dca57ddf570e104f4acb8f72a2",
+    "games/speed/server.js": "50d8cf615e1f4d00bac38869f6dae8a704aa7102a676d1d921f5d59907e69827",
+    "games/tictactoe/server.js": "64a99b9e03245bc6435abe53b3b07534d7ac894e3c765fc4c0012bc9f98ca2e9",
+    "games/uno/server.js": "25c900bf5f1332b8ee1cc13f83858e3190a0129b62e1462f2db5e2287e2a2403",
+    "games/war/server.js": "3c98556c06873740e28fa2b6060adbd8ab69c3e0cc11bbe14f9e15602b2c18c8",
+    "server.js": "df2697598b3d14798c84fd3c494fa5c7490469035c37c82a42dfa1546d849834"
+  },
+  "indexed_at_commit": "f3bddec020486aa7e1aa9c4b05b28a4fe4cb9338",
+  "indexed_at_timestamp": "2026-07-10T10:33:47.739734100+00:00",
+  "schema_version": 3,
+  "stats": {
+    "total_edges": 97,
+    "total_files": 22,
+    "total_nodes": 71
+  },
+  "vexp_version": "2.1.4"
+}

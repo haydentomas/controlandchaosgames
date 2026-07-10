@@ -1072,3 +1072,35 @@ body {
     color: var(--neon-blue);
     box-shadow: 0 0 15px rgba(0, 238, 255, 0.2);
 }
+
+/* Mobile lobby overflow guard */
+@media (max-width: 768px) {
+    .view {
+        height: auto;
+        overflow: visible;
+    }
+
+    .lobby-container,
+    .spectator-container {
+        height: auto;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .lobby-card-body {
+        height: auto;
+    }
+
+    .lobby-buttons-row {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .lobby-buttons-row .btn-lobby {
+        width: 100%;
+    }
+
+    .rooms-list-wrapper {
+        max-height: none;
+    }
+}
