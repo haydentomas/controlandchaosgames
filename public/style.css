@@ -43,7 +43,29 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 60px 20px 20px 20px;
+    padding: 20px 20px 20px 20px;
+}
+
+@media (min-width: 1366px) {
+   .view {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 20px 20px 20px;
+}
+
+}
+
+@media (min-width: 1440px) {
+   .view {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 20px 20px 20px;
+}
+
 }
 
 .hidden {
@@ -334,6 +356,97 @@ iframe {
     }
     .iframe-wrapper {
         height: 540px;
+    }
+}
+
+@media (min-width: 1800px) {
+    .view {
+        padding: 24px 30px 30px;
+    }
+
+    header {
+        margin-bottom: 44px;
+    }
+
+    .logo {
+        font-size: 2.5rem;
+        letter-spacing: 7px;
+    }
+
+    .sub-logo {
+        font-size: 1.1rem;
+        letter-spacing: 5px;
+    }
+
+    .lovense-promo {
+        font-size: 0.85rem;
+        padding: 6px 16px;
+        margin-top: 14px;
+    }
+
+    .terminal-container {
+        max-width: 1280px;
+        padding: 22px 28px 28px;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        margin-bottom: 28px;
+    }
+
+    .games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 24px;
+    }
+
+    .game-card {
+        height: 290px;
+        padding: 28px;
+    }
+
+    .game-icon {
+        font-size: 2.3rem;
+        margin-bottom: 18px;
+    }
+
+    .game-title {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    .game-desc {
+        font-size: 0.88rem;
+        line-height: 1.5;
+    }
+
+    .status-indicator {
+        font-size: 0.75rem;
+        padding: 5px 12px;
+    }
+
+    #game-screen.terminal-container {
+        max-width: 1600px;
+        width: 94%;
+        height: calc(100vh - 60px);
+    }
+
+    .game-controls {
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+    }
+
+    .active-game-banner {
+        font-size: 1.2rem;
+        letter-spacing: 2.5px;
+    }
+
+    .btn-terminal {
+        padding: 11px 22px;
+        font-size: 0.85rem;
+    }
+
+    .iframe-wrapper {
+        height: 800px;
     }
 }
 

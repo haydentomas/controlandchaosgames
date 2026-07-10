@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control & Chaos Arcade Terminal</title>
+    <title>Control & Chaos</title>
     <!-- Premium Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
     <script>
@@ -19,7 +19,6 @@
     <div id="terminal-view" class="view">
         <header>
             <h1 class="logo">CONTROL & CHAOS</h1>
-            <h2 class="sub-logo" id="terminal-subtitle">ARCADE TERMINAL</h2>
             <div class="lovense-promo">
                 <span class="pulse-dot"></span> Lovense Enabled Gaming <span class="pulse-dot"></span>
             </div>
@@ -145,40 +144,31 @@
             const gameScreen = document.getElementById('game-screen');
             const iframe = document.getElementById('game-frame');
             const activeTitle = document.getElementById('active-game-name');
-            const subtitle = document.getElementById('terminal-subtitle');
             const mainHeader = document.querySelector('#terminal-view > header');
 
             if (gameKey === 'fourinarow') {
                 activeTitle.innerText = "CONTROL & CHAOS FOUR IN A ROW";
-                subtitle.innerText = "PLAYING FOUR IN A ROW";
                 iframe.src = "/games/fourinarow/board/lobby?debug=true";
             } else if (gameKey === 'chess') {
                 activeTitle.innerText = "CONTROL & CHAOS CHESS";
-                subtitle.innerText = "PLAYING CHESS";
                 iframe.src = "/games/chess/board/lobby?debug=true";
             } else if (gameKey === 'tictactoe') {
                 activeTitle.innerText = "CONTROL & CHAOS TIC TAC TOE";
-                subtitle.innerText = "PLAYING TIC TAC TOE";
                 iframe.src = "/games/tictactoe/board/lobby?debug=true";
             } else if (gameKey === 'checkers') {
                 activeTitle.innerText = "CONTROL & CHAOS CHECKERS";
-                subtitle.innerText = "PLAYING CHECKERS";
                 iframe.src = "/games/checkers/board/lobby?debug=true";
             } else if (gameKey === 'navalclash') {
                 activeTitle.innerText = "CONTROL & CHAOS: NAVAL CLASH";
-                subtitle.innerText = "PLAYING NAVAL CLASH";
                 iframe.src = "/games/navalclash/board/lobby?debug=true";
             } else if (gameKey === 'reversi') {
                 activeTitle.innerText = "CONTROL & CHAOS: REVERSI";
-                subtitle.innerText = "PLAYING REVERSI";
                 iframe.src = "/games/reversi/board/lobby?debug=true";
             } else if (gameKey === 'dotsandboxes') {
                 activeTitle.innerText = "CONTROL & CHAOS: DOTS & BOXES";
-                subtitle.innerText = "PLAYING DOTS & BOXES";
                 iframe.src = "/games/dotsandboxes/board/lobby?debug=true";
             } else if (gameKey === 'memorymatch') {
                 activeTitle.innerText = "CONTROL & CHAOS: MEMORY MATCH";
-                subtitle.innerText = "PLAYING MEMORY MATCH";
                 iframe.src = "/games/memorymatch/board/lobby?debug=true";
             }
 
@@ -191,11 +181,9 @@
             const selector = document.getElementById('selector-screen');
             const gameScreen = document.getElementById('game-screen');
             const iframe = document.getElementById('game-frame');
-            const subtitle = document.getElementById('terminal-subtitle');
             const mainHeader = document.querySelector('#terminal-view > header');
 
             iframe.src = "";
-            subtitle.innerText = "ARCADE TERMINAL";
             
             gameScreen.classList.add('hidden');
             selector.classList.remove('hidden');
