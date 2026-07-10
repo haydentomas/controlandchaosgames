@@ -534,3 +534,105 @@ iframe {
     border-color: rgba(255, 255, 255, 0.2);
     color: var(--text-primary);
 }
+
+/* ========================================= */
+/* LOBBY SPONSOR/AFFILIATE BANNER            */
+/* ========================================= */
+.lobby-sponsor-banner {
+    margin-top: 30px;
+    background: rgba(10, 10, 20, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px dashed rgba(0, 238, 255, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.sponsor-glow {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(192, 0, 255, 0.15) 0%, transparent 70%);
+    transform: translate(-30%, -50%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.sponsor-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+}
+
+.sponsor-badge {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: var(--neon-purple);
+    border: 1px solid var(--neon-purple);
+    padding: 3px 8px;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(192, 0, 255, 0.2);
+}
+
+.sponsor-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+}
+
+.sponsor-desc {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    max-width: 800px;
+    margin-bottom: 8px;
+}
+
+.btn-sponsor-link {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--neon-blue);
+    background: rgba(0, 238, 255, 0.05);
+    border: 1px solid var(--neon-blue);
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-sponsor-link:hover {
+    background: var(--neon-blue);
+    color: #09090e;
+    box-shadow: 0 0 15px rgba(0, 238, 255, 0.4);
+}
+
+@media (max-width: 768px) {
+    .lobby-sponsor-banner {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+    }
+    .sponsor-content {
+        align-items: center;
+    }
+    .sponsor-desc {
+        max-width: 100%;
+    }
+}

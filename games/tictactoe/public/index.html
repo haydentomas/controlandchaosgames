@@ -366,6 +366,32 @@
             background: rgba(192, 0, 255, 0.1);
             text-shadow: 0 0 5px rgba(192, 0, 255, 0.5);
         }
+        .chat-sponsor-bar {
+            background: rgba(0, 238, 255, 0.04) !important;
+            border-top: 1px solid rgba(0, 238, 255, 0.15) !important;
+            border-bottom: 1px solid rgba(0, 238, 255, 0.15) !important;
+            padding: 6px 10px !important;
+            text-align: center !important;
+            font-size: 0.72rem !important;
+            font-family: 'Orbitron', sans-serif !important;
+            font-weight: 500 !important;
+            flex-shrink: 0 !important;
+        }
+        .chat-sponsor-bar a {
+            color: #a0a0c0 !important;
+            text-decoration: none !important;
+            transition: color 0.2s !important;
+            display: block !important;
+            letter-spacing: 0.5px !important;
+        }
+        .chat-sponsor-bar a span {
+            color: #00eeff !important;
+            font-weight: 700 !important;
+            text-shadow: 0 0 5px rgba(0, 238, 255, 0.3) !important;
+        }
+        .chat-sponsor-bar a:hover {
+            color: #ffffff !important;
+        }
     </style>
     <!-- Socket.io Client -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -542,6 +568,11 @@
                 <div id="chat-sidebar" class="chat-sidebar">
                     <div class="chat-header">MATCH CHAT</div>
                     <div id="chat-messages" class="chat-messages"></div>
+                    <div class="chat-sponsor-bar">
+                        <a href="https://www.lovense.com/" target="_blank">
+                            ⚡ Powered by <span>Lovense</span> - Get Toys
+                        </a>
+                    </div>
                     <div class="chat-input-row">
                         <input type="text" id="chat-input" placeholder="Type message..." maxlength="80">
                         <button id="btn-send-chat">SEND</button>

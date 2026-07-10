@@ -3,10 +3,48 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+
+const COOKIE_SECRET = process.env.COOKIE_SECRET || 'lovense_terminal_secret_key_18';
+app.use(cookieParser(COOKIE_SECRET));
+
+// Socket.io Age Gate Handshake Middleware
+io.use((socket, next) => {
+    try {
+        const cookieHeader = socket.handshake.headers.cookie;
+        if (!cookieHeader) {
+            return next(new Error('Age verification required'));
+        }
+        
+        // Parse cookies
+        const cookies = cookieHeader.split(';').reduce((acc, pair) => {
+            const [key, val] = pair.split('=').map(c => c.trim());
+            if (key && val) {
+                acc[key] = decodeURIComponent(val);
+            }
+            return acc;
+        }, {});
+        
+        const signedCookie = cookies['adult_verified'];
+        if (!signedCookie) {
+            return next(new Error('Age verification required'));
+        }
+        
+        // Unsign the cookie value
+        const unsignedVal = cookieParser.signedCookie(signedCookie, COOKIE_SECRET);
+        if (unsignedVal === 'true') {
+            return next();
+        }
+        
+        return next(new Error('Age verification required'));
+    } catch (err) {
+        return next(new Error('Authentication error'));
+    }
+});
 
 // Parse JSON and form data
 app.use(express.json());
@@ -14,6 +52,39 @@ app.use(express.urlencoded({ extended: true }));
 
 const lovenseHelper = require('./games/lovense_helper.js');
 app.post('/api/lovense/callback', lovenseHelper.handleCallback);
+
+// Age Gate Express Routes
+app.get('/verify-age', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'verify-age.html'));
+});
+
+app.post('/api/verify-age', (req, res) => {
+    res.cookie('adult_verified', 'true', {
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        httpOnly: true,
+        signed: true,
+        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production'
+    });
+    res.json({ success: true });
+});
+
+// Age Gate Express Middleware
+const ageGateMiddleware = (req, res, next) => {
+    const requestPath = req.path;
+    if (requestPath === '/verify-age' || requestPath === '/api/verify-age' || requestPath === '/api/lovense/callback') {
+        return next();
+    }
+    
+    const isVerified = req.signedCookies.adult_verified === 'true';
+    if (isVerified) {
+        return next();
+    }
+    
+    res.redirect('/verify-age');
+};
+
+app.use(ageGateMiddleware);
 
 // Serve Terminal Lobby static files at root
 app.use('/', express.static(path.join(__dirname, 'public')));
