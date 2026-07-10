@@ -490,8 +490,6 @@
                                 <option value="10">10x10 (Win 5)</option>
                             </select>
                         </div>
-                        
-                        <button id="btn-exit-lobby" class="btn-reset btn-exit">EXIT TO LOBBY</button>
                     </div>
                 </div>
 
@@ -873,7 +871,7 @@
             socket.emit('join_game', gameId, profile.uuid);
 
             // Bind Exit
-            document.getElementById('btn-exit-lobby').addEventListener('click', () => {
+            document.getElementById('btn-exit-lobby')?.addEventListener('click', () => {
                 fetch(`${basePath}/api/leave`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1571,3 +1569,4 @@
     </div>
 </body>
 </html>
+

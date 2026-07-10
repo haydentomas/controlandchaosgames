@@ -465,7 +465,6 @@
                         <button id="btn-reset-board" class="btn-reset" style="display: none;">RESET MATCH</button>
                         <button id="btn-copy-link" class="btn-reset btn-share">SHARE MATCH</button>
                         <button id="btn-toggle-voice" class="btn-reset btn-voice" style="display: none;">🎙️ JOIN VOICE</button>
-                        <button id="btn-exit-lobby" class="btn-reset btn-exit">EXIT TO LOBBY</button>
                     </div>
                 </div>
 
@@ -835,7 +834,7 @@
             socket.emit('join_game', gameId, profile.uuid);
 
             // Bind Exit
-            document.getElementById('btn-exit-lobby').addEventListener('click', () => {
+            document.getElementById('btn-exit-lobby')?.addEventListener('click', () => {
                 fetch(`${basePath}/api/leave`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1204,6 +1203,20 @@
             // Sync players cards
             document.getElementById('player1-name').innerText = game.player1 ? game.player1.name : 'Waiting...';
             document.getElementById('player2-name').innerText = game.player2 ? game.player2.name : 'Waiting...';
+
+            const boardFrameOuter = document.querySelector('.board-frame-outer');
+            if (boardFrameOuter) {
+                boardFrameOuter.classList.remove('cpu-select-active', 'join-select-active', 'placement-active', 'combat-active');
+                if (game.status === 'cpu_difficulty_select') {
+                    boardFrameOuter.classList.add('cpu-select-active');
+                } else if (game.status === 'waiting') {
+                    boardFrameOuter.classList.add('join-select-active');
+                } else if (game.status === 'placement') {
+                    boardFrameOuter.classList.add('placement-active');
+                } else if (game.status === 'playing' || game.status === 'won') {
+                    boardFrameOuter.classList.add('combat-active');
+                }
+            }
 
             myRole = (game.player1 && game.player1.uuid === profile.uuid) ? '1' : 
                      (game.player2 && game.player2.uuid === profile.uuid) ? '2' : 'spectator';
@@ -1654,3 +1667,4 @@
     </div>
 </body>
 </html>
+

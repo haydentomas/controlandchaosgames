@@ -929,6 +929,7 @@ body {
 
 .chat-input-row {
     display: flex;
+    flex-direction: column;
     padding: 10px;
     background: rgba(0, 0, 0, 0.3);
     border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -936,7 +937,7 @@ body {
 }
 
 .chat-input-row input {
-    flex-grow: 1;
+    width: 100%;
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid var(--border-color);
     border-radius: 6px;
@@ -951,6 +952,7 @@ body {
 }
 
 .chat-input-row button {
+    width: 100%;
     font-family: 'Orbitron', sans-serif;
     font-size: 0.75rem;
     font-weight: 700;
@@ -1015,20 +1017,132 @@ body {
     box-shadow: 0 0 15px rgba(0, 238, 255, 0.2);
 }
 
-/* Adjustments for Naval Clash Placements and Layout Heights */
-.double-grids {
-    display: flex;
-    flex-direction: row !important; /* side-by-side grids */
-    justify-content: space-around;
-    align-items: center;
-    gap: 15px;
-    width: 100%;
-    height: 100%;
-}
+/* Fluid desktop layout (769px+): aspect-ratio board and flex-aligned chat */
+@media (min-width: 769px) {
+    #spectator-view {
+        height: 100dvh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        overflow: hidden !important;
+        padding: clamp(8px, 1.5vh, 20px) clamp(12px, 2vw, 30px);
+    }
 
-.board-frame-outer {
-    height: 580px; /* fit square bounds alongside chat */
-    justify-content: center;
+    .spectator-container {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        gap: clamp(10px, 1.5vh, 20px);
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    .players-bar,
+    .game-controls-wrapper {
+        width: 100%;
+        max-width: none;
+        flex-shrink: 0;
+    }
+
+    .players-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: clamp(10px, 1.2vw, 16px);
+        margin-bottom: 0;
+    }
+
+    .game-controls-wrapper {
+        margin-bottom: 0;
+    }
+
+    .game-main-area {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        justify-content: center;
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        max-height: min(780px, 100%);
+        gap: clamp(15px, 2vw, 30px);
+        margin-bottom: 0;
+    }
+
+    .board-frame-outer {
+        height: 100%;
+        aspect-ratio: 1 / 1; /* Naval Clash grids fit in a square frame side-by-side */
+        width: auto;
+        max-height: 100%;
+        padding: clamp(8px, 1vw, 12px);
+        flex-shrink: 0;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .board-frame {
+        width: 100%;
+        height: 100%;
+        container-type: inline-size;
+    }
+
+    .double-grids {
+        display: flex;
+        flex-direction: row !important;
+        justify-content: space-around;
+        align-items: center;
+        gap: 15px;
+        width: 100%;
+        height: 100%;
+        padding: clamp(10px, 2.5cqi, 20px);
+    }
+
+    .ocean-grid {
+        width: 42cqi;
+        height: auto;
+        aspect-ratio: 1 / 1;
+    }
+
+    .chat-sidebar {
+        flex: 0 1 clamp(250px, 25vw, 360px);
+        width: auto;
+        min-height: 0;
+        max-height: 100%;
+        align-self: stretch;
+    }
+
+    .chat-messages {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+    .chat-input-row {
+        flex-direction: column;
+        gap: clamp(4px, 0.6vh, 8px);
+        padding: clamp(6px, 1vh, 10px);
+    }
+
+    .chat-input-row input,
+    .chat-input-row button {
+        width: 100%;
+    }
+
+    .status-center {
+        min-width: clamp(230px, 20vw, 320px);
+    }
+
+    .status-buttons {
+        max-width: clamp(230px, 20vw, 320px);
+    }
 }
 
 @media (max-width: 768px) {
@@ -1235,18 +1349,41 @@ body {
 
     .player-card {
         width: 100%;
+        gap: 12px;
+        padding: 8px 10px;
+    }
+
+    .player-info {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .player-name {
+        font-size: 0.95rem;
+        line-height: 1.2;
+        overflow-wrap: anywhere;
     }
 
     .status-center {
         min-width: 0;
         width: 100%;
+        padding: 0 2px;
+        box-sizing: border-box;
     }
 
     .status-buttons {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .status-buttons .btn-reset {
+        width: 100%;
+        flex: none;
+        min-width: 0;
+        white-space: normal;
     }
 
     .game-main-area {
@@ -1259,12 +1396,24 @@ body {
         width: 100%;
         max-width: 520px;
         height: auto;
+        box-sizing: border-box;
+        margin: 0 auto;
     }
 
     .board-frame {
         width: 100%;
         height: auto;
+        min-height: 0;
+    }
+
+    .board-frame-outer.placement-active .board-frame,
+    .board-frame-outer.combat-active .board-frame {
         min-height: 540px;
+    }
+
+    .board-frame-outer.cpu-select-active .board-frame,
+    .board-frame-outer.join-select-active .board-frame {
+        min-height: 320px;
     }
 
     .double-grids {
@@ -1290,5 +1439,84 @@ body {
     .chat-sidebar {
         width: 100%;
         max-width: 520px;
+    }
+}
+
+@media (max-width: 390px) {
+    #spectator-view {
+        padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+    }
+
+    .game-controls-wrapper {
+        margin-bottom: 10px;
+    }
+
+    .spectator-container {
+        width: 100%;
+    }
+
+    .btn-terminal {
+        font-size: 0.7rem;
+        letter-spacing: 0.4px;
+        padding: 8px 10px;
+    }
+
+    .active-game-banner {
+        font-size: 0.78rem;
+        letter-spacing: 1px;
+    }
+
+    .status-buttons {
+        gap: 8px;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    .status-buttons .btn-reset {
+        width: 100%;
+        flex: none;
+    }
+
+    .btn-reset {
+        font-size: 0.64rem;
+        padding: 6px 8px;
+    }
+
+    #cpu-overlay {
+        align-items: flex-start !important;
+        padding: 8px;
+        box-sizing: border-box;
+        overflow-y: auto;
+    }
+
+    #cpu-overlay .overlay-card {
+        width: 100%;
+        max-width: 100%;
+        max-height: none;
+        padding: 14px 12px;
+        overflow: visible;
+        box-sizing: border-box;
+        margin: 0 auto;
+    }
+
+    #cpu-overlay .overlay-title {
+        font-size: 1rem;
+        margin-bottom: 6px;
+    }
+
+    #cpu-overlay .overlay-subtitle {
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+        line-height: 1.25;
+    }
+
+    #cpu-overlay .overlay-buttons {
+        gap: 8px;
+        margin-bottom: 0;
+    }
+
+    #cpu-overlay .btn-overlay-join {
+        font-size: 0.78rem;
+        padding: 9px 12px;
     }
 }

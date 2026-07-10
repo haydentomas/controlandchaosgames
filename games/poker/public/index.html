@@ -359,7 +359,6 @@
                         <button id="btn-reset-board" class="btn-reset">RESET MATCH</button>
                         <button id="btn-copy-link" class="btn-reset btn-share">SHARE MATCH</button>
                         <button id="btn-toggle-voice" class="btn-reset btn-voice" style="display: none;">🎙️ JOIN VOICE</button>
-                        <button id="btn-exit-lobby" class="btn-reset btn-exit">EXIT TO LOBBY</button>
                     </div>
                 </div>
 
@@ -694,7 +693,7 @@
             socket.emit('join_game', gameId, profile.uuid);
 
             // Bind Exit
-            document.getElementById('btn-exit-lobby').addEventListener('click', () => {
+            document.getElementById('btn-exit-lobby')?.addEventListener('click', () => {
                 fetch(`${basePath}/api/leave`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1179,3 +1178,4 @@
     </div>
 </body>
 </html>
+
