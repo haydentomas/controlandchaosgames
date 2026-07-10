@@ -1203,7 +1203,14 @@
 
             // Sync CPU Difficulty selection overlay
             const cpuOverlay = document.getElementById('cpu-overlay');
-            if (game.status === 'cpu_difficulty_select') {
+            const boardFrameOuter = document.querySelector('.board-frame-outer');
+            const isCpuDifficultySelect = game.status === 'cpu_difficulty_select';
+            const isJoinWaiting = game.status === 'waiting';
+            if (boardFrameOuter) {
+                boardFrameOuter.classList.toggle('cpu-select-active', isCpuDifficultySelect);
+                boardFrameOuter.classList.toggle('join-select-active', isJoinWaiting);
+            }
+            if (isCpuDifficultySelect) {
                 overlay.classList.add('fade-out'); // hide join overlay
                 cpuOverlay.classList.remove('hidden');
                 cpuOverlay.classList.remove('fade-out');

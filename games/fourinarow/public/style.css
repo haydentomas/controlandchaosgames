@@ -1219,6 +1219,14 @@ body {
         overflow-y: auto !important;
     }
 
+    #spectator-view {
+        justify-content: flex-start;
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+        padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    }
+
     .view,
     #lobby-view.view {
         height: auto;
@@ -1410,6 +1418,19 @@ body {
 
     .player-card {
         width: 100%;
+        gap: 12px;
+        padding: 8px 10px;
+    }
+
+    .player-info {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .player-name {
+        font-size: 0.95rem;
+        line-height: 1.2;
+        overflow-wrap: anywhere;
     }
 
     .status-center {
@@ -1422,6 +1443,13 @@ body {
         flex-wrap: wrap;
         justify-content: center;
         gap: 8px;
+        max-width: 100%;
+    }
+
+    .status-buttons .btn-reset {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 0;
+        white-space: normal;
     }
 
     .game-main-area {
@@ -1433,25 +1461,111 @@ body {
     .board-frame-outer {
         width: 100%;
         max-width: 520px;
+        box-sizing: border-box;
+        margin: 0 auto;
     }
 
     .board-frame {
-        width: min(92vw, 520px);
+        width: 100%;
         height: auto;
+        min-height: 0;
+    }
+
+    .board-frame-outer.cpu-select-active .board-frame {
         min-height: 300px;
     }
 
+    .board-frame-outer.join-select-active .board-frame {
+        min-height: 320px;
+    }
+
     .board-grid {
-        padding: 6px;
+        padding: calc(6px * 6 / 7) 6px;
     }
 
     .coin-circle {
         width: 78%;
-        height: 78%;
+        height: auto;
+        aspect-ratio: 1 / 1;
     }
 
     .chat-sidebar {
         width: 100%;
         max-width: 520px;
+    }
+}
+
+@media (max-width: 390px) {
+    #spectator-view {
+        padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+    }
+
+    .game-controls-wrapper {
+        margin-bottom: 10px;
+    }
+
+    .spectator-container {
+        width: 100%;
+    }
+
+    .btn-terminal {
+        font-size: 0.7rem;
+        letter-spacing: 0.4px;
+        padding: 8px 10px;
+    }
+
+    .active-game-banner {
+        font-size: 0.78rem;
+        letter-spacing: 1px;
+    }
+
+    .btn-reset {
+        font-size: 0.64rem;
+        padding: 6px 8px;
+    }
+
+    #cpu-overlay {
+        align-items: flex-start !important;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+
+    #cpu-overlay .overlay-card {
+        width: 100%;
+        max-width: 100%;
+        max-height: none;
+        padding: 14px 12px;
+        overflow: visible;
+        box-sizing: border-box;
+        margin: 0 auto;
+    }
+
+    #cpu-overlay .overlay-title {
+        font-size: 1rem;
+        margin-bottom: 6px;
+    }
+
+    #cpu-overlay .overlay-subtitle {
+        font-size: 0.75rem;
+        margin-bottom: 10px;
+        line-height: 1.25;
+    }
+
+    #cpu-overlay .overlay-buttons {
+        gap: 8px;
+        margin-bottom: 0;
+    }
+
+    #cpu-overlay .btn-overlay-join {
+        font-size: 0.78rem;
+        padding: 9px 12px;
+    }
+
+    .board-frame-outer.cpu-select-active .board-frame {
+        min-height: 300px;
+    }
+
+    .board-frame-outer.join-select-active .board-frame {
+        min-height: 330px;
     }
 }
