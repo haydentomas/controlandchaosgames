@@ -711,11 +711,19 @@ header {
     height: calc(100vh - 40px);
     display: flex;
     flex-direction: column;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
 }
 
 #game-screen .iframe-wrapper {
     flex-grow: 1;
     height: 100%;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
 iframe {
