@@ -381,10 +381,10 @@ function init(app, io, mountPath = '') {
 
         let assignedRole = null;
         if (!game.player1 && role !== 'O') {
-            game.player1 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
+            game.player1 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'X';
         } else if (!game.player2 && role !== 'X') {
-            game.player2 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
+            game.player2 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'O';
         }
 
@@ -418,7 +418,7 @@ function init(app, io, mountPath = '') {
         const game = getGame(gameId);
         game.lastActive = Date.now();
 
-        game.player1 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
+        game.player1 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
         game.player2 = { uuid: 'cpu-bot', name: 'CyberBot 🤖' };
         game.isCpuMatch = true;
         game.status = 'cpu_difficulty_select';

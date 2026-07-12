@@ -337,18 +337,18 @@ function init(app, io, mountPath = '') {
 
         if (role === 'X') {
             if (game.player1) return res.status(400).json({ error: "X slot already taken." });
-            game.player1 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
+            game.player1 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'X';
         } else if (role === 'O') {
             if (game.player2) return res.status(400).json({ error: "O slot already taken." });
-            game.player2 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
+            game.player2 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'O';
         } else {
             if (!game.player1) {
-                game.player1 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
+                game.player1 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
                 assignedRole = 'X';
             } else if (!game.player2) {
-                game.player2 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
+                game.player2 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
                 assignedRole = 'O';
             } else {
                 return res.status(400).json({ error: "Game is full." });
@@ -382,7 +382,7 @@ function init(app, io, mountPath = '') {
         const game = getGame(gameId, 3); // Defaults to 3x3 for CPU quick setup
         game.lastActive = Date.now();
 
-        game.player1 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
+        game.player1 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
         game.player2 = { uuid: 'cpu-bot', name: 'CyberBot 🤖' };
         game.isCpuMatch = true;
         game.status = 'cpu_difficulty_select';

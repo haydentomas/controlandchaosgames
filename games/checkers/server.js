@@ -269,17 +269,17 @@ function init(app, io, mountPath = '') {
         let assignedRole = null;
         if (role === 'red') {
             if (game.player1) return res.status(400).json({ error: 'Red slot already taken.' });
-            game.player1 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
+            game.player1 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'red';
         } else if (role === 'black') {
             if (game.player2) return res.status(400).json({ error: 'Black slot already taken.' });
-            game.player2 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
+            game.player2 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'black';
         } else if (!game.player1) {
-            game.player1 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
+            game.player1 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'red';
         } else if (!game.player2) {
-            game.player2 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
+            game.player2 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
             assignedRole = 'black';
         } else {
             return res.status(400).json({ error: 'Game is full.' });
@@ -308,7 +308,7 @@ function init(app, io, mountPath = '') {
         const game = getGame(gameId);
         game.lastActive = Date.now();
 
-        game.player1 = { uuid, name, connected: false, toyEnabled: true, qrCode: null, linkCode: null, qrError: null };
+        game.player1 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
         game.player2 = { uuid: 'cpu-bot', name: 'CyberBot 🤖' };
         game.isCpuMatch = true;
         game.status = 'cpu_difficulty_select';
