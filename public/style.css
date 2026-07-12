@@ -49,19 +49,19 @@ body {
 
 /* Side Sponsor Banners */
 .lobby-sponsor-side {
-    position: absolute;
-    top: 180px;
-    width: 300px;
+    position: fixed;
+    top: 220px;
+    width: 240px;
     display: flex;
     flex-direction: column;
     gap: 6px;
-    z-index: 4;
+    z-index: 100;
 }
 #sponsor-left {
-    right: calc(50% + 520px);
+    left: 20px;
 }
 #sponsor-right {
-    left: calc(50% + 520px);
+    right: 20px;
 }
 .sponsor-side-badge {
     font-size: 0.65rem;
@@ -92,8 +92,8 @@ body {
     border-radius: 8px;
     width: 100%;
     height: auto;
-    max-width: 300px;
-    max-height: 250px;
+    max-width: 240px;
+    max-height: 200px;
 }
 .sponsor-side-content:hover {
     transform: translateY(-2px);
@@ -102,7 +102,7 @@ body {
         0 12px 36px rgba(0, 0, 0, 0.5),
         0 0 16px rgba(0, 229, 255, 0.15);
 }
-@media (max-width: 1679px) {
+@media (max-width: 1539px) {
     .lobby-sponsor-side {
         display: none !important;
     }
