@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multiplayer Chess Arcade</title>
     <!-- Premium Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap"
+        rel="stylesheet">
     <script>
         // Resolve base path dynamically
         const linkPathParts = window.location.pathname.split('/');
         const linkBoardIndex = linkPathParts.indexOf('board');
         const cssBasePath = linkBoardIndex !== -1 ? linkPathParts.slice(0, linkBoardIndex).join('/') : '';
-        
+
         // Insert style tag with cache buster
         const linkEl = document.createElement('link');
         linkEl.rel = 'stylesheet';
@@ -29,7 +32,8 @@
             background: rgba(9, 9, 14, 0.93) !important;
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            z-index: 100000 !important; /* Force on top of all chess square layers */
+            z-index: 100000 !important;
+            /* Force on top of all chess square layers */
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
@@ -115,6 +119,33 @@
             box-shadow: 0 0 15px rgba(192, 0, 255, 0.5);
         }
 
+        .btn-overlay-share-pop {
+            border-color: var(--neon-blue) !important;
+            color: var(--neon-blue) !important;
+            background: rgba(0, 238, 255, 0.1) !important;
+            box-shadow: 0 0 18px rgba(0, 238, 255, 0.4), inset 0 0 10px rgba(0, 238, 255, 0.15);
+            animation: share-pop-pulse 1.4s ease-in-out infinite;
+            letter-spacing: 1.4px;
+            font-size: 0.9rem;
+        }
+
+        .btn-overlay-share-pop:hover:not(:disabled) {
+            background: var(--neon-blue) !important;
+            color: #000 !important;
+            box-shadow: 0 0 24px rgba(0, 238, 255, 0.75);
+            transform: translateY(-1px) scale(1.01);
+        }
+
+        @keyframes share-pop-pulse {
+            0%,
+            100% {
+                box-shadow: 0 0 12px rgba(0, 238, 255, 0.35), inset 0 0 8px rgba(0, 238, 255, 0.12);
+            }
+            50% {
+                box-shadow: 0 0 24px rgba(0, 238, 255, 0.75), inset 0 0 14px rgba(0, 238, 255, 0.24);
+            }
+        }
+
         .btn-overlay-join:disabled {
             border-color: rgba(255, 255, 255, 0.1) !important;
             color: var(--text-secondary) !important;
@@ -139,6 +170,7 @@
             gap: 10px;
             z-index: 999999;
         }
+
         .toast {
             background: rgba(10, 10, 20, 0.95);
             border: 1px solid var(--border-color);
@@ -148,22 +180,25 @@
             font-size: 0.8rem;
             font-weight: 600;
             color: var(--text-primary);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             transition: all 0.3s ease;
             opacity: 0;
             transform: translateY(20px);
         }
+
         .toast.show {
             opacity: 1;
             transform: translateY(0);
         }
+
         .toast.toast-success {
             border-left: 4px solid var(--neon-green);
         }
+
         .toast.toast-error {
             border-left: 4px solid var(--neon-red);
         }
-    
+
         /* Instructions Modal Styles */
         .instructions-modal-overlay {
             position: fixed;
@@ -204,8 +239,15 @@
         }
 
         @keyframes modal-slide-up {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .instructions-modal-close {
@@ -296,6 +338,7 @@
             display: flex;
             align-items: center;
         }
+
         .btn-lovense-connect {
             font-family: 'Orbitron', sans-serif;
             font-size: 0.65rem;
@@ -309,11 +352,13 @@
             transition: all 0.2s ease;
             text-transform: uppercase;
         }
+
         .btn-lovense-connect:hover {
             background: var(--neon-blue);
             color: var(--text-dark);
             box-shadow: 0 0 10px rgba(0, 238, 255, 0.4);
         }
+
         .lovense-active-badge {
             font-family: 'Orbitron', sans-serif;
             font-size: 0.65rem;
@@ -326,6 +371,7 @@
             text-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
             cursor: pointer;
         }
+
         .lovense-passive-badge {
             font-family: 'Orbitron', sans-serif;
             font-size: 0.65rem;
@@ -337,6 +383,7 @@
             background: rgba(192, 0, 255, 0.1);
             text-shadow: 0 0 5px rgba(192, 0, 255, 0.5);
         }
+
         .chat-sponsor-bar {
             background: rgba(0, 238, 255, 0.04) !important;
             border-top: 1px solid rgba(0, 238, 255, 0.15) !important;
@@ -348,6 +395,7 @@
             font-weight: 500 !important;
             flex-shrink: 0 !important;
         }
+
         .chat-sponsor-bar a {
             color: #a0a0c0 !important;
             text-decoration: none !important;
@@ -355,11 +403,13 @@
             display: block !important;
             letter-spacing: 0.5px !important;
         }
+
         .chat-sponsor-bar a span {
             color: #00eeff !important;
             font-weight: 700 !important;
             text-shadow: 0 0 5px rgba(0, 238, 255, 0.3) !important;
         }
+
         .chat-sponsor-bar a:hover {
             color: #ffffff !important;
         }
@@ -367,6 +417,7 @@
     <!-- Socket.io Client -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
+
 <body>
 
     <!-- ========================================= -->
@@ -396,11 +447,15 @@
                 <div class="actions-card">
                     <div class="lobby-card-header">MATCH ACTIONS</div>
                     <div class="lobby-card-body">
-                        <p class="lobby-actions-desc" style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.45;">Create a new match room or instantly auto-join the first available game waiting for an opponent.</p>
+                        <p class="lobby-actions-desc"
+                            style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.45;">
+                            Create a new match room or instantly auto-join the first available game waiting for an
+                            opponent.</p>
                         <div class="lobby-buttons-row">
-                            <button id="btn-create-room" class="btn-lobby btn-primary">CREATE MATCH</button>
-                            <button id="btn-quick-play" class="btn-lobby btn-quick">QUICK PLAY</button>
-                            <button id="btn-play-cpu" class="btn-lobby btn-quick" style="border-color: var(--neon-purple); color: var(--neon-purple);">PLAY VS CPU</button>
+                            <button id="btn-quick-play" class="btn-lobby btn-quick" style="border-color: var(--neon-green) !important; color: var(--text-dark) !important; background: var(--neon-green) !important; box-shadow: 0 0 12px rgba(57, 255, 20, 0.4) !important;">CREATE MATCH</button>
+                            <button id="btn-play-cpu" class="btn-lobby btn-quick"
+                                style="border-color: var(--neon-purple); color: var(--neon-purple);">PLAY VS
+                                CPU</button>
                         </div>
                     </div>
                 </div>
@@ -414,7 +469,7 @@
                         <input type="text" id="lobby-search-input" placeholder="Search player or code...">
                     </div>
                 </div>
-                
+
                 <!-- Filter Tabs -->
                 <div class="lobby-filter-tabs">
                     <button class="btn-tab active" data-tab="joinable">JOINABLE</button>
@@ -468,15 +523,22 @@
                         <span class="player-label">WHITE PLAYER</span>
                         <span id="player-white-name" class="player-name">Waiting...</span>
                         <div id="lovense-red-status" class="lovense-badge-container"></div>
+                        <div id="white-captured-bucket" class="captured-bucket"></div>
                     </div>
                 </div>
 
                 <div class="status-center">
-                    <span id="game-status-text" class="status-badge" style="display: none !important;">WAITING FOR PLAYERS</span>
+                    <span id="game-status-text" class="status-badge" style="display: none !important;">WAITING FOR
+                        PLAYERS</span>
                     <div class="status-buttons">
                         <button id="btn-reset-board" class="btn-reset">RESET MATCH</button>
+                        <button id="btn-vibe-mode" class="btn-reset btn-share"
+                            style="border-color: var(--neon-purple); color: var(--neon-purple);">VIBE: FUN</button>
+                        <button id="btn-toggle-guides" class="btn-reset btn-share"
+                            style="border-color: var(--neon-blue); color: var(--neon-blue);">🎯 GUIDES: ON</button>
                         <button id="btn-copy-link" class="btn-reset btn-share">SHARE MATCH</button>
-                        <button id="btn-toggle-voice" class="btn-reset btn-voice" style="display: none;">🎙️ JOIN VOICE</button>
+                        <button id="btn-toggle-voice" class="btn-reset btn-voice" style="display: none;">🎙️ JOIN
+                            VOICE</button>
                     </div>
                 </div>
 
@@ -484,7 +546,10 @@
                     <div class="player-info text-right">
                         <span class="player-label">BLACK PLAYER</span>
                         <span id="player-black-name" class="player-name">Waiting...</span>
-                        <div id="lovense-yellow-status" class="lovense-badge-container" style="justify-content: flex-end;"></div>
+                        <div id="lovense-yellow-status" class="lovense-badge-container"
+                            style="justify-content: flex-end;"></div>
+                        <div id="black-captured-bucket" class="captured-bucket text-right"
+                            style="justify-content: flex-end;"></div>
                     </div>
                     <div class="color-indicator"></div>
                 </div>
@@ -503,10 +568,13 @@
                                 <h3 class="overlay-title">WAITING FOR PLAYERS</h3>
                                 <p class="overlay-subtitle">Both players must join to start the match.</p>
                                 <div class="overlay-buttons">
-                                    <button id="btn-overlay-join-white" class="btn-overlay-join join-white-color">JOIN AS WHITE</button>
-                                    <button id="btn-overlay-join-black" class="btn-overlay-join join-black-color">JOIN AS BLACK</button>
+                                    <button id="btn-overlay-join-white" class="btn-overlay-join join-white-color">JOIN
+                                        AS WHITE</button>
+                                    <button id="btn-overlay-join-black" class="btn-overlay-join join-black-color">JOIN
+                                        AS BLACK</button>
                                 </div>
-                                <p class="overlay-desc">(Or join automatically from Second Life)</p>
+                                <button id="btn-overlay-share-link" class="btn-overlay-join btn-overlay-share-pop hidden"
+                                    style="width: 100%; margin-bottom: 12px;">⚡ SHARE MATCH LINK ⚡</button>
                             </div>
                         </div>
 
@@ -516,9 +584,13 @@
                                 <h3 class="overlay-title">SELECT CPU DIFFICULTY</h3>
                                 <p class="overlay-subtitle">Choose how smart CyberBot 🤖 will play.</p>
                                 <div class="overlay-buttons">
-                                    <button class="btn-overlay-join join-white-color" onclick="setCpuDifficulty('easy')">Easy</button>
-                                    <button class="btn-overlay-join join-black-color" onclick="setCpuDifficulty('medium')">Medium</button>
-                                    <button class="btn-overlay-join join-white-color" style="border-color: var(--neon-purple) !important; color: var(--neon-purple) !important;" onclick="setCpuDifficulty('hard')">Hard</button>
+                                    <button class="btn-overlay-join join-white-color"
+                                        onclick="setCpuDifficulty('easy')">Easy</button>
+                                    <button class="btn-overlay-join join-black-color"
+                                        onclick="setCpuDifficulty('medium')">Medium</button>
+                                    <button class="btn-overlay-join join-white-color"
+                                        style="border-color: var(--neon-purple) !important; color: var(--neon-purple) !important;"
+                                        onclick="setCpuDifficulty('hard')">Hard</button>
                                 </div>
                             </div>
                         </div>
@@ -530,7 +602,7 @@
                     <div class="chat-header">MATCH CHAT</div>
                     <div id="chat-messages" class="chat-messages"></div>
                     <div class="chat-sponsor-bar">
-                        <a href="https://www.lovense.com/" target="_blank">
+                        <a href="https://www.lovense.com/r/52zzr7" target="_blank">
                             ⚡ Powered by <span>Lovense</span> - Get Toys
                         </a>
                     </div>
@@ -556,15 +628,225 @@
                 Scan the QR code in the Lovense app or enter the code to connect your toy.
             </p>
             <div style="text-align:center; margin:15px 0;">
-                <div id="lovense-qr-loading" style="font-size: 0.85rem; color: var(--text-secondary);">Generating QR Code...</div>
-                <img id="lovense-qr-img" class="hidden" style="max-width:180px; border:6px solid #fff; border-radius:8px; margin:0 auto; display: block;" />
-                <div id="lovense-code-text" class="hidden" style="margin-top:15px; font-family:'Orbitron',sans-serif; color:var(--neon-blue); font-weight:bold; font-size: 1.1rem; letter-spacing: 2px;">
+                <div id="lovense-qr-loading" style="font-size: 0.85rem; color: var(--text-secondary);">Generating QR
+                    Code...</div>
+                <img id="lovense-qr-img" class="hidden"
+                    style="max-width:180px; border:6px solid #fff; border-radius:8px; margin:0 auto; display: block;" />
+                <div id="lovense-code-text" class="hidden"
+                    style="margin-top:15px; font-family:'Orbitron',sans-serif; color:var(--neon-blue); font-weight:bold; font-size: 1.1rem; letter-spacing: 2px;">
                     CODE: <span id="lovense-code-val">------</span>
                 </div>
             </div>
-            <div id="lovense-toy-status" class="status-indicator offline" style="display: inline-block; margin: 10px auto;">Disconnected: Scan QR code</div>
-            <button id="btn-lovense-verify" class="btn-terminal" style="margin-top:12px; width:100%; border-color: var(--neon-purple); color: var(--neon-purple);">Verify Connection</button>
-            <button id="btn-lovense-test" class="btn-terminal hidden" style="margin-top:12px; width:100%;">Test Vibe</button>
+            <div id="lovense-toy-status" class="status-indicator offline"
+                style="display: inline-block; margin: 10px auto;">Disconnected: Scan QR code</div>
+            <button id="btn-lovense-verify" class="btn-terminal"
+                style="margin-top:12px; width:100%; border-color: var(--neon-purple); color: var(--neon-purple);">Verify
+                Connection</button>
+            <button id="btn-lovense-disconnect" class="btn-terminal hidden"
+                style="margin-top:12px; width:100%; border-color: var(--neon-red); color: var(--neon-red);">Disconnect
+                Toy</button>
+        </div>
+    </div>
+
+    <!-- Lovense Toy Control Winner Panel -->
+    <div id="toy-control-winner-overlay" class="instructions-modal-overlay">
+        <div class="instructions-modal-card toy-control-card winner-card"
+            style="border-color: var(--neon-purple); box-shadow: 0 0 35px rgba(187, 75, 255, 0.25);">
+            <button class="instructions-modal-close"
+                onclick="document.getElementById('toy-control-winner-overlay').classList.remove('show')">&times;</button>
+            <h3 class="instructions-modal-title control-title"
+                style="color: var(--neon-purple); text-shadow: 0 0 10px rgba(187, 75, 255, 0.4);">⚡ TOY CONTROL ACTIVE ⚡
+            </h3>
+            <p class="control-subtitle" style="margin-bottom: 20px; font-size: 0.9rem;">You are now controlling <span
+                    id="toy-control-loser-name-span"
+                    style="color: var(--neon-yellow); font-weight: bold;">Opponent</span>'s toy!</p>
+
+            <!-- Countdown Timer -->
+            <div class="control-timer-container"
+                style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <div
+                    style="font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase;">
+                    Time Remaining:</div>
+                <div id="toy-control-winner-timer" class="timer-digits"
+                    style="font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 900; color: var(--neon-purple); text-shadow: 0 0 15px rgba(187, 75, 255, 0.5); line-height: 1.1; margin-bottom: 8px;">
+                    00:00</div>
+                <div class="timer-progress-bg"
+                    style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                    <div id="toy-control-winner-progress" class="timer-progress-fill"
+                        style="width: 100%; height: 100%; background: linear-gradient(90deg, var(--neon-purple), var(--neon-blue)); transition: width 0.3s linear;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strength Slider -->
+            <div class="slider-container" style="margin: 25px 0 20px 0;">
+                <div
+                    style="display: flex; justify-content: space-between; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; margin-bottom: 8px;">
+                    <span>VIBRATION LEVEL:</span>
+                    <span id="control-strength-val" style="color: var(--neon-blue); font-weight: bold;">5</span>
+                </div>
+                <input type="range" id="control-strength-slider" min="0" max="20" value="5" class="neon-slider"
+                    style="width: 100%; cursor: pointer;" />
+                <div
+                    style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text-secondary); margin-top: 6px;">
+                    <span>OFF (0)</span>
+                    <span>MED (10)</span>
+                    <span>MAX (20)</span>
+                </div>
+            </div>
+
+            <!-- Preset Patterns -->
+            <div class="preset-patterns-container" style="margin: 20px 0;">
+                <div
+                    style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; margin-bottom: 10px; text-align: left;">
+                    SELECT PATTERN:</div>
+                <div class="pattern-buttons-grid"
+                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                    <button class="btn-pattern active btn-terminal" data-pattern="constant"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px;">CONST</button>
+                    <button class="btn-pattern btn-terminal" data-pattern="pulse"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px;">PULSE</button>
+                    <button class="btn-pattern btn-terminal" data-pattern="wave"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px;">WAVE</button>
+                    <button class="btn-pattern btn-terminal" data-pattern="chaos"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px;">CHAOS</button>
+                    <button class="btn-pattern btn-terminal" data-pattern="heartbeat"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px;">HEARTBEAT</button>
+                    <button class="btn-pattern btn-terminal" data-pattern="escalator"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px;">ESCALATOR</button>
+                    <button class="btn-pattern btn-terminal" data-pattern="tease"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px; grid-column: span 3;">TEASE &
+                        RELEASE</button>
+                </div>
+            </div>
+
+            <!-- Quick Buzz Buttons -->
+            <div class="quick-buzz-container" style="margin: 20px 0 25px 0;">
+                <div
+                    style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; margin-bottom: 10px; text-align: left;">
+                    QUICK ACTIONS:</div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-quick-buzz-max" class="btn-terminal"
+                        style="flex: 1; border-color: var(--neon-red); color: var(--neon-red); font-size: 0.75rem;">🔥
+                        MAX BLAST</button>
+                    <button id="btn-quick-buzz-tickle" class="btn-terminal"
+                        style="flex: 1; border-color: var(--neon-green); color: var(--neon-green); font-size: 0.75rem;">🍃
+                        TICKLE</button>
+                </div>
+            </div>
+
+            <button id="btn-toy-control-release" class="btn-terminal"
+                style="width: 100%; border-color: rgba(255,255,255,0.2); color: #fff;">RELEASE PLAYER</button>
+        </div>
+    </div>
+
+    <!-- Lovense Toy Control Loser Alert Panel -->
+    <div id="toy-control-loser-overlay" class="instructions-modal-overlay">
+        <div class="instructions-modal-card toy-control-card loser-card"
+            style="border-color: var(--neon-red); box-shadow: 0 0 35px rgba(255, 51, 102, 0.25);">
+            <h3 class="instructions-modal-title control-title"
+                style="color: var(--neon-red); text-shadow: 0 0 10px rgba(255, 51, 102, 0.4);">⚠️ TOY UNDER EXTERNAL
+                CONTROL ⚠️</h3>
+            <p class="control-subtitle" style="margin-bottom: 20px; font-size: 0.9rem;"><span
+                    id="toy-control-winner-name" style="color: var(--neon-yellow); font-weight: bold;">Opponent</span>
+                is currently controlling your connected toy!</p>
+
+            <!-- Countdown Timer -->
+            <div class="control-timer-container"
+                style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <div
+                    style="font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase;">
+                    Control Duration Remaining:</div>
+                <div id="toy-control-loser-timer" class="timer-digits"
+                    style="font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 900; color: var(--neon-red); text-shadow: 0 0 15px rgba(255, 51, 102, 0.5); line-height: 1.1; margin-bottom: 8px;">
+                    00:00</div>
+                <div class="timer-progress-bg"
+                    style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                    <div id="toy-control-loser-progress" class="timer-progress-fill"
+                        style="width: 100%; height: 100%; background: linear-gradient(90deg, var(--neon-red), var(--neon-purple)); transition: width 0.3s linear;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Level Indicator -->
+            <div class="indicator-container" style="margin: 25px 0;">
+                <div
+                    style="display: flex; justify-content: space-between; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; margin-bottom: 8px;">
+                    <span>CURRENT INTENSITY:</span>
+                    <span id="toy-control-live-strength" style="color: var(--neon-red); font-weight: bold;">0</span>
+                </div>
+                <div class="progress-bar-container"
+                    style="width:100%; height:12px; background:rgba(255,255,255,0.05); border-radius:6px; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
+                    <div id="toy-control-live-progress-fill"
+                        style="width:0%; height:100%; background:linear-gradient(90deg, var(--neon-yellow), var(--neon-red)); transition:width 0.3s ease;">
+                    </div>
+                </div>
+                <div id="toy-control-live-pattern"
+                    style="font-size:0.65rem; color:var(--text-secondary); margin-top:8px; font-family:'Orbitron',sans-serif; text-transform: uppercase;">
+                    Active Pattern: constant</div>
+            </div>
+
+            <!-- Safety Button -->
+            <button id="btn-toy-control-safeword" class="btn-terminal"
+                style="width:100%; padding:14px 0; font-weight:bold; border-color:var(--neon-red); color:var(--neon-red); font-size:0.9rem; text-shadow:0 0 5px rgba(255,51,102,0.3); background:rgba(255, 51, 102, 0.05); margin-top: 15px;">
+                🛑 SAFE WORD / STOP TOY
+            </button>
+        </div>
+    </div>
+
+    <!-- Lovense No Toy Connected Loser Panel -->
+    <div id="toy-control-no-toy-overlay" class="instructions-modal-overlay">
+        <div class="instructions-modal-card toy-control-card"
+            style="border-color: var(--neon-yellow); text-align: center;">
+            <button class="instructions-modal-close"
+                onclick="document.getElementById('toy-control-no-toy-overlay').classList.remove('show')">&times;</button>
+            <h3 class="instructions-modal-title" style="color: var(--neon-yellow);">YOU LOST, BUT WE COULD HAVE HAD FUN</h3>
+            <p style="font-size: 0.9rem; line-height: 1.6; margin: 20px 0; color: var(--text-secondary);">
+                You are not connected to Lovense, so your opponent did not get toy control.
+            </p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px;">
+                Connect here: <a href="https://www.lovense.com/r/52zzr7" target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue);">Lovense</a>
+            </p>
+            <button class="btn-terminal" style="width: 100%;"
+                onclick="document.getElementById('toy-control-no-toy-overlay').classList.remove('show')">OK</button>
+        </div>
+    </div>
+
+    <!-- Lovense Winner No Target Toy Panel -->
+    <div id="toy-control-winner-no-toy-overlay" class="instructions-modal-overlay">
+        <div class="instructions-modal-card toy-control-card"
+            style="border-color: var(--neon-blue); text-align: center;">
+            <button class="instructions-modal-close"
+                onclick="document.getElementById('toy-control-winner-no-toy-overlay').classList.remove('show')">&times;</button>
+            <h3 class="instructions-modal-title" style="color: var(--neon-blue);">NO TOY CONTROL THIS ROUND</h3>
+            <p style="font-size: 0.9rem; line-height: 1.6; margin: 20px 0; color: var(--text-secondary);">
+                Your opponent was not connected to Lovense, so you could not control their toy this time.
+            </p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px;">
+                Get your next toy here: <a href="https://www.lovense.com/r/52zzr7" target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue);">Lovense</a>
+            </p>
+            <button class="btn-terminal" style="width: 100%;"
+                onclick="document.getElementById('toy-control-winner-no-toy-overlay').classList.remove('show')">OK</button>
+        </div>
+    </div>
+
+    <!-- Lovense Toy Control CPU Skipped Panel -->
+    <div id="toy-control-cpu-skipped-overlay" class="instructions-modal-overlay">
+        <div class="instructions-modal-card toy-control-card"
+            style="border-color: var(--neon-blue); text-align: center;">
+            <button class="instructions-modal-close"
+                onclick="document.getElementById('toy-control-cpu-skipped-overlay').classList.remove('show')">&times;</button>
+            <h3 class="instructions-modal-title control-title"
+                style="color: var(--neon-blue); text-shadow: 0 0 10px rgba(0, 243, 255, 0.4);">🏆 MATCH COMPLETED 🏆
+            </h3>
+            <p style="font-size: 0.95rem; margin: 20px 0; line-height: 1.5; color: var(--text-primary);">
+                You won against <strong>CyberBot 🤖</strong>!
+            </p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 25px;">
+                The CPU opponent doesn't have a physical toy connected, so the Toy Control phase was skipped.
+            </p>
+            <button onclick="document.getElementById('toy-control-cpu-skipped-overlay').classList.remove('show')"
+                class="btn-terminal" style="width: 100%;">CLOSE WINDOW</button>
         </div>
     </div>
 
@@ -580,9 +862,9 @@
         let currentTurn = 'white';
         let selectedSquare = null; // { r, c }
         let activeGame = null;
-        const isDebug = new URLSearchParams(window.location.search).get('debug') === 'true' || 
-                        window.location.hostname === 'localhost' || 
-                        window.location.hostname === '127.0.0.1';
+        const isDebug = new URLSearchParams(window.location.search).get('debug') === 'true' ||
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1';
 
         // WebRTC Voice Chat variables
         let localStream = null;
@@ -605,7 +887,7 @@
         function getPlayerProfile() {
             let uuid = localStorage.getItem('chess_player_uuid');
             let name = localStorage.getItem('chess_player_name');
-            
+
             if (!uuid) {
                 uuid = 'web-' + Math.random().toString(36).substr(2, 9);
                 localStorage.setItem('chess_player_uuid', uuid);
@@ -623,16 +905,16 @@
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             if (!container) return;
-            
+
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
             toast.innerText = message;
-            
+
             container.appendChild(toast);
-            
+
             // Trigger transition
             setTimeout(() => toast.classList.add('show'), 10);
-            
+
             // Auto remove
             setTimeout(() => {
                 toast.classList.remove('show');
@@ -664,6 +946,7 @@
         let searchQuery = '';
         let currentPage = 1;
         const itemsPerPage = 6;
+        let showMoveGuides = localStorage.getItem('chess_show_guides') !== 'false';
 
         // =========================================
         // LOBBY SELECTOR CONTROLLERS
@@ -671,10 +954,10 @@
         function showLobbyView() {
             document.getElementById('lobby-view').classList.remove('hidden');
             document.getElementById('spectator-view').classList.add('hidden');
-            
+
             const nameInput = document.getElementById('profile-name-input');
             nameInput.value = profile.name;
-            
+
             document.getElementById('btn-save-profile').addEventListener('click', () => {
                 const newName = nameInput.value.trim();
                 if (newName) {
@@ -685,12 +968,6 @@
                     showToast('Please enter a valid nickname.');
                 }
             });
-            
-            document.getElementById('btn-create-room').addEventListener('click', () => {
-                const roomCode = 'CH-' + Math.random().toString(36).substr(2, 4).toUpperCase();
-                navigateToRoom(roomCode);
-            });
-
             document.getElementById('btn-play-cpu').addEventListener('click', async () => {
                 const roomCode = 'CPU-' + Math.random().toString(36).substr(2, 4).toUpperCase();
                 try {
@@ -704,15 +981,15 @@
                 }
                 navigateToRoom(roomCode);
             });
-            
+
             document.getElementById('btn-quick-play').addEventListener('click', async () => {
                 try {
                     const res = await fetch(`${basePath}/api/rooms`);
                     if (!res.ok) throw new Error('Failed to fetch rooms');
                     const rooms = await res.json();
-                    
+
                     const joinableRoom = rooms.find(room => room.status === 'waiting' && (!room.player1 || !room.player2));
-                    
+
                     if (joinableRoom) {
                         showToast(`Match found! Joining room ${joinableRoom.id}...`, 'success');
                         setTimeout(() => navigateToRoom(joinableRoom.id), 800);
@@ -761,10 +1038,10 @@
                 currentPage++;
                 filterAndRenderRooms();
             });
-            
+
             fetchActiveRooms();
             const pollInterval = setInterval(fetchActiveRooms, 5000);
-            
+
             window.addEventListener('beforeunload', () => clearInterval(pollInterval));
         }
 
@@ -825,25 +1102,25 @@
             const container = document.getElementById('rooms-list-container');
             const noRoomsMsg = document.getElementById('no-rooms-message');
             container.innerHTML = '';
-            
+
             if (rooms.length === 0) {
                 noRoomsMsg.classList.remove('hidden');
                 return;
             }
-            
+
             noRoomsMsg.classList.add('hidden');
             rooms.forEach(room => {
                 const row = document.createElement('div');
                 row.className = 'room-item';
-                
+
                 const p1Name = room.player1 ? room.player1.name : 'Waiting...';
                 const p2Name = room.player2 ? room.player2.name : 'Waiting...';
-                
+
                 const isFull = room.player1 && room.player2;
                 const joinBtnHtml = !isFull
                     ? `<button class="btn-room-action btn-join-action" onclick="navigateToRoom('${room.id}')">JOIN</button>`
                     : `<button class="btn-room-action btn-spec-action" onclick="navigateToRoom('${room.id}')">SPECTATE</button>`;
-                
+
                 row.innerHTML = `
                     <div class="room-code-col">
                         <span class="room-id-badge">${room.id}</span>
@@ -868,8 +1145,12 @@
             document.getElementById('lobby-view').classList.add('hidden');
             document.getElementById('spectator-view').classList.remove('hidden');
             setupChessBoard();
-            
-            socket.emit('join_game', gameId, profile.uuid);
+            socket.on('connect', () => {
+                socket.emit('join_game', gameId, profile.uuid);
+            });
+            if (socket.connected) {
+                socket.emit('join_game', gameId, profile.uuid);
+            }
 
             // Bind Exit
             document.getElementById('btn-exit-lobby')?.addEventListener('click', () => {
@@ -878,24 +1159,42 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ gameId, uuid: profile.uuid })
                 }).finally(() => {
-                    window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                    window.location.href = '/';
                 });
             });
 
             // Bind Share Link
             const copyLinkBtn = document.getElementById('btn-copy-link');
-            if (copyLinkBtn) {
-                copyLinkBtn.addEventListener('click', () => {
-                    const matchUrl = window.location.origin + basePath + '/board/' + gameId;
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(matchUrl).then(() => {
-                            showToast('Match link copied! Share it with a friend.', 'success');
-                        }).catch(err => {
-                            fallbackCopyText(matchUrl);
-                        });
-                    } else {
+            const copyMatchLink = () => {
+                const matchUrl = window.location.origin + basePath + '/board/' + gameId;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(matchUrl).then(() => {
+                        showToast('Match link copied! Share it with a friend.', 'success');
+                    }).catch(() => {
                         fallbackCopyText(matchUrl);
-                    }
+                    });
+                } else {
+                    fallbackCopyText(matchUrl);
+                }
+            };
+            if (copyLinkBtn) {
+                copyLinkBtn.addEventListener('click', copyMatchLink);
+            }
+
+            // Bind Guides Toggle
+            const guidesBtn = document.getElementById('btn-toggle-guides');
+            if (guidesBtn) {
+                guidesBtn.innerText = showMoveGuides ? '🎯 GUIDES: ON' : '🎯 GUIDES: OFF';
+                guidesBtn.style.borderColor = showMoveGuides ? 'var(--neon-blue)' : 'rgba(255, 255, 255, 0.2)';
+                guidesBtn.style.color = showMoveGuides ? 'var(--neon-blue)' : 'var(--text-secondary)';
+
+                guidesBtn.addEventListener('click', () => {
+                    showMoveGuides = !showMoveGuides;
+                    localStorage.setItem('chess_show_guides', showMoveGuides);
+                    guidesBtn.innerText = showMoveGuides ? '🎯 GUIDES: ON' : '🎯 GUIDES: OFF';
+                    guidesBtn.style.borderColor = showMoveGuides ? 'var(--neon-blue)' : 'rgba(255, 255, 255, 0.2)';
+                    guidesBtn.style.color = showMoveGuides ? 'var(--neon-blue)' : 'var(--text-secondary)';
+                    clearSelections();
                 });
             }
 
@@ -913,6 +1212,11 @@
                 document.body.removeChild(el);
             }
 
+            const overlayShareBtn = document.getElementById('btn-overlay-share-link');
+            if (overlayShareBtn) {
+                overlayShareBtn.addEventListener('click', copyMatchLink);
+            }
+
             // Bind Overlay Join Buttons
             document.getElementById('btn-overlay-join-white').addEventListener('click', () => {
                 fetch(`${basePath}/api/join`, {
@@ -928,7 +1232,7 @@
                     }
                 });
             });
-            
+
             document.getElementById('btn-overlay-join-black').addEventListener('click', () => {
                 fetch(`${basePath}/api/join`, {
                     method: 'POST',
@@ -954,7 +1258,7 @@
 
             // Initialize voice chat controls
             initVoiceChat();
-            
+
             // Listen to WebRTC signaling messages
             socket.on('voice_signal', async (data) => {
                 if (!localStream) return;
@@ -1009,11 +1313,11 @@
 
             function escapeHtml(unsafe) {
                 return unsafe
-                     .replace(/&/g, "&amp;")
-                     .replace(/</g, "&lt;")
-                     .replace(/>/g, "&gt;")
-                     .replace(/"/g, "&quot;")
-                     .replace(/'/g, "&#039;");
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
             }
 
             function sendChatMessage() {
@@ -1043,7 +1347,7 @@
             const btnReload = document.getElementById('btn-standalone-reload');
             if (btnBack) {
                 btnBack.addEventListener('click', () => {
-                    window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                    window.location.href = '/';
                 });
             }
             if (btnReload) {
@@ -1051,6 +1355,134 @@
                     window.location.reload();
                 });
             }
+
+            // Bind Vibe Mode toggle button click
+            const vibeBtnToggle = document.getElementById('btn-vibe-mode');
+            if (vibeBtnToggle) {
+                vibeBtnToggle.addEventListener('click', () => {
+                    fetch(`${basePath}/api/toggle-vibe-mode`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId })
+                    });
+                });
+            }
+
+            // Bind winner strength slider
+            const strengthSlider = document.getElementById('control-strength-slider');
+            const strengthVal = document.getElementById('control-strength-val');
+            if (strengthSlider) {
+                strengthSlider.addEventListener('input', (e) => {
+                    strengthVal.innerText = e.target.value;
+                    const patternBtn = document.querySelector('.btn-pattern.active');
+                    const pattern = patternBtn ? patternBtn.getAttribute('data-pattern') : 'constant';
+                    socket.emit('control_toy', { gameId, strength: e.target.value, pattern });
+                });
+            }
+
+            // Bind winner pattern buttons
+            document.querySelectorAll('.btn-pattern').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.btn-pattern').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    const val = strengthSlider ? strengthSlider.value : 5;
+                    const pattern = e.target.getAttribute('data-pattern');
+                    socket.emit('control_toy', { gameId, strength: val, pattern });
+                });
+            });
+
+            // Bind Quick Buzz Actions
+            const btnMax = document.getElementById('btn-quick-buzz-max');
+            if (btnMax) {
+                btnMax.addEventListener('click', () => {
+                    socket.emit('control_toy', { gameId, strength: 20, pattern: 'constant' });
+                    showToast('🔥 MAX BLAST ACTIVATED', 'error');
+                    setTimeout(() => {
+                        const val = strengthSlider ? strengthSlider.value : 5;
+                        const patternBtn = document.querySelector('.btn-pattern.active');
+                        const pattern = patternBtn ? patternBtn.getAttribute('data-pattern') : 'constant';
+                        socket.emit('control_toy', { gameId, strength: val, pattern });
+                    }, 3000);
+                });
+            }
+
+            const btnTickle = document.getElementById('btn-quick-buzz-tickle');
+            if (btnTickle) {
+                btnTickle.addEventListener('click', () => {
+                    socket.emit('control_toy', { gameId, strength: 3, pattern: 'pulse' });
+                    showToast('🍃 TICKLING TARGET', 'success');
+                    setTimeout(() => {
+                        const val = strengthSlider ? strengthSlider.value : 5;
+                        const patternBtn = document.querySelector('.btn-pattern.active');
+                        const pattern = patternBtn ? patternBtn.getAttribute('data-pattern') : 'constant';
+                        socket.emit('control_toy', { gameId, strength: val, pattern });
+                    }, 4000);
+                });
+            }
+
+            // Bind Release Player button
+            const btnRelease = document.getElementById('btn-toy-control-release');
+            if (btnRelease) {
+                btnRelease.addEventListener('click', () => {
+                    socket.emit('stop_toy_control', { gameId });
+                });
+            }
+
+            // Bind Loser Safe Word button
+            const btnSafeword = document.getElementById('btn-toy-control-safeword');
+            if (btnSafeword) {
+                btnSafeword.addEventListener('click', () => {
+                    socket.emit('stop_toy_control', { gameId });
+
+                    const isMeRed = activeGame && activeGame.player1 && activeGame.player1.uuid === profile.uuid;
+                    const me = isMeRed ? activeGame.player1 : (activeGame ? activeGame.player2 : null);
+                    if (me) {
+                        me.connected = false;
+                        updateLovenseModalContent();
+                        updateLovenseBadge(isMeRed ? 'red' : 'yellow', me);
+                    }
+                    showToast('🔴 SAFE WORD TRIGGERED. TOY STOPPED AND DISCONNECTED.', 'error');
+                });
+            }
+
+            // Listen to Lovense Toy Control events
+            socket.on('toy_control_tick', (data) => {
+                const { currentStrength, userStrength, pattern, remainingSec } = data;
+
+                const minutes = Math.floor(remainingSec / 60);
+                const seconds = remainingSec % 60;
+                const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+                const durationSec = (activeGame && activeGame.vibeMode === 'normal') ? 60 : 120;
+                const progressPercent = (remainingSec / durationSec) * 100;
+
+                const wTimer = document.getElementById('toy-control-winner-timer');
+                if (wTimer) wTimer.innerText = timeStr;
+                const wProgress = document.getElementById('toy-control-winner-progress');
+                if (wProgress) wProgress.style.width = `${progressPercent}%`;
+
+                const lTimer = document.getElementById('toy-control-loser-timer');
+                if (lTimer) lTimer.innerText = timeStr;
+                const lProgress = document.getElementById('toy-control-loser-progress');
+                if (lProgress) lProgress.style.width = `${progressPercent}%`;
+
+                const lStrength = document.getElementById('toy-control-live-strength');
+                if (lStrength) lStrength.innerText = currentStrength;
+                const lFill = document.getElementById('toy-control-live-progress-fill');
+                if (lFill) lFill.style.width = `${(currentStrength / 20) * 100}%`;
+                const lPattern = document.getElementById('toy-control-live-pattern');
+                if (lPattern) lPattern.innerText = `Active Pattern: ${pattern}`;
+            });
+
+            socket.on('toy_control_end', () => {
+                document.getElementById('toy-control-winner-overlay').classList.remove('show');
+                document.getElementById('toy-control-loser-overlay').classList.remove('show');
+                document.getElementById('toy-control-cpu-skipped-overlay').classList.remove('show');
+                document.getElementById('toy-control-no-toy-overlay').classList.remove('show');
+                document.getElementById('toy-control-winner-no-toy-overlay').classList.remove('show');
+                showToast('Toy control phase has ended.', 'info');
+            });
         }
 
         function setupChessBoard() {
@@ -1063,7 +1495,7 @@
                     square.classList.add('square');
                     square.classList.add((r + c) % 2 === 0 ? 'light-sq' : 'dark-sq');
                     square.id = `square-${r}-${c}`;
-                    
+
                     square.addEventListener('click', () => handleSquareClick(r, c));
 
                     gridContainer.appendChild(square);
@@ -1071,10 +1503,143 @@
             }
         }
 
+        function isValidMove(board, fr, fc, tr, tc) {
+            if (fr === tr && fc === tc) return false;
+            const piece = board[fr][fc];
+            if (!piece) return false;
+
+            const color = piece[0]; // 'w' or 'b'
+            const type = piece[1]; // 'p', 'r', 'n', 'b', 'q', 'k'
+
+            const target = board[tr][tc];
+            if (target && target[0] === color) return false; // Cannot capture own piece
+
+            const dr = tr - fr;
+            const dc = tc - fc;
+
+            switch (type) {
+                case 'p': {
+                    if (color === 'w') {
+                        // White moves up (r decreases)
+                        if (dc === 0) {
+                            // Normal move
+                            if (dr === -1 && !target) return true;
+                            // Double move from starting rank
+                            if (fr === 6 && dr === -2 && !board[5][fc] && !target) return true;
+                        } else if (Math.abs(dc) === 1 && dr === -1) {
+                            // Capture
+                            if (target && target[0] === 'b') return true;
+                        }
+                    } else {
+                        // Black moves down (r increases)
+                        if (dc === 0) {
+                            // Normal move
+                            if (dr === 1 && !target) return true;
+                            // Double move from starting rank
+                            if (fr === 1 && dr === 2 && !board[2][fc] && !target) return true;
+                        } else if (Math.abs(dc) === 1 && dr === 1) {
+                            // Capture
+                            if (target && target[0] === 'w') return true;
+                        }
+                    }
+                    return false;
+                }
+                case 'n': {
+                    return (Math.abs(dr) === 2 && Math.abs(dc) === 1) || (Math.abs(dr) === 1 && Math.abs(dc) === 2);
+                }
+                case 'r': {
+                    if (dr !== 0 && dc !== 0) return false;
+                    return isPathClear(board, fr, fc, tr, tc);
+                }
+                case 'b': {
+                    if (Math.abs(dr) !== Math.abs(dc)) return false;
+                    return isPathClear(board, fr, fc, tr, tc);
+                }
+                case 'q': {
+                    if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) return false;
+                    return isPathClear(board, fr, fc, tr, tc);
+                }
+                case 'k': {
+                    return Math.abs(dr) <= 1 && Math.abs(dc) <= 1;
+                }
+            }
+            return false;
+        }
+
+        function isPathClear(board, fr, fc, tr, tc) {
+            const stepR = Math.sign(tr - fr);
+            const stepC = Math.sign(tc - fc);
+
+            let r = fr + stepR;
+            let c = fc + stepC;
+
+            while (r !== tr || c !== tc) {
+                if (board[r][c]) return false;
+                r += stepR;
+                c += stepC;
+            }
+            return true;
+        }
+
+        function isKingInCheck(board, color) {
+            const colorChar = color[0];
+            let kr = -1, kc = -1;
+            const targetKing = colorChar === 'w' ? 'wk' : 'bk';
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (board[r][c] === targetKing) {
+                        kr = r;
+                        kc = c;
+                        break;
+                    }
+                }
+                if (kr !== -1) break;
+            }
+
+            if (kr === -1) return false;
+
+            const oppColor = colorChar === 'w' ? 'b' : 'w';
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const piece = board[r][c];
+                    if (piece && piece.startsWith(oppColor)) {
+                        if (isValidMove(board, r, c, kr, kc)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        function hasLegalMoves(board, color) {
+            const colorChar = color[0];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const piece = board[r][c];
+                    if (piece && piece.startsWith(colorChar)) {
+                        for (let tr = 0; tr < 8; tr++) {
+                            for (let tc = 0; tc < 8; tc++) {
+                                if (isValidMove(board, r, c, tr, tc)) {
+                                    const tempBoard = board.map(row => [...row]);
+                                    tempBoard[tr][tc] = tempBoard[r][c];
+                                    tempBoard[r][c] = null;
+                                    if (!isKingInCheck(tempBoard, colorChar)) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
         function handleSquareClick(r, c) {
-            const myRole = (activeGame && activeGame.player1 && activeGame.player1.uuid === profile.uuid) ? 'white' : 
-                           (activeGame && activeGame.player2 && activeGame.player2.uuid === profile.uuid) ? 'black' : null;
-            
+            const myRole = (activeGame && activeGame.player1 && activeGame.player1.uuid === profile.uuid) ? 'white' :
+                (activeGame && activeGame.player2 && activeGame.player2.uuid === profile.uuid) ? 'black' : null;
+
             const canMove = isDebug || (myRole && myRole === currentTurn && activeGame.status === 'playing');
             if (!canMove) return;
 
@@ -1087,9 +1652,26 @@
                     return;
                 }
 
+                // Client-side move validation block
+                if (activeGame && activeGame.board && !isValidMove(activeGame.board, selectedSquare.r, selectedSquare.c, r, c)) {
+                    showToast("Invalid chess move.", "error");
+                    clearSelections();
+                    return;
+                }
+
+                // Client-side check evasion validation block
+                const tempBoard = activeGame.board.map(row => [...row]);
+                tempBoard[r][c] = tempBoard[selectedSquare.r][selectedSquare.c];
+                tempBoard[selectedSquare.r][selectedSquare.c] = null;
+                if (isKingInCheck(tempBoard, myRole || currentTurn)) {
+                    showToast("Move leaves King in check.", "error");
+                    clearSelections();
+                    return;
+                }
+
                 const uuid = profile.uuid;
                 const role = myRole || currentTurn;
-                
+
                 fetch(`${basePath}/api/move`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1113,13 +1695,41 @@
                 if (piece && piece.startsWith(targetRole[0])) {
                     selectedSquare = { r, c };
                     squareEl.classList.add('selected');
+
+                    // Highlight all legal moves for this piece
+                    if (showMoveGuides && activeGame && activeGame.board) {
+                        for (let tr = 0; tr < 8; tr++) {
+                            for (let tc = 0; tc < 8; tc++) {
+                                if (isValidMove(activeGame.board, r, c, tr, tc)) {
+                                    const tempBoardForGuide = activeGame.board.map(row => [...row]);
+                                    tempBoardForGuide[tr][tc] = tempBoardForGuide[r][c];
+                                    tempBoardForGuide[r][c] = null;
+                                    if (!isKingInCheck(tempBoardForGuide, targetRole)) {
+                                        const targetSq = document.getElementById(`square-${tr}-${tc}`);
+                                        const targetPiece = activeGame.board[tr][tc];
+                                        if (targetSq) {
+                                            if (targetPiece) {
+                                                targetSq.classList.add('legal-capture');
+                                            } else {
+                                                targetSq.classList.add('legal-target');
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
 
         function clearSelections() {
             selectedSquare = null;
-            document.querySelectorAll('.square').forEach(sq => sq.classList.remove('selected'));
+            document.querySelectorAll('.square').forEach(sq => {
+                sq.classList.remove('selected');
+                sq.classList.remove('legal-target');
+                sq.classList.remove('legal-capture');
+            });
         }
 
         let isRedirecting = false;
@@ -1129,15 +1739,15 @@
             if (game.status === 'abandoned') {
                 if (isRedirecting) return;
                 isRedirecting = true;
-                
+
                 document.getElementById('game-status-text').innerText = "OPPONENT LEFT. ENDING MATCH...";
-                showToast('Opponent has left the match. Returning to lobby...', 'error');
-                
+                showToast('Opponent has left the match. Returning to games...', 'error');
+
                 document.getElementById('chess-grid').style.pointerEvents = 'none';
                 closeVoiceChat();
-                
+
                 setTimeout(() => {
-                    window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                    window.location.href = '/';
                 }, 3000);
                 return;
             }
@@ -1145,7 +1755,7 @@
             // Manage Voice Chat Button Visibility & Connections
             const btnToggleVoice = document.getElementById('btn-toggle-voice');
             const isParticipant = (game.player1 && game.player1.uuid === profile.uuid) || (game.player2 && game.player2.uuid === profile.uuid);
-            
+
             if (game.status === 'playing' && isParticipant) {
                 if (btnToggleVoice) btnToggleVoice.style.display = 'inline-block';
             } else {
@@ -1159,10 +1769,11 @@
             const overlay = document.getElementById('join-overlay');
             const joinWhiteBtn = document.getElementById('btn-overlay-join-white');
             const joinBlackBtn = document.getElementById('btn-overlay-join-black');
+            const overlayShareBtn = document.getElementById('btn-overlay-share-link');
 
             if (game.status === 'waiting') {
                 overlay.classList.remove('fade-out');
-                
+
                 // White Join Button
                 if (game.player1) {
                     joinWhiteBtn.innerText = `WHITE: ${game.player1.name.toUpperCase()}`;
@@ -1180,17 +1791,25 @@
                     joinBlackBtn.innerText = `JOIN AS BLACK`;
                     joinBlackBtn.disabled = false;
                 }
-                
+
                 // Hide Join overlay entirely for visitors if room has already joined players on client side
                 const isAlreadyInRoom = (game.player1 && game.player1.uuid === profile.uuid) || (game.player2 && game.player2.uuid === profile.uuid);
                 if (isAlreadyInRoom) {
-                    overlay.innerHTML = `
-                        <div class="overlay-card">
-                            <h3 class="overlay-title">WAITING FOR OPPONENT</h3>
-                            <p class="overlay-subtitle">Share the room code or link with a friend to begin.</p>
-                            <p class="overlay-desc">(Or join automatically from Second Life)</p>
-                        </div>
-                    `;
+                    const overlayTitle = overlay.querySelector('.overlay-title');
+                    const overlaySubtitle = overlay.querySelector('.overlay-subtitle');
+                    if (overlayTitle) overlayTitle.innerText = 'WAITING FOR OPPONENT';
+                    if (overlaySubtitle) overlaySubtitle.innerText = 'Share the room code or link with a friend to begin.';
+                    joinWhiteBtn.style.display = 'none';
+                    joinBlackBtn.style.display = 'none';
+                    if (overlayShareBtn) overlayShareBtn.classList.remove('hidden');
+                } else {
+                    const overlayTitle = overlay.querySelector('.overlay-title');
+                    const overlaySubtitle = overlay.querySelector('.overlay-subtitle');
+                    if (overlayTitle) overlayTitle.innerText = 'WAITING FOR PLAYERS';
+                    if (overlaySubtitle) overlaySubtitle.innerText = 'Both players must join to start the match.';
+                    joinWhiteBtn.style.display = 'block';
+                    joinBlackBtn.style.display = 'block';
+                    if (overlayShareBtn) overlayShareBtn.classList.add('hidden');
                 }
             } else {
                 overlay.classList.add('fade-out');
@@ -1215,23 +1834,68 @@
             document.getElementById('player-white-name').innerText = game.player1 ? game.player1.name : 'Waiting...';
             document.getElementById('player-black-name').innerText = game.player2 ? game.player2.name : 'Waiting...';
 
+            // Update Captured Pieces Buckets
+            const whiteBucket = document.getElementById('white-captured-bucket');
+            const blackBucket = document.getElementById('black-captured-bucket');
+
+            if (whiteBucket) {
+                whiteBucket.innerHTML = '';
+                const blackCaptured = game.captured ? (game.captured.black || []) : [];
+                blackCaptured.forEach(piece => {
+                    const span = document.createElement('span');
+                    span.className = 'captured-piece black-piece';
+                    span.innerText = pieceSymbols[piece] || '';
+                    whiteBucket.appendChild(span);
+                });
+            }
+
+            if (blackBucket) {
+                blackBucket.innerHTML = '';
+                const whiteCaptured = game.captured ? (game.captured.white || []) : [];
+                whiteCaptured.forEach(piece => {
+                    const span = document.createElement('span');
+                    span.className = 'captured-piece white-piece';
+                    span.innerText = pieceSymbols[piece] || '';
+                    blackBucket.appendChild(span);
+                });
+            }
+
+            // Trigger check toast notifications
+            const myRole = (game.player1 && game.player1.uuid === profile.uuid) ? 'white' :
+                (game.player2 && game.player2.uuid === profile.uuid) ? 'black' : null;
+
+            if (game.checkState && game.checkState !== lastCheckState) {
+                if (game.checkState === myRole) {
+                    showToast("⚠️ YOUR KING IS IN CHECK!", "error");
+                } else if (myRole) {
+                    showToast("🎯 OPPONENT IS IN CHECK!", "success");
+                }
+            }
+            lastCheckState = game.checkState;
+
             // Active player highlights
             document.getElementById('player-white-card').classList.remove('active');
             document.getElementById('player-black-card').classList.remove('active');
 
             if (game.status === 'playing') {
-                if (game.turn === 'white') {
-                    document.getElementById('player-white-card').classList.add('active');
-                    document.getElementById('game-status-text').innerText = "WHITE'S TURN";
+                const turnLabel = game.turn === 'white' ? "WHITE'S TURN" : "BLACK'S TURN";
+                if (game.checkState) {
+                    document.getElementById('game-status-text').innerText = `${turnLabel} (CHECK!)`;
                 } else {
-                    document.getElementById('player-black-card').classList.add('active');
-                    document.getElementById('game-status-text').innerText = "BLACK'S TURN";
+                    document.getElementById('game-status-text').innerText = turnLabel;
                 }
+
+                if (game.turn === 'white') document.getElementById('player-white-card').classList.add('active');
+                else document.getElementById('player-black-card').classList.add('active');
             } else if (game.status === 'won') {
-                const winnerName = game.winner === 'white' ? game.player1.name : game.player2.name;
-                document.getElementById('game-status-text').innerText = `${winnerName.toUpperCase()} WINS!`;
+                const winnerName = game.winner === 'white'
+                    ? (game.player1 ? game.player1.name : 'White')
+                    : (game.player2 ? game.player2.name : 'Black');
+                document.getElementById('game-status-text').innerText = `CHECKMATE! ${winnerName.toUpperCase()} WINS!`;
                 if (game.winner === 'white') document.getElementById('player-white-card').classList.add('active');
                 else document.getElementById('player-black-card').classList.add('active');
+            } else if (game.status === 'draw') {
+                document.getElementById('game-status-text').innerText = "STALEMATE (DRAW)";
             } else {
                 document.getElementById('game-status-text').innerText = "WAITING FOR PLAYERS";
             }
@@ -1241,10 +1905,10 @@
                 for (let c = 0; c < 8; c++) {
                     const square = document.getElementById(`square-${r}-${c}`);
                     const piece = game.board[r][c];
-                    
+
                     square.innerHTML = '';
                     square.className = `square ${(r + c) % 2 === 0 ? 'light-sq' : 'dark-sq'}`;
-                    
+
                     if (piece) {
                         square.setAttribute('data-piece', piece);
                         const pieceSpan = document.createElement('span');
@@ -1252,6 +1916,13 @@
                         pieceSpan.classList.add(piece.startsWith('w') ? 'white-piece' : 'black-piece');
                         pieceSpan.innerText = pieceSymbols[piece] || '';
                         square.appendChild(pieceSpan);
+
+                        // Flash King if in check
+                        if (piece === 'wk' && game.checkState === 'white') {
+                            square.classList.add('king-in-check');
+                        } else if (piece === 'bk' && game.checkState === 'black') {
+                            square.classList.add('king-in-check');
+                        }
                     } else {
                         square.removeAttribute('data-piece');
                     }
@@ -1269,6 +1940,84 @@
             // Update Lovense badges for White and Black players
             updateLovenseBadge('red', game.player1);
             updateLovenseBadge('yellow', game.player2);
+
+            // Update Vibe Mode Button
+            const vibeBtn = document.getElementById('btn-vibe-mode');
+            if (vibeBtn) {
+                const isFun = (game.vibeMode || 'fun') === 'fun';
+                vibeBtn.innerText = isFun ? '⚡ VIBE: FUN' : '🌸 VIBE: NORMAL';
+                vibeBtn.style.borderColor = isFun ? 'var(--neon-purple)' : 'var(--neon-blue)';
+                vibeBtn.style.color = isFun ? 'var(--neon-purple)' : 'var(--neon-blue)';
+            }
+
+            // Sync Toy Control overlays
+            const winnerOverlay = document.getElementById('toy-control-winner-overlay');
+            const loserOverlay = document.getElementById('toy-control-loser-overlay');
+            const cpuSkippedOverlay = document.getElementById('toy-control-cpu-skipped-overlay');
+            const noToyOverlay = document.getElementById('toy-control-no-toy-overlay');
+            const winnerNoToyOverlay = document.getElementById('toy-control-winner-no-toy-overlay');
+
+            if (winnerOverlay) winnerOverlay.classList.remove('show');
+            if (loserOverlay) loserOverlay.classList.remove('show');
+            if (cpuSkippedOverlay) cpuSkippedOverlay.classList.remove('show');
+            if (noToyOverlay) noToyOverlay.classList.remove('show');
+            if (winnerNoToyOverlay) winnerNoToyOverlay.classList.remove('show');
+
+            if (game.toyControl && game.toyControl.active) {
+                if (game.toyControl.cpuNoToy) {
+                    if (profile.uuid === game.toyControl.controllerUuid) {
+                        cpuSkippedOverlay.classList.add('show');
+                    }
+                } else if (game.toyControl.noToyTarget) {
+                    if (profile.uuid === game.toyControl.controllerUuid && winnerNoToyOverlay) {
+                        winnerNoToyOverlay.classList.add('show');
+                    } else if (profile.uuid === game.toyControl.targetUuid && noToyOverlay) {
+                        noToyOverlay.classList.add('show');
+                    }
+                } else {
+                    if (profile.uuid === game.toyControl.controllerUuid) {
+                        document.getElementById('toy-control-loser-name-span').innerText = game.toyControl.targetName;
+
+                        const strengthSlider = document.getElementById('control-strength-slider');
+                        const strengthVal = document.getElementById('control-strength-val');
+
+                        if (strengthSlider && document.activeElement !== strengthSlider) {
+                            strengthSlider.value = game.toyControl.currentStrength;
+                            strengthVal.innerText = game.toyControl.currentStrength;
+                        }
+
+                        document.querySelectorAll('.btn-pattern').forEach(btn => {
+                            if (btn.getAttribute('data-pattern') === game.toyControl.currentPattern) {
+                                btn.classList.add('active');
+                            } else {
+                                btn.classList.remove('active');
+                            }
+                        });
+
+                        winnerOverlay.classList.add('show');
+                        loserOverlay.classList.remove('show');
+                        if (winnerNoToyOverlay) winnerNoToyOverlay.classList.remove('show');
+                        if (noToyOverlay) noToyOverlay.classList.remove('show');
+                    } else if (profile.uuid === game.toyControl.targetUuid) {
+                        document.getElementById('toy-control-winner-name').innerText = game.toyControl.controllerName;
+                        loserOverlay.classList.add('show');
+                        winnerOverlay.classList.remove('show');
+                        if (winnerNoToyOverlay) winnerNoToyOverlay.classList.remove('show');
+                        if (noToyOverlay) noToyOverlay.classList.remove('show');
+                    } else {
+                        winnerOverlay.classList.remove('show');
+                        loserOverlay.classList.remove('show');
+                        if (winnerNoToyOverlay) winnerNoToyOverlay.classList.remove('show');
+                        if (noToyOverlay) noToyOverlay.classList.remove('show');
+                    }
+                }
+            } else {
+                winnerOverlay.classList.remove('show');
+                loserOverlay.classList.remove('show');
+                cpuSkippedOverlay.classList.remove('show');
+                if (noToyOverlay) noToyOverlay.classList.remove('show');
+                if (winnerNoToyOverlay) winnerNoToyOverlay.classList.remove('show');
+            }
 
             // Update open Lovense modal content dynamically
             const lovenseModal = document.getElementById('lovense-modal');
@@ -1289,9 +2038,9 @@
                     try {
                         btnToggleVoice.className = 'btn-reset btn-voice voice-connecting';
                         btnToggleVoice.innerText = '🎙️ CONNECTING...';
-                        
+
                         localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                        
+
                         btnToggleVoice.className = 'btn-reset btn-voice voice-connected';
                         btnToggleVoice.innerText = '🎙️ MUTE VOICE';
                         isVoiceConnected = true;
@@ -1307,7 +2056,7 @@
                 } else {
                     isMuted = !isMuted;
                     localStream.getAudioTracks().forEach(track => track.enabled = !isMuted);
-                    
+
                     if (isMuted) {
                         btnToggleVoice.className = 'btn-reset btn-voice voice-muted';
                         btnToggleVoice.innerText = '🎙️ UNMUTE';
@@ -1323,18 +2072,18 @@
 
         function createPeerConnection() {
             if (peerConnection) return;
-            
+
             peerConnection = new RTCPeerConnection(stunConfig);
-            
+
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-            
+
             peerConnection.ontrack = (event) => {
                 const remoteAudio = document.getElementById('remote-audio');
                 if (remoteAudio && event.streams[0]) {
                     remoteAudio.srcObject = event.streams[0];
                 }
             };
-            
+
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
                     socket.emit('voice_signal', { type: 'candidate', candidate: event.candidate });
@@ -1374,6 +2123,10 @@
             modal.classList.remove('show');
         }
 
+        function isToyConnectedForUi(player) {
+            return player && player.connected && player.toyEnabled;
+        }
+
         function updateLovenseModalContent() {
             if (!activeGame) return;
             const isMeRed = activeGame.player1 && activeGame.player1.uuid === profile.uuid;
@@ -1386,20 +2139,21 @@
             const codeText = document.getElementById('lovense-code-text');
             const codeVal = document.getElementById('lovense-code-val');
             const statusIndicator = document.getElementById('lovense-toy-status');
-            const testBtn = document.getElementById('btn-lovense-test');
             const verifyBtn = document.getElementById('btn-lovense-verify');
+            const disconnectBtn = document.getElementById('btn-lovense-disconnect');
+            const toyConnected = isToyConnectedForUi(me);
 
-            if (me.connected) {
+            if (toyConnected) {
                 qrImg.classList.add('hidden');
                 qrLoading.classList.add('hidden');
                 codeText.classList.add('hidden');
-                statusIndicator.innerText = "Connected: Toy Active";
+                statusIndicator.innerText = "Connected: Toy Linked";
                 statusIndicator.className = "status-indicator online";
-                testBtn.classList.remove('hidden');
                 if (verifyBtn) verifyBtn.classList.add('hidden');
+                if (disconnectBtn) disconnectBtn.classList.remove('hidden');
             } else {
-                testBtn.classList.add('hidden');
                 if (verifyBtn) verifyBtn.classList.remove('hidden');
+                if (disconnectBtn) disconnectBtn.classList.add('hidden');
                 statusIndicator.innerText = "Disconnected: Scan QR code";
                 statusIndicator.className = "status-indicator offline";
 
@@ -1407,7 +2161,7 @@
                     qrImg.src = me.qrCode;
                     qrImg.classList.remove('hidden');
                     qrLoading.classList.add('hidden');
-                    
+
                     if (me.linkCode) {
                         codeVal.innerText = me.linkCode;
                         codeText.classList.remove('hidden');
@@ -1440,10 +2194,10 @@
 
             // If it is the current player, show clickable connect/active button
             if (player.uuid === profile.uuid) {
-                if (player.connected) {
+                if (isToyConnectedForUi(player)) {
                     const badge = document.createElement('button');
                     badge.className = 'lovense-active-badge';
-                    badge.innerText = '🟢 Toy Active';
+                    badge.innerText = '🟢 Toy Connected';
                     badge.onclick = (e) => { e.stopPropagation(); openLovenseModal(); };
                     container.appendChild(badge);
                 } else {
@@ -1455,7 +2209,7 @@
                 }
             } else {
                 // If it is another player, show static badge if connected
-                if (player.connected) {
+                if (isToyConnectedForUi(player)) {
                     const badge = document.createElement('span');
                     badge.className = 'lovense-passive-badge';
                     badge.innerText = '🔌 Toy Connected';
@@ -1463,15 +2217,6 @@
                 }
             }
         }
-
-        // Bind test vibe button click
-        document.getElementById('btn-lovense-test').addEventListener('click', () => {
-            fetch(`${basePath}/api/vibe/test`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ gameId, uuid: profile.uuid })
-            });
-        });
 
         // Bind verify connection button click
         const verifyBtn = document.getElementById('btn-lovense-verify');
@@ -1488,6 +2233,7 @@
                     verifyBtn.innerText = "Verify Connection";
                     if (res.ok) {
                         showToast("Toy connected successfully!", "success");
+                        closeLovenseModal();
                     } else {
                         const err = await res.json();
                         showToast(err.error || "Verify failed. Ensure app/toy is active.", "error");
@@ -1496,6 +2242,37 @@
                     verifyBtn.disabled = false;
                     verifyBtn.innerText = "Verify Connection";
                     showToast("Failed to verify connection.", "error");
+                });
+            });
+        }
+
+        // Bind disconnect toy button click
+        const disconnectBtn = document.getElementById('btn-lovense-disconnect');
+        if (disconnectBtn) {
+            disconnectBtn.addEventListener('click', () => {
+                disconnectBtn.innerText = "Disconnecting...";
+                disconnectBtn.disabled = true;
+                if (typeof socket !== 'undefined') {
+                    socket.emit('stop_toy_control', { gameId });
+                }
+                fetch(`${basePath}/api/vibe/disconnect`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, uuid: profile.uuid })
+                }).then(async res => {
+                    disconnectBtn.disabled = false;
+                    disconnectBtn.innerText = "Disconnect Toy";
+                    if (res.ok) {
+                        showToast("Toy disconnected for this match.", "success");
+                        updateLovenseModalContent();
+                    } else {
+                        const err = await res.json();
+                        showToast(err.error || "Failed to disconnect toy.", "error");
+                    }
+                }).catch(() => {
+                    disconnectBtn.disabled = false;
+                    disconnectBtn.innerText = "Disconnect Toy";
+                    showToast("Failed to disconnect toy.", "error");
                 });
             });
         }
@@ -1513,7 +2290,7 @@
         // =========================================
         socket.on('update', (data) => {
             if (!data) {
-                window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                window.location.href = '/';
                 return;
             }
             const game = data.game || data;
@@ -1524,7 +2301,7 @@
         });
 
         // Set CPU Difficulty
-        window.setCpuDifficulty = function(diff) {
+        window.setCpuDifficulty = function (diff) {
             fetch(`${basePath}/api/set-difficulty`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1562,13 +2339,16 @@
                 <p>Welcome to <strong>Chess Duel</strong>! Here is how to play:</p>
                 <ul>
                     <li><strong>Objective:</strong> Capture the opponent's King to win the match.</li>
-                    <li><strong>Movement:</strong> Standard chess movement applies. Select a piece to highlight legal destination squares, then click a target square to move.</li>
-                    <li><strong>Piece Capture:</strong> Land on a square occupied by an opponent's piece to capture it and remove it from the board.</li>
-                    <li><strong>Winning:</strong> The game ends immediately when a King is captured. Press <em>RESET MATCH</em> to start a new duel.</li>
+                    <li><strong>Movement:</strong> Standard chess movement applies. Select a piece to highlight legal
+                        destination squares, then click a target square to move.</li>
+                    <li><strong>Piece Capture:</strong> Land on a square occupied by an opponent's piece to capture it
+                        and remove it from the board.</li>
+                    <li><strong>Winning:</strong> The game ends immediately when a King is captured. Press <em>RESET
+                            MATCH</em> to start a new duel.</li>
                 </ul>
             </div>
         </div>
     </div>
 </body>
-</html>
 
+</html>

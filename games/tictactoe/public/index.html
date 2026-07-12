@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multiplayer Tic Tac Toe Arcade</title>
     <!-- Premium Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap"
+        rel="stylesheet">
     <script>
         // Resolve base path dynamically
         const linkPathParts = window.location.pathname.split('/');
         const linkBoardIndex = linkPathParts.indexOf('board');
         const cssBasePath = linkBoardIndex !== -1 ? linkPathParts.slice(0, linkBoardIndex).join('/') : '';
-        
+
         // Insert style tag with cache buster
         const linkEl = document.createElement('link');
         linkEl.rel = 'stylesheet';
@@ -29,7 +32,8 @@
             background: rgba(9, 9, 14, 0.93) !important;
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            z-index: 100000 !important; /* Force on top of all layers */
+            z-index: 100000 !important;
+            /* Force on top of all layers */
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
@@ -123,6 +127,33 @@
             box-shadow: none !important;
         }
 
+        .btn-overlay-share-pop {
+            border-color: var(--neon-blue) !important;
+            color: var(--neon-blue) !important;
+            background: rgba(0, 238, 255, 0.1) !important;
+            box-shadow: 0 0 18px rgba(0, 238, 255, 0.4), inset 0 0 10px rgba(0, 238, 255, 0.15);
+            animation: share-pop-pulse 1.4s ease-in-out infinite;
+            letter-spacing: 1.4px;
+            font-size: 0.9rem;
+        }
+
+        .btn-overlay-share-pop:hover:not(:disabled) {
+            background: var(--neon-blue) !important;
+            color: #000 !important;
+            box-shadow: 0 0 24px rgba(0, 238, 255, 0.75);
+            transform: translateY(-1px) scale(1.01);
+        }
+
+        @keyframes share-pop-pulse {
+            0%,
+            100% {
+                box-shadow: 0 0 12px rgba(0, 238, 255, 0.35), inset 0 0 8px rgba(0, 238, 255, 0.12);
+            }
+            50% {
+                box-shadow: 0 0 24px rgba(0, 238, 255, 0.75), inset 0 0 14px rgba(0, 238, 255, 0.24);
+            }
+        }
+
         .overlay-desc {
             font-size: 0.7rem;
             color: rgba(255, 255, 255, 0.25) !important;
@@ -139,6 +170,7 @@
             gap: 10px;
             z-index: 999999;
         }
+
         .toast {
             background: rgba(10, 10, 20, 0.95);
             border: 1px solid var(--border-color);
@@ -148,22 +180,25 @@
             font-size: 0.8rem;
             font-weight: 600;
             color: var(--text-primary);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             transition: all 0.3s ease;
             opacity: 0;
             transform: translateY(20px);
         }
+
         .toast.show {
             opacity: 1;
             transform: translateY(0);
         }
+
         .toast.toast-success {
             border-left: 4px solid var(--neon-green);
         }
+
         .toast.toast-error {
             border-left: 4px solid var(--neon-red);
         }
-        
+
         /* Dropdown selection wrapper inside spectator card status buttons */
         .size-select-group {
             display: flex;
@@ -178,6 +213,7 @@
             border-radius: 6px;
             background: rgba(0, 0, 0, 0.3);
         }
+
         .size-select-group select {
             background: transparent;
             border: none;
@@ -188,11 +224,12 @@
             outline: none;
             cursor: pointer;
         }
+
         .size-select-group select option {
             background: var(--bg-dark);
             color: var(--text-primary);
         }
-    
+
         /* Instructions Modal Styles */
         .instructions-modal-overlay {
             position: fixed;
@@ -233,8 +270,15 @@
         }
 
         @keyframes modal-slide-up {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         .instructions-modal-close {
@@ -325,6 +369,7 @@
             display: flex;
             align-items: center;
         }
+
         .btn-lovense-connect {
             font-family: 'Orbitron', sans-serif;
             font-size: 0.65rem;
@@ -338,11 +383,13 @@
             transition: all 0.2s ease;
             text-transform: uppercase;
         }
+
         .btn-lovense-connect:hover {
             background: var(--neon-blue);
             color: var(--text-dark);
             box-shadow: 0 0 10px rgba(0, 238, 255, 0.4);
         }
+
         .lovense-active-badge {
             font-family: 'Orbitron', sans-serif;
             font-size: 0.65rem;
@@ -355,6 +402,7 @@
             text-shadow: 0 0 5px rgba(57, 255, 20, 0.5);
             cursor: pointer;
         }
+
         .lovense-passive-badge {
             font-family: 'Orbitron', sans-serif;
             font-size: 0.65rem;
@@ -366,6 +414,7 @@
             background: rgba(192, 0, 255, 0.1);
             text-shadow: 0 0 5px rgba(192, 0, 255, 0.5);
         }
+
         .chat-sponsor-bar {
             background: rgba(0, 238, 255, 0.04) !important;
             border-top: 1px solid rgba(0, 238, 255, 0.15) !important;
@@ -377,6 +426,7 @@
             font-weight: 500 !important;
             flex-shrink: 0 !important;
         }
+
         .chat-sponsor-bar a {
             color: #a0a0c0 !important;
             text-decoration: none !important;
@@ -384,11 +434,13 @@
             display: block !important;
             letter-spacing: 0.5px !important;
         }
+
         .chat-sponsor-bar a span {
             color: #00eeff !important;
             font-weight: 700 !important;
             text-shadow: 0 0 5px rgba(0, 238, 255, 0.3) !important;
         }
+
         .chat-sponsor-bar a:hover {
             color: #ffffff !important;
         }
@@ -396,6 +448,7 @@
     <!-- Socket.io Client -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
+
 <body>
 
     <!-- ========================================= -->
@@ -425,11 +478,15 @@
                 <div class="actions-card">
                     <div class="lobby-card-header">MATCH ACTIONS</div>
                     <div class="lobby-card-body">
-                        <p class="lobby-actions-desc" style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.45;">Create a new match room or instantly auto-join the first available game waiting for an opponent.</p>
+                        <p class="lobby-actions-desc"
+                            style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.45;">
+                            Create a new match room or instantly auto-join the first available game waiting for an
+                            opponent.</p>
                         <div class="lobby-buttons-row">
-                            <button id="btn-create-room" class="btn-lobby btn-primary">CREATE MATCH</button>
-                            <button id="btn-quick-play" class="btn-lobby btn-quick">QUICK PLAY</button>
-                            <button id="btn-play-cpu" class="btn-lobby btn-quick" style="border-color: var(--neon-purple); color: var(--neon-purple);">PLAY VS CPU</button>
+                            <button id="btn-quick-play" class="btn-lobby btn-quick" style="border-color: var(--neon-green) !important; color: var(--text-dark) !important; background: var(--neon-green) !important; box-shadow: 0 0 12px rgba(57, 255, 20, 0.4) !important;">CREATE MATCH</button>
+                            <button id="btn-play-cpu" class="btn-lobby btn-quick"
+                                style="border-color: var(--neon-purple); color: var(--neon-purple);">PLAY VS
+                                CPU</button>
                         </div>
                     </div>
                 </div>
@@ -443,7 +500,7 @@
                         <input type="text" id="lobby-search-input" placeholder="Search player or code...">
                     </div>
                 </div>
-                
+
                 <!-- Filter Tabs -->
                 <div class="lobby-filter-tabs">
                     <button class="btn-tab active" data-tab="joinable">JOINABLE</button>
@@ -501,12 +558,15 @@
                 </div>
 
                 <div class="status-center">
-                    <span id="game-status-text" class="status-badge" style="display: none !important;">WAITING FOR PLAYERS</span>
+                    <span id="game-status-text" class="status-badge" style="display: none !important;">WAITING FOR
+                        PLAYERS</span>
                     <div class="status-buttons">
                         <button id="btn-reset-board" class="btn-reset">RESET MATCH</button>
+                        <button id="btn-vibe-mode" class="btn-reset btn-share">⚡ VIBE: FUN</button>
                         <button id="btn-copy-link" class="btn-reset btn-share">SHARE MATCH</button>
-                        <button id="btn-toggle-voice" class="btn-reset btn-voice" style="display: none;">🎙️ JOIN VOICE</button>
-                        
+                        <button id="btn-toggle-voice" class="btn-reset btn-voice" style="display: none;">🎙️ JOIN
+                            VOICE</button>
+
                         <!-- Grid Size selection wrapped in action buttons list -->
                         <div class="size-select-group">
                             <label for="select-board-size">SIZE:</label>
@@ -523,7 +583,8 @@
                     <div class="player-info text-right">
                         <span class="player-label">PLAYER O</span>
                         <span id="player-o-name" class="player-name">Waiting...</span>
-                        <div id="lovense-yellow-status" class="lovense-badge-container" style="justify-content: flex-end;"></div>
+                        <div id="lovense-yellow-status" class="lovense-badge-container"
+                            style="justify-content: flex-end;"></div>
                     </div>
                     <div class="color-indicator"></div>
                 </div>
@@ -542,9 +603,13 @@
                                 <h3 class="overlay-title">WAITING FOR PLAYERS</h3>
                                 <p class="overlay-subtitle">Both players must join to start the match.</p>
                                 <div class="overlay-buttons">
-                                    <button id="btn-overlay-join-x" class="btn-overlay-join join-x-color">JOIN AS X</button>
-                                    <button id="btn-overlay-join-o" class="btn-overlay-join join-o-color">JOIN AS O</button>
+                                    <button id="btn-overlay-join-x" class="btn-overlay-join join-x-color">JOIN AS
+                                        X</button>
+                                    <button id="btn-overlay-join-o" class="btn-overlay-join join-o-color">JOIN AS
+                                        O</button>
                                 </div>
+                                <button id="btn-overlay-share-link" class="btn-overlay-join btn-overlay-share-pop hidden"
+                                    style="width: 100%; margin-bottom: 12px;">⚡ SHARE MATCH LINK ⚡</button>
                                 <p class="overlay-desc">(Or join automatically from Second Life)</p>
                             </div>
                         </div>
@@ -555,9 +620,13 @@
                                 <h3 class="overlay-title">SELECT CPU DIFFICULTY</h3>
                                 <p class="overlay-subtitle">Choose how smart CyberBot 🤖 will play.</p>
                                 <div class="overlay-buttons">
-                                    <button class="btn-overlay-join join-x-color" onclick="setCpuDifficulty('easy')">Easy</button>
-                                    <button class="btn-overlay-join join-o-color" onclick="setCpuDifficulty('medium')">Medium</button>
-                                    <button class="btn-overlay-join join-x-color" style="border-color: var(--neon-purple) !important; color: var(--neon-purple) !important;" onclick="setCpuDifficulty('hard')">Hard</button>
+                                    <button class="btn-overlay-join join-x-color"
+                                        onclick="setCpuDifficulty('easy')">Easy</button>
+                                    <button class="btn-overlay-join join-o-color"
+                                        onclick="setCpuDifficulty('medium')">Medium</button>
+                                    <button class="btn-overlay-join join-x-color"
+                                        style="border-color: var(--neon-purple) !important; color: var(--neon-purple) !important;"
+                                        onclick="setCpuDifficulty('hard')">Hard</button>
                                 </div>
                             </div>
                         </div>
@@ -569,7 +638,7 @@
                     <div class="chat-header">MATCH CHAT</div>
                     <div id="chat-messages" class="chat-messages"></div>
                     <div class="chat-sponsor-bar">
-                        <a href="https://www.lovense.com/" target="_blank">
+                        <a href="https://www.lovense.com/r/52zzr7" target="_blank">
                             ⚡ Powered by <span>Lovense</span> - Get Toys
                         </a>
                     </div>
@@ -595,15 +664,212 @@
                 Scan the QR code in the Lovense app or enter the code to connect your toy.
             </p>
             <div style="text-align:center; margin:15px 0;">
-                <div id="lovense-qr-loading" style="font-size: 0.85rem; color: var(--text-secondary);">Generating QR Code...</div>
-                <img id="lovense-qr-img" class="hidden" style="max-width:180px; border:6px solid #fff; border-radius:8px; margin:0 auto; display: block;" />
-                <div id="lovense-code-text" class="hidden" style="margin-top:15px; font-family:'Orbitron',sans-serif; color:var(--neon-blue); font-weight:bold; font-size: 1.1rem; letter-spacing: 2px;">
+                <div id="lovense-qr-loading" style="font-size: 0.85rem; color: var(--text-secondary);">Generating QR
+                    Code...</div>
+                <img id="lovense-qr-img" class="hidden"
+                    style="max-width:180px; border:6px solid #fff; border-radius:8px; margin:0 auto; display: block;" />
+                <div id="lovense-code-text" class="hidden"
+                    style="margin-top:15px; font-family:'Orbitron',sans-serif; color:var(--neon-blue); font-weight:bold; font-size: 1.1rem; letter-spacing: 2px;">
                     CODE: <span id="lovense-code-val">------</span>
                 </div>
             </div>
-            <div id="lovense-toy-status" class="status-indicator offline" style="display: inline-block; margin: 10px auto;">Disconnected: Scan QR code</div>
-            <button id="btn-lovense-verify" class="btn-terminal" style="margin-top:12px; width:100%; border-color: var(--neon-purple); color: var(--neon-purple);">Verify Connection</button>
-            <button id="btn-lovense-test" class="btn-terminal hidden" style="margin-top:12px; width:100%;">Test Vibe</button>
+            <div id="lovense-toy-status" class="status-indicator offline"
+                style="display: inline-block; margin: 10px auto;">Disconnected: Scan QR code</div>
+            <button id="btn-lovense-verify" class="btn-terminal"
+                style="margin-top:12px; width:100%; border-color: var(--neon-purple); color: var(--neon-purple);">Verify
+                Connection</button>
+            <button id="btn-lovense-disconnect" class="btn-terminal hidden"
+                style="margin-top:12px; width:100%; border-color: var(--neon-red); color: var(--neon-red);">Disconnect
+                Toy</button>
+        </div>
+    </div>
+
+    <!-- Lovense Toy Control Winner Panel -->
+    <div id="toy-control-winner-overlay" class="instructions-modal-overlay">
+        <div class="instructions-modal-card toy-control-card winner-card"
+            style="border-color: var(--neon-purple); box-shadow: 0 0 35px rgba(187, 75, 255, 0.25);">
+            <button class="instructions-modal-close"
+                onclick="document.getElementById('toy-control-winner-overlay').classList.remove('show')">&times;</button>
+            <h3 class="instructions-modal-title control-title"
+                style="color: var(--neon-purple); text-shadow: 0 0 10px rgba(187, 75, 255, 0.4);">⚡ TOY CONTROL ACTIVE ⚡
+            </h3>
+            <p class="control-subtitle" style="margin-bottom: 20px; font-size: 0.9rem;">You are now controlling <span
+                    id="toy-control-loser-name-span"
+                    style="color: var(--neon-yellow); font-weight: bold;">Opponent</span>'s toy!</p>
+
+            <div class="control-timer-container"
+                style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <div
+                    style="font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase;">
+                    Time Remaining:</div>
+                <div id="toy-control-winner-timer" class="timer-digits"
+                    style="font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 900; color: var(--neon-purple); text-shadow: 0 0 15px rgba(187, 75, 255, 0.5); line-height: 1.1; margin-bottom: 8px;">
+                    00:00</div>
+                <div class="timer-progress-bg"
+                    style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                    <div id="toy-control-winner-progress" class="timer-progress-fill"
+                        style="width: 100%; height: 100%; background: linear-gradient(90deg, var(--neon-purple), var(--neon-blue)); transition: width 0.3s linear;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="slider-container" style="margin: 25px 0 20px 0;">
+                <div
+                    style="display: flex; justify-content: space-between; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; margin-bottom: 8px;">
+                    <span>VIBRATION LEVEL:</span>
+                    <span id="control-strength-val" style="color: var(--neon-blue); font-weight: bold;">5</span>
+                </div>
+                <input type="range" id="control-strength-slider" min="0" max="20" value="5" class="neon-slider"
+                    style="width: 100%; cursor: pointer;" />
+            </div>
+
+            <div class="preset-patterns-container" style="margin: 20px 0;">
+                <div
+                    style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; margin-bottom: 10px; text-align: left;">
+                    SELECT PATTERN:</div>
+                <div class="pattern-buttons-grid"
+                    style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                    <button class="btn-pattern active btn-terminal" data-pattern="constant"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px;">CONST</button>
+                    <button class="btn-pattern btn-terminal" data-pattern="pulse"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px;">PULSE</button>
+                    <button class="btn-pattern btn-terminal" data-pattern="wave"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px;">WAVE</button>
+                    <button class="btn-pattern btn-terminal" data-pattern="chaos"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px;">CHAOS</button>
+                    <button class="btn-pattern btn-terminal" data-pattern="heartbeat"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px;">HEARTBEAT</button>
+                    <button class="btn-pattern btn-terminal" data-pattern="escalator"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px;">ESCALATOR</button>
+                    <button class="btn-pattern btn-terminal" data-pattern="tease"
+                        style="padding: 6px 0; font-size: 0.7rem; letter-spacing: 0.5px; grid-column: span 3;">TEASE &
+                        RELEASE</button>
+                </div>
+            </div>
+
+            <div class="quick-buzz-container" style="margin: 20px 0 25px 0;">
+                <div
+                    style="font-family: 'Orbitron', sans-serif; font-size: 0.85rem; margin-bottom: 10px; text-align: left;">
+                    QUICK ACTIONS:</div>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-quick-buzz-max" class="btn-terminal"
+                        style="flex: 1; border-color: var(--neon-red); color: var(--neon-red); font-size: 0.75rem;">🔥
+                        MAX BLAST</button>
+                    <button id="btn-quick-buzz-tickle" class="btn-terminal"
+                        style="flex: 1; border-color: var(--neon-green); color: var(--neon-green); font-size: 0.75rem;">🍃
+                        TICKLE</button>
+                </div>
+            </div>
+
+            <button id="btn-toy-control-release" class="btn-terminal"
+                style="width: 100%; border-color: rgba(255,255,255,0.2); color: #fff;">RELEASE PLAYER</button>
+        </div>
+    </div>
+
+    <!-- Lovense Toy Control Loser Alert Panel -->
+    <div id="toy-control-loser-overlay" class="instructions-modal-overlay">
+        <div class="instructions-modal-card toy-control-card loser-card"
+            style="border-color: var(--neon-red); box-shadow: 0 0 35px rgba(255, 51, 102, 0.25);">
+            <h3 class="instructions-modal-title control-title"
+                style="color: var(--neon-red); text-shadow: 0 0 10px rgba(255, 51, 102, 0.4);">⚠️ TOY UNDER EXTERNAL
+                CONTROL ⚠️</h3>
+            <p class="control-subtitle" style="margin-bottom: 20px; font-size: 0.9rem;"><span
+                    id="toy-control-winner-name" style="color: var(--neon-yellow); font-weight: bold;">Opponent</span>
+                is currently controlling your connected toy!</p>
+
+            <div class="control-timer-container"
+                style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <div
+                    style="font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase;">
+                    Control Duration Remaining:</div>
+                <div id="toy-control-loser-timer" class="timer-digits"
+                    style="font-family: 'Orbitron', sans-serif; font-size: 2.2rem; font-weight: 900; color: var(--neon-red); text-shadow: 0 0 15px rgba(255, 51, 102, 0.5); line-height: 1.1; margin-bottom: 8px;">
+                    00:00</div>
+                <div class="timer-progress-bg"
+                    style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden;">
+                    <div id="toy-control-loser-progress" class="timer-progress-fill"
+                        style="width: 100%; height: 100%; background: linear-gradient(90deg, var(--neon-red), var(--neon-purple)); transition: width 0.3s linear;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="indicator-container" style="margin: 25px 0;">
+                <div
+                    style="display: flex; justify-content: space-between; font-family: 'Orbitron', sans-serif; font-size: 0.85rem; margin-bottom: 8px;">
+                    <span>CURRENT INTENSITY:</span>
+                    <span id="toy-control-live-strength" style="color: var(--neon-red); font-weight: bold;">0</span>
+                </div>
+                <div class="progress-bar-container"
+                    style="width:100%; height:12px; background:rgba(255,255,255,0.05); border-radius:6px; overflow:hidden; border:1px solid rgba(255,255,255,0.1);">
+                    <div id="toy-control-live-progress-fill"
+                        style="width:0%; height:100%; background:linear-gradient(90deg, var(--neon-yellow), var(--neon-red)); transition:width 0.3s ease;">
+                    </div>
+                </div>
+                <div id="toy-control-live-pattern"
+                    style="font-size:0.65rem; color:var(--text-secondary); margin-top:8px; font-family:'Orbitron',sans-serif; text-transform: uppercase;">
+                    Active Pattern: constant</div>
+            </div>
+
+            <button id="btn-toy-control-safeword" class="btn-terminal"
+                style="width:100%; padding:14px 0; font-weight:bold; border-color:var(--neon-red); color:var(--neon-red); font-size:0.9rem; text-shadow:0 0 5px rgba(255,51,102,0.3); background:rgba(255, 51, 102, 0.05); margin-top: 15px;">
+                🛑 SAFE WORD / STOP TOY
+            </button>
+        </div>
+    </div>
+
+    <!-- Lovense Toy Control CPU Skipped Panel -->
+    <div id="toy-control-cpu-skipped-overlay" class="instructions-modal-overlay">
+        <div class="instructions-modal-card toy-control-card"
+            style="border-color: var(--neon-blue); text-align: center;">
+            <button class="instructions-modal-close"
+                onclick="document.getElementById('toy-control-cpu-skipped-overlay').classList.remove('show')">&times;</button>
+            <h3 class="instructions-modal-title control-title"
+                style="color: var(--neon-blue); text-shadow: 0 0 10px rgba(0, 243, 255, 0.4);">🏆 MATCH COMPLETED 🏆
+            </h3>
+            <p style="font-size: 0.95rem; margin: 20px 0; line-height: 1.5; color: var(--text-primary);">
+                You won against <strong>CyberBot 🤖</strong>!
+            </p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; margin-bottom: 25px;">
+                The CPU opponent doesn't have a physical toy connected, so the Toy Control phase was skipped.
+            </p>
+            <button onclick="document.getElementById('toy-control-cpu-skipped-overlay').classList.remove('show')"
+                class="btn-terminal" style="width: 100%;">CLOSE WINDOW</button>
+        </div>
+    </div>
+
+    <!-- Lovense No Toy Connected Loser Panel -->
+    <div id="toy-control-no-toy-overlay" class="instructions-modal-overlay">
+        <div class="instructions-modal-card toy-control-card"
+            style="border-color: var(--neon-yellow); text-align: center;">
+            <button class="instructions-modal-close"
+                onclick="closeNoToyOverlay('toy-control-no-toy-overlay')">&times;</button>
+            <h3 class="instructions-modal-title" style="color: var(--neon-yellow);">YOU LOST, BUT WE COULD HAVE HAD FUN</h3>
+            <p style="font-size: 0.9rem; line-height: 1.6; margin: 20px 0; color: var(--text-secondary);">
+                You are not connected to Lovense, so your opponent did not get toy control.
+            </p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px;">
+                Connect here: <a href="https://www.lovense.com/r/52zzr7" target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue);">Lovense</a>
+            </p>
+            <button class="btn-terminal" style="width: 100%;"
+                onclick="closeNoToyOverlay('toy-control-no-toy-overlay')">OK</button>
+        </div>
+    </div>
+
+    <!-- Lovense Winner No Target Toy Panel -->
+    <div id="toy-control-winner-no-toy-overlay" class="instructions-modal-overlay">
+        <div class="instructions-modal-card toy-control-card"
+            style="border-color: var(--neon-blue); text-align: center;">
+            <button class="instructions-modal-close"
+                onclick="closeNoToyOverlay('toy-control-winner-no-toy-overlay')">&times;</button>
+            <h3 class="instructions-modal-title" style="color: var(--neon-blue);">NO TOY CONTROL THIS ROUND</h3>
+            <p style="font-size: 0.9rem; line-height: 1.6; margin: 20px 0; color: var(--text-secondary);">
+                Your opponent was not connected to Lovense, so you could not control their toy this time.
+            </p>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px;">
+                Get your next toy here: <a href="https://www.lovense.com/r/52zzr7" target="_blank" rel="noopener noreferrer" style="color: var(--neon-blue);">Lovense</a>
+            </p>
+            <button class="btn-terminal" style="width: 100%;"
+                onclick="closeNoToyOverlay('toy-control-winner-no-toy-overlay')">OK</button>
         </div>
     </div>
 
@@ -619,9 +885,11 @@
         let activeTurn = 1;
         let boardSize = 3;
         let activeGame = null;
-        const isDebug = new URLSearchParams(window.location.search).get('debug') === 'true' || 
-                        window.location.hostname === 'localhost' || 
-                        window.location.hostname === '127.0.0.1';
+        let noToyPromptActive = false;
+        let noToyPromptDismissed = false;
+        const isDebug = new URLSearchParams(window.location.search).get('debug') === 'true' ||
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1';
 
         // WebRTC Voice Chat variables
         let localStream = null;
@@ -638,7 +906,7 @@
         function getPlayerProfile() {
             let uuid = localStorage.getItem('tictactoe_player_uuid');
             let name = localStorage.getItem('tictactoe_player_name');
-            
+
             if (!uuid) {
                 uuid = 'web-' + Math.random().toString(36).substr(2, 9);
                 localStorage.setItem('tictactoe_player_uuid', uuid);
@@ -656,15 +924,15 @@
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             if (!container) return;
-            
+
             const toast = document.createElement('div');
             toast.className = `toast toast-${type}`;
             toast.innerText = message;
-            
+
             container.appendChild(toast);
-            
+
             setTimeout(() => toast.classList.add('show'), 10);
-            
+
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 300);
@@ -701,10 +969,10 @@
         function showLobbyView() {
             document.getElementById('lobby-view').classList.remove('hidden');
             document.getElementById('spectator-view').classList.add('hidden');
-            
+
             const nameInput = document.getElementById('profile-name-input');
             nameInput.value = profile.name;
-            
+
             document.getElementById('btn-save-profile').addEventListener('click', () => {
                 const newName = nameInput.value.trim();
                 if (newName) {
@@ -715,12 +983,6 @@
                     showToast('Please enter a valid nickname.');
                 }
             });
-            
-            document.getElementById('btn-create-room').addEventListener('click', () => {
-                const roomCode = 'TT-' + Math.random().toString(36).substr(2, 4).toUpperCase();
-                navigateToRoom(roomCode);
-            });
-
             document.getElementById('btn-play-cpu').addEventListener('click', async () => {
                 const roomCode = 'CPU-' + Math.random().toString(36).substr(2, 4).toUpperCase();
                 try {
@@ -734,15 +996,15 @@
                 }
                 navigateToRoom(roomCode);
             });
-            
+
             document.getElementById('btn-quick-play').addEventListener('click', async () => {
                 try {
                     const res = await fetch(`${basePath}/api/rooms`);
                     if (!res.ok) throw new Error('Failed to fetch rooms');
                     const rooms = await res.json();
-                    
+
                     const joinableRoom = rooms.find(room => room.status === 'waiting' && (!room.player1 || !room.player2));
-                    
+
                     if (joinableRoom) {
                         showToast(`Match found! Joining room ${joinableRoom.id}...`, 'success');
                         setTimeout(() => navigateToRoom(joinableRoom.id), 800);
@@ -791,10 +1053,10 @@
                 currentPage++;
                 filterAndRenderRooms();
             });
-            
+
             fetchActiveRooms();
             const pollInterval = setInterval(fetchActiveRooms, 5000);
-            
+
             window.addEventListener('beforeunload', () => clearInterval(pollInterval));
         }
 
@@ -855,25 +1117,25 @@
             const container = document.getElementById('rooms-list-container');
             const noRoomsMsg = document.getElementById('no-rooms-message');
             container.innerHTML = '';
-            
+
             if (rooms.length === 0) {
                 noRoomsMsg.classList.remove('hidden');
                 return;
             }
-            
+
             noRoomsMsg.classList.add('hidden');
             rooms.forEach(room => {
                 const row = document.createElement('div');
                 row.className = 'room-item';
-                
+
                 const p1Name = room.player1 ? room.player1.name : 'Waiting...';
                 const p2Name = room.player2 ? room.player2.name : 'Waiting...';
-                
+
                 const isFull = room.player1 && room.player2;
                 const joinBtnHtml = !isFull
                     ? `<button class="btn-room-action btn-join-action" onclick="navigateToRoom('${room.id}')">JOIN</button>`
                     : `<button class="btn-room-action btn-spec-action" onclick="navigateToRoom('${room.id}')">SPECTATE</button>`;
-                
+
                 row.innerHTML = `
                     <div class="room-code-col">
                         <span class="room-id-badge">${room.id}</span>
@@ -898,7 +1160,7 @@
             document.getElementById('lobby-view').classList.add('hidden');
             document.getElementById('spectator-view').classList.remove('hidden');
             renderGridStructure(boardSize);
-            
+
             socket.emit('join_game', gameId, profile.uuid);
 
             // Bind Exit
@@ -908,25 +1170,30 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ gameId, uuid: profile.uuid })
                 }).finally(() => {
-                    window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                    window.location.href = '/';
                 });
             });
 
             // Bind Share Link
             const copyLinkBtn = document.getElementById('btn-copy-link');
-            if (copyLinkBtn) {
-                copyLinkBtn.addEventListener('click', () => {
-                    const matchUrl = window.location.origin + basePath + '/board/' + gameId;
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(matchUrl).then(() => {
-                            showToast('Match link copied! Share it with a friend.', 'success');
-                        }).catch(err => {
-                            fallbackCopyText(matchUrl);
-                        });
-                    } else {
+            const copyMatchLink = () => {
+                const matchUrl = window.location.origin + basePath + '/board/' + gameId;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(matchUrl).then(() => {
+                        showToast('Match link copied! Share it with a friend.', 'success');
+                    }).catch(err => {
                         fallbackCopyText(matchUrl);
-                    }
-                });
+                    });
+                } else {
+                    fallbackCopyText(matchUrl);
+                }
+            };
+            if (copyLinkBtn) {
+                copyLinkBtn.addEventListener('click', copyMatchLink);
+            }
+            const overlayShareBtn = document.getElementById('btn-overlay-share-link');
+            if (overlayShareBtn) {
+                overlayShareBtn.addEventListener('click', copyMatchLink);
             }
 
             function fallbackCopyText(text) {
@@ -958,7 +1225,7 @@
                     }
                 });
             });
-            
+
             document.getElementById('btn-overlay-join-o').addEventListener('click', () => {
                 fetch(`${basePath}/api/join`, {
                     method: 'POST',
@@ -1002,8 +1269,126 @@
                 });
             });
 
+            const vibeBtnToggle = document.getElementById('btn-vibe-mode');
+            if (vibeBtnToggle) {
+                vibeBtnToggle.addEventListener('click', () => {
+                    fetch(`${basePath}/api/toggle-vibe-mode`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ gameId })
+                    });
+                });
+            }
+
+            const strengthSlider = document.getElementById('control-strength-slider');
+            const strengthVal = document.getElementById('control-strength-val');
+            if (strengthSlider) {
+                strengthSlider.addEventListener('input', (e) => {
+                    strengthVal.innerText = e.target.value;
+                    const patternBtn = document.querySelector('.btn-pattern.active');
+                    const pattern = patternBtn ? patternBtn.getAttribute('data-pattern') : 'constant';
+                    socket.emit('control_toy', { gameId, strength: e.target.value, pattern });
+                });
+            }
+
+            document.querySelectorAll('.btn-pattern').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.btn-pattern').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+
+                    const val = strengthSlider ? strengthSlider.value : 5;
+                    const pattern = e.target.getAttribute('data-pattern');
+                    socket.emit('control_toy', { gameId, strength: val, pattern });
+                });
+            });
+
+            const btnMax = document.getElementById('btn-quick-buzz-max');
+            if (btnMax) {
+                btnMax.addEventListener('click', () => {
+                    socket.emit('control_toy', { gameId, strength: 20, pattern: 'constant' });
+                    showToast('🔥 MAX BLAST ACTIVATED', 'error');
+                    setTimeout(() => {
+                        const val = strengthSlider ? strengthSlider.value : 5;
+                        const patternBtn = document.querySelector('.btn-pattern.active');
+                        const pattern = patternBtn ? patternBtn.getAttribute('data-pattern') : 'constant';
+                        socket.emit('control_toy', { gameId, strength: val, pattern });
+                    }, 3000);
+                });
+            }
+
+            const btnTickle = document.getElementById('btn-quick-buzz-tickle');
+            if (btnTickle) {
+                btnTickle.addEventListener('click', () => {
+                    socket.emit('control_toy', { gameId, strength: 3, pattern: 'pulse' });
+                    showToast('🍃 TICKLING TARGET', 'success');
+                    setTimeout(() => {
+                        const val = strengthSlider ? strengthSlider.value : 5;
+                        const patternBtn = document.querySelector('.btn-pattern.active');
+                        const pattern = patternBtn ? patternBtn.getAttribute('data-pattern') : 'constant';
+                        socket.emit('control_toy', { gameId, strength: val, pattern });
+                    }, 4000);
+                });
+            }
+
+            const btnRelease = document.getElementById('btn-toy-control-release');
+            if (btnRelease) {
+                btnRelease.addEventListener('click', () => {
+                    socket.emit('stop_toy_control', { gameId });
+                });
+            }
+
+            const btnSafeword = document.getElementById('btn-toy-control-safeword');
+            if (btnSafeword) {
+                btnSafeword.addEventListener('click', () => {
+                    socket.emit('stop_toy_control', { gameId });
+
+                    const isMeX = activeGame && activeGame.player1 && activeGame.player1.uuid === profile.uuid;
+                    const me = isMeX ? activeGame.player1 : (activeGame ? activeGame.player2 : null);
+                    if (me) {
+                        me.connected = false;
+                        me.toyEnabled = false;
+                        updateLovenseModalContent();
+                        updateLovenseBadge(isMeX ? 'red' : 'yellow', me);
+                    }
+                    showToast('🔴 SAFE WORD TRIGGERED. TOY STOPPED AND DISCONNECTED.', 'error');
+                });
+            }
+
+            socket.on('toy_control_tick', (data) => {
+                const { currentStrength, pattern, remainingSec } = data;
+                const minutes = Math.floor(remainingSec / 60);
+                const seconds = remainingSec % 60;
+                const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                const durationSec = (activeGame && activeGame.vibeMode === 'normal') ? 60 : 120;
+                const progressPercent = (remainingSec / durationSec) * 100;
+
+                const wTimer = document.getElementById('toy-control-winner-timer');
+                if (wTimer) wTimer.innerText = timeStr;
+                const wProgress = document.getElementById('toy-control-winner-progress');
+                if (wProgress) wProgress.style.width = `${progressPercent}%`;
+
+                const lTimer = document.getElementById('toy-control-loser-timer');
+                if (lTimer) lTimer.innerText = timeStr;
+                const lProgress = document.getElementById('toy-control-loser-progress');
+                if (lProgress) lProgress.style.width = `${progressPercent}%`;
+
+                const lStrength = document.getElementById('toy-control-live-strength');
+                if (lStrength) lStrength.innerText = currentStrength;
+                const lFill = document.getElementById('toy-control-live-progress-fill');
+                if (lFill) lFill.style.width = `${(currentStrength / 20) * 100}%`;
+                const lPattern = document.getElementById('toy-control-live-pattern');
+                if (lPattern) lPattern.innerText = `Active Pattern: ${pattern}`;
+            });
+
+            socket.on('toy_control_end', () => {
+                document.getElementById('toy-control-winner-overlay').classList.remove('show');
+                document.getElementById('toy-control-loser-overlay').classList.remove('show');
+                document.getElementById('toy-control-cpu-skipped-overlay').classList.remove('show');
+                showToast('Toy control phase has ended.', 'info');
+            });
+
             initVoiceChat();
-            
+
             socket.on('voice_signal', async (data) => {
                 if (!localStream) return;
 
@@ -1057,11 +1442,11 @@
 
             function escapeHtml(unsafe) {
                 return unsafe
-                     .replace(/&/g, "&amp;")
-                     .replace(/</g, "&lt;")
-                     .replace(/>/g, "&gt;")
-                     .replace(/"/g, "&quot;")
-                     .replace(/'/g, "&#039;");
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
             }
 
             function sendChatMessage() {
@@ -1090,7 +1475,7 @@
             const btnReload = document.getElementById('btn-standalone-reload');
             if (btnBack) {
                 btnBack.addEventListener('click', () => {
-                    window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                    window.location.href = '/';
                 });
             }
             if (btnReload) {
@@ -1103,10 +1488,10 @@
         function renderGridStructure(size) {
             const gridContainer = document.getElementById('tictactoe-grid');
             gridContainer.innerHTML = '';
-            
+
             gridContainer.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
             gridContainer.style.gridTemplateRows = `repeat(${size}, 1fr)`;
-            
+
             let cellClass = 'cell-medium';
             if (size === 6) cellClass = 'cell-small';
             if (size === 10) cellClass = 'cell-tiny';
@@ -1116,7 +1501,7 @@
                     const cell = document.createElement('div');
                     cell.className = `cell ${cellClass}`;
                     cell.id = `cell-${r}-${c}`;
-                    
+
                     cell.addEventListener('click', () => handleCellClick(r, c));
                     gridContainer.appendChild(cell);
                 }
@@ -1124,9 +1509,9 @@
         }
 
         function handleCellClick(r, c) {
-            const myRole = (activeGame && activeGame.player1 && activeGame.player1.uuid === profile.uuid) ? 'X' : 
-                           (activeGame && activeGame.player2 && activeGame.player2.uuid === profile.uuid) ? 'O' : null;
-            
+            const myRole = (activeGame && activeGame.player1 && activeGame.player1.uuid === profile.uuid) ? 'X' :
+                (activeGame && activeGame.player2 && activeGame.player2.uuid === profile.uuid) ? 'O' : null;
+
             const canMove = isDebug || (myRole && ((myRole === 'X' && activeTurn === 1) || (myRole === 'O' && activeTurn === 2)) && activeGame.status === 'playing');
             if (!canMove) return;
 
@@ -1149,22 +1534,22 @@
             if (game.status === 'abandoned') {
                 if (isRedirecting) return;
                 isRedirecting = true;
-                
+
                 document.getElementById('game-status-text').innerText = "OPPONENT LEFT. ENDING MATCH...";
-                showToast('Opponent has left the match. Returning to lobby...', 'error');
-                
+                showToast('Opponent has left the match. Returning to games...', 'error');
+
                 document.getElementById('tictactoe-grid').style.pointerEvents = 'none';
                 closeVoiceChat();
-                
+
                 setTimeout(() => {
-                    window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                    window.location.href = '/';
                 }, 3000);
                 return;
             }
 
             const btnToggleVoice = document.getElementById('btn-toggle-voice');
             const isParticipant = (game.player1 && game.player1.uuid === profile.uuid) || (game.player2 && game.player2.uuid === profile.uuid);
-            
+
             if (game.status === 'playing' && isParticipant) {
                 if (btnToggleVoice) btnToggleVoice.style.display = 'inline-block';
             } else {
@@ -1173,7 +1558,7 @@
             }
 
             activeTurn = game.turn;
-            
+
             if (game.size !== boardSize) {
                 boardSize = game.size;
                 document.getElementById('select-board-size').value = boardSize;
@@ -1195,10 +1580,11 @@
             const overlay = document.getElementById('join-overlay');
             const joinXBtn = document.getElementById('btn-overlay-join-x');
             const joinOBtn = document.getElementById('btn-overlay-join-o');
+            const overlayShareBtn = document.getElementById('btn-overlay-share-link');
 
             if (game.status === 'waiting') {
                 overlay.classList.remove('fade-out');
-                
+
                 if (game.player1) {
                     joinXBtn.innerText = `X: ${game.player1.name.toUpperCase()}`;
                     joinXBtn.disabled = true;
@@ -1214,16 +1600,24 @@
                     joinOBtn.innerText = `JOIN AS O`;
                     joinOBtn.disabled = false;
                 }
-                
+
                 const isAlreadyInRoom = (game.player1 && game.player1.uuid === profile.uuid) || (game.player2 && game.player2.uuid === profile.uuid);
                 if (isAlreadyInRoom) {
-                    overlay.innerHTML = `
-                        <div class="overlay-card">
-                            <h3 class="overlay-title">WAITING FOR OPPONENT</h3>
-                            <p class="overlay-subtitle">Share the room code or link with a friend to begin.</p>
-                            <p class="overlay-desc">(Or join automatically from Second Life)</p>
-                        </div>
-                    `;
+                    const overlayTitle = overlay.querySelector('.overlay-title');
+                    const overlaySubtitle = overlay.querySelector('.overlay-subtitle');
+                    if (overlayTitle) overlayTitle.innerText = 'WAITING FOR OPPONENT';
+                    if (overlaySubtitle) overlaySubtitle.innerText = 'Share the room code or link with a friend to begin.';
+                    joinXBtn.style.display = 'none';
+                    joinOBtn.style.display = 'none';
+                    if (overlayShareBtn) overlayShareBtn.classList.remove('hidden');
+                } else {
+                    const overlayTitle = overlay.querySelector('.overlay-title');
+                    const overlaySubtitle = overlay.querySelector('.overlay-subtitle');
+                    if (overlayTitle) overlayTitle.innerText = 'WAITING FOR PLAYERS';
+                    if (overlaySubtitle) overlaySubtitle.innerText = 'Both players must join to start the match.';
+                    joinXBtn.style.display = 'block';
+                    joinOBtn.style.display = 'block';
+                    if (overlayShareBtn) overlayShareBtn.classList.add('hidden');
                 }
             } else {
                 overlay.classList.add('fade-out');
@@ -1260,7 +1654,9 @@
                     document.getElementById('game-status-text').innerText = "O'S TURN";
                 }
             } else if (game.status === 'won') {
-                const winnerName = game.winner === 1 ? game.player1.name : game.player2.name;
+                const winnerName = game.winner === 1
+                    ? (game.player1 ? game.player1.name : 'Player X')
+                    : (game.player2 ? game.player2.name : 'Player O');
                 document.getElementById('game-status-text').innerText = `${winnerName.toUpperCase()} WINS!`;
                 if (game.winner === 1) document.getElementById('player-x-card').classList.add('active');
                 else document.getElementById('player-o-card').classList.add('active');
@@ -1276,7 +1672,7 @@
                     const cell = document.getElementById(`cell-${r}-${c}`);
                     if (!cell) continue;
                     const val = game.board[r][c];
-                    
+
                     cell.innerHTML = '';
                     cell.className = cell.className.split(' ').filter(cn => cn !== 'winning-cell').join(' ');
 
@@ -1300,6 +1696,100 @@
             updateLovenseBadge('red', game.player1);
             updateLovenseBadge('yellow', game.player2);
 
+            const vibeBtn = document.getElementById('btn-vibe-mode');
+            if (vibeBtn) {
+                const isFun = (game.vibeMode || 'fun') === 'fun';
+                vibeBtn.innerText = isFun ? '⚡ VIBE: FUN' : '🌸 VIBE: NORMAL';
+                vibeBtn.style.borderColor = isFun ? 'var(--neon-purple)' : 'var(--neon-blue)';
+                vibeBtn.style.color = isFun ? 'var(--neon-purple)' : 'var(--neon-blue)';
+            }
+
+            const winnerOverlay = document.getElementById('toy-control-winner-overlay');
+            const loserOverlay = document.getElementById('toy-control-loser-overlay');
+            const cpuSkippedOverlay = document.getElementById('toy-control-cpu-skipped-overlay');
+            const noToyOverlay = document.getElementById('toy-control-no-toy-overlay');
+            const winnerNoToyOverlay = document.getElementById('toy-control-winner-no-toy-overlay');
+
+            if (winnerOverlay) winnerOverlay.classList.remove('show');
+            if (loserOverlay) loserOverlay.classList.remove('show');
+            if (cpuSkippedOverlay) cpuSkippedOverlay.classList.remove('show');
+            if (!game.toyControl || !game.toyControl.active || !game.toyControl.noToyTarget) {
+                noToyPromptDismissed = false;
+            }
+            if (!noToyPromptActive) {
+                if (noToyOverlay) noToyOverlay.classList.remove('show');
+                if (winnerNoToyOverlay) winnerNoToyOverlay.classList.remove('show');
+            }
+
+            if (game.toyControl && game.toyControl.active) {
+                if (game.toyControl.cpuNoToy) {
+                    if (profile.uuid === game.toyControl.controllerUuid && cpuSkippedOverlay) {
+                        cpuSkippedOverlay.classList.add('show');
+                    }
+                    if (winnerOverlay) winnerOverlay.classList.remove('show');
+                    if (loserOverlay) loserOverlay.classList.remove('show');
+                } else if (game.toyControl.noToyTarget) {
+                    if (!noToyPromptDismissed) {
+                        noToyPromptActive = true;
+                        if (profile.uuid === game.toyControl.controllerUuid && winnerNoToyOverlay) {
+                            winnerNoToyOverlay.classList.add('show');
+                        } else if (profile.uuid === game.toyControl.targetUuid && noToyOverlay) {
+                            noToyOverlay.classList.add('show');
+                        }
+                    }
+                } else if (profile.uuid === game.toyControl.controllerUuid) {
+                    document.getElementById('toy-control-loser-name-span').innerText = game.toyControl.targetName;
+
+                    const strengthSlider = document.getElementById('control-strength-slider');
+                    const strengthVal = document.getElementById('control-strength-val');
+                    if (strengthSlider && document.activeElement !== strengthSlider) {
+                        strengthSlider.value = game.toyControl.currentStrength;
+                        strengthVal.innerText = game.toyControl.currentStrength;
+                    }
+
+                    document.querySelectorAll('.btn-pattern').forEach(btn => {
+                        if (btn.getAttribute('data-pattern') === game.toyControl.currentPattern) {
+                            btn.classList.add('active');
+                        } else {
+                            btn.classList.remove('active');
+                        }
+                    });
+
+                    if (winnerOverlay) winnerOverlay.classList.add('show');
+                    if (loserOverlay) loserOverlay.classList.remove('show');
+                    if (cpuSkippedOverlay) cpuSkippedOverlay.classList.remove('show');
+                    if (!noToyPromptActive) {
+                        if (winnerNoToyOverlay) winnerNoToyOverlay.classList.remove('show');
+                        if (noToyOverlay) noToyOverlay.classList.remove('show');
+                    }
+                } else if (profile.uuid === game.toyControl.targetUuid) {
+                    document.getElementById('toy-control-winner-name').innerText = game.toyControl.controllerName;
+                    if (loserOverlay) loserOverlay.classList.add('show');
+                    if (winnerOverlay) winnerOverlay.classList.remove('show');
+                    if (cpuSkippedOverlay) cpuSkippedOverlay.classList.remove('show');
+                    if (!noToyPromptActive) {
+                        if (winnerNoToyOverlay) winnerNoToyOverlay.classList.remove('show');
+                        if (noToyOverlay) noToyOverlay.classList.remove('show');
+                    }
+                } else {
+                    if (winnerOverlay) winnerOverlay.classList.remove('show');
+                    if (loserOverlay) loserOverlay.classList.remove('show');
+                    if (cpuSkippedOverlay) cpuSkippedOverlay.classList.remove('show');
+                    if (!noToyPromptActive) {
+                        if (winnerNoToyOverlay) winnerNoToyOverlay.classList.remove('show');
+                        if (noToyOverlay) noToyOverlay.classList.remove('show');
+                    }
+                }
+            } else {
+                if (winnerOverlay) winnerOverlay.classList.remove('show');
+                if (loserOverlay) loserOverlay.classList.remove('show');
+                if (cpuSkippedOverlay) cpuSkippedOverlay.classList.remove('show');
+                if (!noToyPromptActive) {
+                    if (winnerNoToyOverlay) winnerNoToyOverlay.classList.remove('show');
+                    if (noToyOverlay) noToyOverlay.classList.remove('show');
+                }
+            }
+
             // Update open Lovense modal content dynamically
             const lovenseModal = document.getElementById('lovense-modal');
             if (lovenseModal && lovenseModal.classList.contains('show')) {
@@ -1319,9 +1809,9 @@
                     try {
                         btnToggleVoice.className = 'btn-reset btn-voice voice-connecting';
                         btnToggleVoice.innerText = '🎙️ CONNECTING...';
-                        
+
                         localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                        
+
                         btnToggleVoice.className = 'btn-reset btn-voice voice-connected';
                         btnToggleVoice.innerText = '🎙️ MUTE VOICE';
                         isVoiceConnected = true;
@@ -1337,7 +1827,7 @@
                 } else {
                     isMuted = !isMuted;
                     localStream.getAudioTracks().forEach(track => track.enabled = !isMuted);
-                    
+
                     if (isMuted) {
                         btnToggleVoice.className = 'btn-reset btn-voice voice-muted';
                         btnToggleVoice.innerText = '🎙️ UNMUTE';
@@ -1353,18 +1843,18 @@
 
         function createPeerConnection() {
             if (peerConnection) return;
-            
+
             peerConnection = new RTCPeerConnection(stunConfig);
-            
+
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-            
+
             peerConnection.ontrack = (event) => {
                 const remoteAudio = document.getElementById('remote-audio');
                 if (remoteAudio && event.streams[0]) {
                     remoteAudio.srcObject = event.streams[0];
                 }
             };
-            
+
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
                     socket.emit('voice_signal', { type: 'candidate', candidate: event.candidate });
@@ -1404,6 +1894,17 @@
             modal.classList.remove('show');
         }
 
+        function closeNoToyOverlay(overlayId) {
+            const overlay = document.getElementById(overlayId);
+            if (overlay) overlay.classList.remove('show');
+            noToyPromptActive = false;
+            noToyPromptDismissed = true;
+        }
+
+        function isToyConnectedForUi(player) {
+            return player && player.connected && player.toyEnabled;
+        }
+
         function updateLovenseModalContent() {
             if (!activeGame) return;
             const isMeRed = activeGame.player1 && activeGame.player1.uuid === profile.uuid;
@@ -1416,20 +1917,21 @@
             const codeText = document.getElementById('lovense-code-text');
             const codeVal = document.getElementById('lovense-code-val');
             const statusIndicator = document.getElementById('lovense-toy-status');
-            const testBtn = document.getElementById('btn-lovense-test');
             const verifyBtn = document.getElementById('btn-lovense-verify');
+            const disconnectBtn = document.getElementById('btn-lovense-disconnect');
+            const toyConnected = isToyConnectedForUi(me);
 
-            if (me.connected) {
+            if (toyConnected) {
                 qrImg.classList.add('hidden');
                 qrLoading.classList.add('hidden');
                 codeText.classList.add('hidden');
-                statusIndicator.innerText = "Connected: Toy Active";
+                statusIndicator.innerText = "Connected: Toy Linked";
                 statusIndicator.className = "status-indicator online";
-                testBtn.classList.remove('hidden');
                 if (verifyBtn) verifyBtn.classList.add('hidden');
+                if (disconnectBtn) disconnectBtn.classList.remove('hidden');
             } else {
-                testBtn.classList.add('hidden');
                 if (verifyBtn) verifyBtn.classList.remove('hidden');
+                if (disconnectBtn) disconnectBtn.classList.add('hidden');
                 statusIndicator.innerText = "Disconnected: Scan QR code";
                 statusIndicator.className = "status-indicator offline";
 
@@ -1437,7 +1939,7 @@
                     qrImg.src = me.qrCode;
                     qrImg.classList.remove('hidden');
                     qrLoading.classList.add('hidden');
-                    
+
                     if (me.linkCode) {
                         codeVal.innerText = me.linkCode;
                         codeText.classList.remove('hidden');
@@ -1470,10 +1972,10 @@
 
             // If it is the current player, show clickable connect/active button
             if (player.uuid === profile.uuid) {
-                if (player.connected) {
+                if (isToyConnectedForUi(player)) {
                     const badge = document.createElement('button');
                     badge.className = 'lovense-active-badge';
-                    badge.innerText = '🟢 Toy Active';
+                    badge.innerText = '🟢 Toy Connected';
                     badge.onclick = (e) => { e.stopPropagation(); openLovenseModal(); };
                     container.appendChild(badge);
                 } else {
@@ -1485,7 +1987,7 @@
                 }
             } else {
                 // If it is another player, show static badge if connected
-                if (player.connected) {
+                if (isToyConnectedForUi(player)) {
                     const badge = document.createElement('span');
                     badge.className = 'lovense-passive-badge';
                     badge.innerText = '🔌 Toy Connected';
@@ -1493,15 +1995,6 @@
                 }
             }
         }
-
-        // Bind test vibe button click
-        document.getElementById('btn-lovense-test').addEventListener('click', () => {
-            fetch(`${basePath}/api/vibe/test`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ gameId, uuid: profile.uuid })
-            });
-        });
 
         // Bind verify connection button click
         const verifyBtn = document.getElementById('btn-lovense-verify');
@@ -1518,6 +2011,7 @@
                     verifyBtn.innerText = "Verify Connection";
                     if (res.ok) {
                         showToast("Toy connected successfully!", "success");
+                        closeLovenseModal();
                     } else {
                         const err = await res.json();
                         showToast(err.error || "Verify failed. Ensure app/toy is active.", "error");
@@ -1526,6 +2020,36 @@
                     verifyBtn.disabled = false;
                     verifyBtn.innerText = "Verify Connection";
                     showToast("Failed to verify connection.", "error");
+                });
+            });
+        }
+
+        const disconnectBtn = document.getElementById('btn-lovense-disconnect');
+        if (disconnectBtn) {
+            disconnectBtn.addEventListener('click', () => {
+                disconnectBtn.innerText = "Disconnecting...";
+                disconnectBtn.disabled = true;
+                if (typeof socket !== 'undefined') {
+                    socket.emit('stop_toy_control', { gameId });
+                }
+                fetch(`${basePath}/api/vibe/disconnect`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gameId, uuid: profile.uuid })
+                }).then(async res => {
+                    disconnectBtn.disabled = false;
+                    disconnectBtn.innerText = "Disconnect Toy";
+                    if (res.ok) {
+                        showToast("Toy disconnected for this match.", "success");
+                        updateLovenseModalContent();
+                    } else {
+                        const err = await res.json();
+                        showToast(err.error || "Failed to disconnect toy.", "error");
+                    }
+                }).catch(() => {
+                    disconnectBtn.disabled = false;
+                    disconnectBtn.innerText = "Disconnect Toy";
+                    showToast("Failed to disconnect toy.", "error");
                 });
             });
         }
@@ -1543,7 +2067,7 @@
         // =========================================
         socket.on('update', (data) => {
             if (!data) {
-                window.location.href = `${basePath}/board/lobby${isDebug ? '?debug=true' : ''}`;
+                window.location.href = '/';
                 return;
             }
             const game = data.game || data;
@@ -1554,7 +2078,7 @@
         });
 
         // Set CPU Difficulty
-        window.setCpuDifficulty = function(diff) {
+        window.setCpuDifficulty = function (diff) {
             fetch(`${basePath}/api/set-difficulty`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1591,13 +2115,16 @@
             <div class="instructions-modal-body">
                 <p>Welcome to <strong>Tic Tac Toe</strong>! Here is how to play:</p>
                 <ul>
-                    <li><strong>Objective:</strong> Align three of your marks (horizontal, vertical, or diagonal) on the grid.</li>
-                    <li><strong>Gameplay:</strong> Take turns placing your symbol (X or O) on an empty square of the 3x3 grid.</li>
-                    <li><strong>Winning:</strong> The first player to align three symbols wins the round. If all spaces are filled without alignment, it's a draw.</li>
+                    <li><strong>Objective:</strong> Align three of your marks (horizontal, vertical, or diagonal) on the
+                        grid.</li>
+                    <li><strong>Gameplay:</strong> Take turns placing your symbol (X or O) on an empty square of the 3x3
+                        grid.</li>
+                    <li><strong>Winning:</strong> The first player to align three symbols wins the round. If all spaces
+                        are filled without alignment, it's a draw.</li>
                 </ul>
             </div>
         </div>
     </div>
 </body>
-</html>
 
+</html>
