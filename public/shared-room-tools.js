@@ -441,6 +441,20 @@
                 width: 100%;
                 padding-right: 54px;
             }
+            body #btn-standalone-reload {
+                display: none !important;
+            }
+            body.cc-room-host #btn-standalone-reload {
+                display: inline-flex !important;
+            }
+            body.cc-room-clean .chat-sponsor-bar,
+            body.cc-room-clean .lobby-sponsor-banner,
+            body.cc-room-clean .lobby-sponsor-side {
+                display: none !important;
+            }
+            body:not(.cc-room-host) #btn-standalone-reload {
+                display: none !important;
+            }
             @supports (backdrop-filter: blur(1px)) {
                 .chat-sidebar {
                     backdrop-filter: blur(10px) saturate(1.1);
@@ -717,6 +731,7 @@
             <div class="room-tools-row" style="grid-template-columns: repeat(auto-fit, minmax(160px, auto)); justify-content: start;">
                 <button class="room-tools-action" id="room-tools-save">Save settings</button>
                 <button class="room-tools-action" id="room-tools-clear-reports">Clear reports</button>
+                <button class="room-tools-action" id="room-tools-reload-room">Reload room</button>
             </div>
         `;
 
@@ -749,6 +764,13 @@
                 }
             });
         }
+
+        const reloadBtn = document.getElementById('room-tools-reload-room');
+        if (reloadBtn) {
+            reloadBtn.addEventListener('click', () => {
+                window.location.reload();
+            });
+        }
     }
 
     function renderPanel(game) {
@@ -758,6 +780,7 @@
         if (!panel || !toggle || !summary) return;
 
         const admin = isHost(game);
+        syncRoomUiState(game);
         toggle.textContent = admin ? '🛡️ HOST CONTROLS' : '⚑ PLAYER TOOLS';
         summary.textContent = game && game.moderation
             ? `${game.moderation.visibility === 'private' ? 'Private' : 'Public'} • Chat ${game.moderation.chatEnabled === false ? 'Off' : 'On'} • Voice ${game.moderation.voiceEnabled === false ? 'Off' : 'On'}`
@@ -770,6 +793,27 @@
         setComposerState(game);
     }
 
+    function syncRoomUiState(game) {
+        if (!document.body) return;
+        const admin = isHost(game);
+        document.body.classList.add('cc-room-clean');
+        document.body.classList.toggle('cc-room-host', admin);
+        document.body.classList.toggle('cc-room-guest', !admin);
+        syncReloadControl(admin);
+    }
+
+    function syncReloadControl(isAdmin) {
+        const btn = document.getElementById('btn-standalone-reload');
+        if (!btn) return;
+        if (!isAdmin) {
+            btn.remove();
+            return;
+        }
+        btn.disabled = false;
+        btn.setAttribute('aria-disabled', 'false');
+        btn.title = 'Reload this room';
+    }
+
     function buildUi() {
         if (uiReady) return;
         const sidebar = document.getElementById('chat-sidebar');
@@ -780,6 +824,7 @@
 
         uiReady = true;
         addStyles();
+        syncRoomUiState(latestGame);
 
         const strip = document.createElement('div');
         strip.className = 'room-tools-strip';
@@ -844,6 +889,20 @@
                 closeEmojiPopup();
             }
         });
+
+        document.addEventListener('click', (e) => {
+            const reloadBtn = e.target && typeof e.target.closest === 'function'
+                ? e.target.closest('#btn-standalone-reload')
+                : null;
+            if (!reloadBtn) return;
+            if (document.body.classList.contains('cc-room-host')) return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof e.stopImmediatePropagation === 'function') {
+                e.stopImmediatePropagation();
+            }
+            toast('Reload is host-only.', 'warning');
+        }, true);
 
         if (latestGame) {
             renderPanel(latestGame);

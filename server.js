@@ -15,6 +15,12 @@ app.use(express.urlencoded({ extended: true }));
 const lovenseHelper = require('./games/lovense_helper.js');
 app.post('/api/lovense/callback', lovenseHelper.handleCallback);
 
+const { createSlBridge } = require('./slport/backend/sl-bridge.js');
+const slBridge = createSlBridge({ logger: console });
+slBridge.registerRoutes(app);
+app.locals.slBridge = slBridge;
+setInterval(() => slBridge.pruneStaleCabinets(), 5 * 60 * 1000).unref();
+
 app.get('/verify-age', (req, res) => {
     res.redirect('/');
 });
