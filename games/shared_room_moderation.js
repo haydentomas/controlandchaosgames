@@ -1,7 +1,7 @@
 const DEFAULT_MODERATION = () => ({
-    visibility: 'public',
-    chatEnabled: true,
-    voiceEnabled: true,
+    visibility: 'private',
+    chatEnabled: false,
+    voiceEnabled: false,
     slowModeSeconds: 0,
     blockedUuids: [],
     mutedUuids: [],
@@ -18,9 +18,9 @@ function ensureModeration(game) {
     }
 
     const moderation = game.moderation;
-    moderation.visibility = moderation.visibility === 'private' ? 'private' : 'public';
-    moderation.chatEnabled = moderation.chatEnabled !== false;
-    moderation.voiceEnabled = moderation.voiceEnabled !== false;
+    moderation.visibility = moderation.visibility === 'public' ? 'public' : 'private';
+    moderation.chatEnabled = moderation.chatEnabled === true;
+    moderation.voiceEnabled = moderation.voiceEnabled === true;
     moderation.slowModeSeconds = Math.max(0, Math.min(60, parseInt(moderation.slowModeSeconds, 10) || 0));
     moderation.blockedUuids = Array.isArray(moderation.blockedUuids) ? [...new Set(moderation.blockedUuids.filter(Boolean))] : [];
     moderation.mutedUuids = Array.isArray(moderation.mutedUuids) ? [...new Set(moderation.mutedUuids.filter(Boolean))] : [];
