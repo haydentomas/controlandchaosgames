@@ -3,10 +3,13 @@ const cpuAi = require('../cpu_ai.js');
 const express = require('express');
 const path = require('path');
 
+let gamesRef = null;
+
 function init(app, io, mountPath = '') {
     app.use(`${mountPath}`, express.static(path.join(__dirname, 'public')));
 
     const games = {};
+    gamesRef = games;
     const gameIo = io.of(mountPath || '/');
 
     const COLORS = ['Red', 'Blue', 'Yellow', 'Green'];
@@ -435,6 +438,16 @@ function init(app, io, mountPath = '') {
     });
 }
 
+function getRooms() {
+    return Object.values(gamesRef || {}).map(game => ({
+        id: game.id,
+        player1: game.player1,
+        player2: game.player2,
+        status: game.status,
+        winner: game.winner
+    }));
+}
+
 if (require.main === module) {
     const http = require('http');
     const socketIo = require('socket.io');
@@ -452,5 +465,5 @@ if (require.main === module) {
         console.log(`Uno Server running standalone on port ${PORT}`);
     });
 } else {
-    module.exports = { init };
+    module.exports = { init, getRooms };
 }

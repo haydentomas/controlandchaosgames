@@ -69,6 +69,7 @@ function makeMove(gameName, game, gameIo, checkWin, checkDraw, getWinLength) {
 }
 
 function triggerCpuVibe(game, gameName) {
+    if (gameName === 'chess') return; // Handled directly inside resolveChess
     let humanPlayer = null;
     if (game.player1 && game.player1.uuid !== 'cpu-bot' && !game.player1.uuid.startsWith('cpu')) {
         humanPlayer = game.player1;
@@ -359,6 +360,41 @@ function resolveReversiEndGame(game) {
 }
 
 function resolveCheckers(game, gameIo, checkWin, checkDraw) {
+    function hasAnyLegalMoveForPlayer(board, playerVal) {
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const piece = board[r][c];
+                if (piece === 0) continue;
+                if ((playerVal === 1 && piece < 0) || (playerVal === -1 && piece > 0)) continue;
+
+                const isKing = Math.abs(piece) === 2;
+                const dirs = [];
+                if (isKing || playerVal === 1) dirs.push([-1, -1], [-1, 1]);
+                if (isKing || playerVal === -1) dirs.push([1, -1], [1, 1]);
+
+                for (const [dr, dc] of dirs) {
+                    const nr = r + dr;
+                    const nc = c + dc;
+                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && board[nr][nc] === 0) {
+                        return true;
+                    }
+
+                    const jr = r + dr * 2;
+                    const jc = c + dc * 2;
+                    if (jr < 0 || jr > 7 || jc < 0 || jc > 7) continue;
+                    const mid = board[nr][nc];
+                    if (mid === 0) continue;
+
+                    const isOpponentMid = (playerVal === 1 && mid < 0) || (playerVal === -1 && mid > 0);
+                    if (isOpponentMid && board[jr][jc] === 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     const jumps = [];
     const regularMoves = [];
 
@@ -440,6 +476,10 @@ function resolveCheckers(game, gameIo, checkWin, checkDraw) {
         game.winner = 1;
     } else {
         game.turn = 1;
+        if (!hasAnyLegalMoveForPlayer(game.board, 1)) {
+            game.status = 'won';
+            game.winner = -1;
+        }
     }
 
     gameIo.to(game.id).emit('update', { game, lastMove: { from: [fr, fc], to: [tr, tc] } });
@@ -501,19 +541,38 @@ function resolveChess(game, gameIo) {
         }
     }
 
-    if (moves.length === 0) {
-        game.status = 'draw';
+    // Filter moves to only keep those that do not leave the Black King in check
+    const legalMoves = [];
+    for (let mv of moves) {
+        const tempBoard = game.board.map(row => [...row]);
+        tempBoard[mv.to[0]][mv.to[1]] = tempBoard[mv.from[0]][mv.from[1]];
+        tempBoard[mv.from[0]][mv.from[1]] = null;
+        if (!isKingInCheck(tempBoard, 'b')) {
+            legalMoves.push(mv);
+        }
+    }
+
+    if (legalMoves.length === 0) {
+        const inCheck = isKingInCheck(game.board, 'b');
+        if (inCheck) {
+            game.status = 'won';
+            game.winner = 'white';
+        } else {
+            game.status = 'draw';
+            game.winner = null;
+        }
+        game.checkState = null;
         gameIo.to(game.id).emit('update', game);
         return;
     }
 
-    moves.sort((a, b) => (b.weight || 0) - (a.weight || 0));
+    legalMoves.sort((a, b) => (b.weight || 0) - (a.weight || 0));
     
-    let chosen = moves[Math.floor(Math.random() * moves.length)];
+    let chosen = legalMoves[Math.floor(Math.random() * legalMoves.length)];
     if (game.difficulty === 'hard') {
-        chosen = moves[0];
+        chosen = legalMoves[0];
     } else if (game.difficulty === 'medium') {
-        chosen = Math.random() < 0.5 ? moves[0] : moves[Math.floor(Math.random() * moves.length)];
+        chosen = Math.random() < 0.5 ? legalMoves[0] : legalMoves[Math.floor(Math.random() * legalMoves.length)];
     }
 
     const fr = chosen.from[0];
@@ -526,11 +585,56 @@ function resolveChess(game, gameIo) {
 
     game.board[tr][tc] = piece;
     game.board[fr][fc] = null;
+
+    // Auto pawn promotion for Black
+    if (piece === 'bp' && tr === 7) {
+        game.board[tr][tc] = 'bq';
+    }
+
+    // Track captures
+    if (targetPiece) {
+        if (!game.captured) game.captured = { white: [], black: [] };
+        if (targetPiece.startsWith('w')) {
+            game.captured.white.push(targetPiece);
+        } else if (targetPiece.startsWith('b')) {
+            game.captured.black.push(targetPiece);
+        }
+    }
+
     game.turn = 'white';
 
-    if (targetPiece && targetPiece.endsWith('k')) {
+    // Check for check/checkmate/stalemate on White after CPU moves
+    const oppColor = 'white';
+    const oppHasMoves = hasLegalMoves(game.board, 'w');
+    const oppInCheck = isKingInCheck(game.board, 'w');
+
+    game.checkState = oppInCheck ? oppColor : null;
+
+    if (oppInCheck && !oppHasMoves) {
         game.status = 'won';
         game.winner = 'black';
+    } else if (!oppInCheck && !oppHasMoves) {
+        game.status = 'draw';
+        game.winner = null;
+    }
+
+    // Trigger CPU move vibrations for the human player
+    const humanPlayer = game.player1;
+    if (humanPlayer && humanPlayer.connected && humanPlayer.toyEnabled) {
+        const isCapture = targetPiece !== null;
+        const vibeMode = game.vibeMode || 'fun';
+        
+        if (game.status === 'won') {
+            lovenseHelper.triggerVibration(humanPlayer.uuid, 'lose');
+        } else if (isCapture) {
+            if (vibeMode === 'fun') {
+                lovenseHelper.triggerVibration(humanPlayer.uuid, 'lose', { strength: 18, duration: 2 });
+            } else {
+                lovenseHelper.triggerVibration(humanPlayer.uuid, 'turn_alert', { strength: 10, duration: 1 });
+            }
+        } else {
+            lovenseHelper.triggerVibration(humanPlayer.uuid, 'turn_alert');
+        }
     }
 
     gameIo.to(game.id).emit('update', { game, lastMove: { from: [fr, fc], to: [tr, tc] } });
@@ -1130,6 +1234,131 @@ function resolveNavalClash(game, gameIo) {
     }
 
     gameIo.to(game.id).emit('update', game);
+}
+
+function isKingInCheck(board, color) {
+    const colorChar = color[0];
+    let kr = -1, kc = -1;
+    const targetKing = colorChar === 'w' ? 'wk' : 'bk';
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            if (board[r][c] === targetKing) {
+                kr = r;
+                kc = c;
+                break;
+            }
+        }
+        if (kr !== -1) break;
+    }
+    
+    if (kr === -1) return false;
+    
+    const oppColor = colorChar === 'w' ? 'b' : 'w';
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const piece = board[r][c];
+            if (piece && piece.startsWith(oppColor)) {
+                if (isValidMove(board, r, c, kr, kc)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+function hasLegalMoves(board, color) {
+    const colorChar = color[0];
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const piece = board[r][c];
+            if (piece && piece.startsWith(colorChar)) {
+                for (let tr = 0; tr < 8; tr++) {
+                    for (let tc = 0; tc < 8; tc++) {
+                        if (isValidMove(board, r, c, tr, tc)) {
+                            const tempBoard = board.map(row => [...row]);
+                            tempBoard[tr][tc] = tempBoard[r][c];
+                            tempBoard[r][c] = null;
+                            if (!isKingInCheck(tempBoard, colorChar)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+function isValidMove(board, fr, fc, tr, tc) {
+    if (fr === tr && fc === tc) return false;
+    const piece = board[fr][fc];
+    if (!piece) return false;
+
+    const color = piece[0]; // 'w' or 'b'
+    const type = piece[1]; // 'p', 'r', 'n', 'b', 'q', 'k'
+
+    const target = board[tr][tc];
+    if (target && target[0] === color) return false;
+
+    const dr = tr - fr;
+    const dc = tc - fc;
+
+    switch (type) {
+        case 'p': {
+            if (color === 'w') {
+                if (dc === 0) {
+                    if (dr === -1 && !target) return true;
+                    if (fr === 6 && dr === -2 && !board[5][fc] && !target) return true;
+                } else if (Math.abs(dc) === 1 && dr === -1) {
+                    if (target && target[0] === 'b') return true;
+                }
+            } else {
+                if (dc === 0) {
+                    if (dr === 1 && !target) return true;
+                    if (fr === 1 && dr === 2 && !board[2][fc] && !target) return true;
+                } else if (Math.abs(dc) === 1 && dr === 1) {
+                    if (target && target[0] === 'w') return true;
+                }
+            }
+            return false;
+        }
+        case 'n': {
+            return (Math.abs(dr) === 2 && Math.abs(dc) === 1) || (Math.abs(dr) === 1 && Math.abs(dc) === 2);
+        }
+        case 'r': {
+            if (dr !== 0 && dc !== 0) return false;
+            return isPathClear(board, fr, fc, tr, tc);
+        }
+        case 'b': {
+            if (Math.abs(dr) !== Math.abs(dc)) return false;
+            return isPathClear(board, fr, fc, tr, tc);
+        }
+        case 'q': {
+            if (dr !== 0 && dc !== 0 && Math.abs(dr) !== Math.abs(dc)) return false;
+            return isPathClear(board, fr, fc, tr, tc);
+        }
+        case 'k': {
+            return Math.abs(dr) <= 1 && Math.abs(dc) <= 1;
+        }
+    }
+    return false;
+}
+
+function isPathClear(board, fr, fc, tr, tc) {
+    const stepR = Math.sign(tr - fr);
+    const stepC = Math.sign(tc - fc);
+
+    let r = fr + stepR;
+    let c = fc + stepC;
+
+    while (r !== tr || c !== tc) {
+        if (board[r][c]) return false;
+        r += stepR;
+        c += stepC;
+    }
+    return true;
 }
 
 module.exports = { makeMove };

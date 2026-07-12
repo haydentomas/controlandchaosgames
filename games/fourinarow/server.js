@@ -3,14 +3,138 @@ const express = require('express');
 const path = require('path');
 const lovenseHelper = require('../lovense_helper.js');
 
+let gamesRef = null;
+
 // Wrap everything in an init function to mount it dynamically
 function init(app, io, mountPath = '') {
     // Static files handled by parent server, but we can also register it here:
     app.use(`${mountPath}`, express.static(path.join(__dirname, 'public')));
 
     const games = {};
+    gamesRef = games;
     const gameIo = io.of(mountPath || '/');
     lovenseHelper.registerModule('fourinarow', games, gameIo);
+
+    function startToyControl(gameId) {
+        const game = games[gameId];
+        if (!game || !game.toyControl) return;
+
+        if (game.toyControlInterval) {
+            clearInterval(game.toyControlInterval);
+        }
+
+        let tick = 0;
+        game.toyControlInterval = setInterval(() => {
+            const activeGame = games[gameId];
+            if (!activeGame || !activeGame.toyControl || !activeGame.toyControl.active) {
+                clearInterval(activeGame.toyControlInterval);
+                delete activeGame.toyControlInterval;
+                return;
+            }
+
+            const remainingMs = activeGame.toyControl.endTime - Date.now();
+            const remainingSec = Math.max(0, Math.ceil(remainingMs / 1000));
+
+            if (remainingSec <= 0) {
+                endToyControl(gameId);
+                return;
+            }
+
+            // CPU behavior if CPU is controlling (changes every 4 seconds in 500ms ticks)
+            if (activeGame.toyControl.controllerUuid === 'cpu-bot') {
+                if (tick % 8 === 0) {
+                    const patterns = ['constant', 'pulse', 'wave', 'chaos', 'heartbeat', 'escalator', 'tease'];
+                    activeGame.toyControl.currentPattern = patterns[Math.floor(Math.random() * patterns.length)];
+                    activeGame.toyControl.currentStrength = Math.floor(Math.random() * 12) + 5; // 5 to 16
+                }
+            }
+
+            const targetUuid = activeGame.toyControl.targetUuid;
+            const targetPlayer = getPlayerByUuid(activeGame, targetUuid);
+
+            let activeStrength = activeGame.toyControl.currentStrength;
+            const pattern = activeGame.toyControl.currentPattern;
+
+            if (pattern === 'pulse') {
+                activeStrength = (Math.floor(tick / 2) % 2 === 0) ? activeGame.toyControl.currentStrength : 0;
+            } else if (pattern === 'wave') {
+                const factor = (Math.sin(tick * Math.PI / 6) + 1) / 2; // Cycle of 12 ticks (6 seconds)
+                activeStrength = Math.round(factor * activeGame.toyControl.currentStrength);
+            } else if (pattern === 'chaos') {
+                activeStrength = Math.round(Math.random() * activeGame.toyControl.currentStrength);
+            } else if (pattern === 'heartbeat') {
+                let cycleLength = 4;
+                if (remainingSec > 80) cycleLength = 6;
+                else if (remainingSec > 40) cycleLength = 4;
+                else if (remainingSec > 15) cycleLength = 3;
+                else cycleLength = 2;
+
+                const cycleIndex = tick % cycleLength;
+                if (cycleLength === 6) {
+                    activeStrength = (cycleIndex === 0 || cycleIndex === 2) ? activeGame.toyControl.currentStrength : 0;
+                } else if (cycleLength === 4) {
+                    activeStrength = (cycleIndex === 0 || cycleIndex === 2) ? activeGame.toyControl.currentStrength : 0;
+                } else if (cycleLength === 3) {
+                    activeStrength = (cycleIndex === 0 || cycleIndex === 1) ? activeGame.toyControl.currentStrength : 0;
+                } else {
+                    activeStrength = activeGame.toyControl.currentStrength;
+                }
+            } else if (pattern === 'escalator') {
+                const rampStep = tick % 20; // 10 seconds ramp
+                activeStrength = Math.round((rampStep / 19) * activeGame.toyControl.currentStrength);
+            } else if (pattern === 'tease') {
+                const teaseStep = tick % 20; // 10 seconds cycle
+                if (teaseStep < 12) {
+                    activeStrength = (teaseStep % 2 === 0) ? Math.min(activeGame.toyControl.currentStrength, 3) : 0;
+                } else if (teaseStep < 16) {
+                    const progress = (teaseStep - 12) / 4;
+                    activeStrength = Math.round(3 + progress * (activeGame.toyControl.currentStrength - 3));
+                } else if (teaseStep < 18) {
+                    activeStrength = activeGame.toyControl.currentStrength;
+                } else {
+                    activeStrength = 0;
+                }
+            }
+
+            if (targetPlayer && isToyActive(targetPlayer)) {
+                // Keep active duration low (2 seconds) to stop if loop crashes/clears
+                lovenseHelper.triggerVibration(targetUuid, 'toy_control', { strength: activeStrength, duration: 2 });
+            }
+
+            gameIo.to(gameId).emit('toy_control_tick', {
+                currentStrength: activeStrength,
+                userStrength: activeGame.toyControl.currentStrength,
+                pattern: activeGame.toyControl.currentPattern,
+                remainingSec: remainingSec
+            });
+
+            tick++;
+        }, 500);
+    }
+
+    function endToyControl(gameId, quiet = false) {
+        const game = games[gameId];
+        if (!game) return;
+
+        if (game.toyControlInterval) {
+            clearInterval(game.toyControlInterval);
+            delete game.toyControlInterval;
+        }
+
+        if (game.toyControl) {
+            const targetUuid = game.toyControl.targetUuid;
+            const targetPlayer = getPlayerByUuid(game, targetUuid);
+            if (targetPlayer && isToyActive(targetPlayer)) {
+                lovenseHelper.triggerVibration(targetUuid, 'toy_control_stop', { strength: 0, duration: 1 });
+            }
+            delete game.toyControl;
+        }
+
+        if (!quiet) {
+            gameIo.to(gameId).emit('toy_control_end');
+            gameIo.to(gameId).emit('update', game);
+        }
+    }
 
     // Helper: Initialize an empty board (7 columns, 6 rows)
     function createEmptyBoard() {
@@ -302,6 +426,7 @@ function init(app, io, mountPath = '') {
         if (result.success) {
             player.connected = true;
             player.toyEnabled = true;
+            await lovenseHelper.triggerVibration(player.uuid, 'move');
             gameIo.to(gameId).emit('update', game);
             return res.json({ success: true });
         }
@@ -310,15 +435,19 @@ function init(app, io, mountPath = '') {
     });
 
     // Manual local disconnect from this game (stops all game-triggered vibrations)
-    app.post(`${mountPath}/api/vibe/disconnect`, (req, res) => {
+    app.post(`${mountPath}/api/vibe/disconnect`, async (req, res) => {
         const { gameId, uuid } = req.body;
         const game = games[gameId];
         if (!game) return res.status(404).json({ error: "Game not found." });
         const player = getPlayerByUuid(game, uuid);
         if (!player) return res.status(400).json({ error: "Player not registered." });
 
+        await lovenseHelper.disconnectToy(player.uuid);
         player.connected = false;
         player.toyEnabled = false;
+        if (game.toyControl && game.toyControl.active) {
+            game.toyControl.active = false;
+        }
         gameIo.to(gameId).emit('update', game);
         res.json({ success: true });
     });
@@ -358,6 +487,7 @@ function init(app, io, mountPath = '') {
             }
 
             if (playerLeft) {
+                endToyControl(gameId, true);
                 game.lastActive = Date.now();
                 if (game.status === 'playing') {
                     game.status = 'abandoned';
@@ -384,6 +514,7 @@ function init(app, io, mountPath = '') {
         const { gameId } = req.body;
         const game = games[gameId];
         if (game) {
+            endToyControl(gameId, true);
             game.lastActive = Date.now();
             game.board = createEmptyBoard();
             game.turn = 1;
@@ -454,6 +585,61 @@ function init(app, io, mountPath = '') {
             game.winCoords = winResult.coords;
             addVibeIfActive(vibeQueue, game.player1, game.winner === 1 ? 'win' : 'lose');
             addVibeIfActive(vibeQueue, game.player2, game.winner === 2 ? 'win' : 'lose');
+
+            // Setup Toy Control phase
+            if (!game.isCpuMatch) {
+                const winnerPlayer = game.winner === 1 ? game.player1 : game.player2;
+                const loserPlayer = game.winner === 1 ? game.player2 : game.player1;
+
+                if (isToyActive(loserPlayer)) {
+                    const durationSec = (game.vibeMode === 'normal') ? 60 : 120;
+
+                    game.toyControl = {
+                        active: true,
+                        controllerUuid: winnerPlayer.uuid,
+                        controllerName: winnerPlayer.name,
+                        targetUuid: loserPlayer.uuid,
+                        targetName: loserPlayer.name,
+                        durationSec: durationSec,
+                        endTime: Date.now() + durationSec * 1000,
+                        currentStrength: 5,
+                        currentPattern: 'constant'
+                    };
+
+                    setTimeout(() => {
+                        startToyControl(gameId);
+                    }, 50);
+                } else {
+                    game.toyControl = {
+                        active: true,
+                        controllerUuid: winnerPlayer.uuid,
+                        controllerName: winnerPlayer.name,
+                        targetUuid: loserPlayer.uuid,
+                        targetName: loserPlayer.name,
+                        durationSec: 0,
+                        endTime: Date.now(),
+                        currentStrength: 0,
+                        currentPattern: 'constant',
+                        noToyTarget: true
+                    };
+                }
+            } else {
+                // VS CPU: If player won, there's no CPU toy to control
+                if (game.winner === 1) {
+                    game.toyControl = {
+                        active: true,
+                        controllerUuid: game.player1.uuid,
+                        controllerName: game.player1.name,
+                        targetUuid: 'cpu-bot',
+                        targetName: 'CyberBot 🤖',
+                        durationSec: 0,
+                        endTime: Date.now(),
+                        currentStrength: 0,
+                        currentPattern: 'constant',
+                        cpuNoToy: true
+                    };
+                }
+            }
         } else if (checkDraw(game.board)) {
             game.status = 'draw';
         } else {
@@ -560,6 +746,26 @@ function init(app, io, mountPath = '') {
                         game.winner = 2;
                         game.winCoords = winResultCpu.coords;
                         if (game.player1) cpuVibeQueue.push({ uuid: game.player1.uuid, type: 'lose' });
+
+                        // CPU wins vs Player 1 (Red)
+                        if (game.player1) {
+                            const durationSec = (game.vibeMode === 'normal') ? 60 : 120;
+                            game.toyControl = {
+                                active: true,
+                                controllerUuid: 'cpu-bot',
+                                controllerName: 'CyberBot 🤖',
+                                targetUuid: game.player1.uuid,
+                                targetName: game.player1.name,
+                                durationSec: durationSec,
+                                endTime: Date.now() + durationSec * 1000,
+                                currentStrength: 5,
+                                currentPattern: 'constant'
+                            };
+
+                            setTimeout(() => {
+                                startToyControl(gameId);
+                            }, 50);
+                        }
                     } else if (checkDraw(game.board)) {
                         game.status = 'draw';
                     } else {
@@ -661,6 +867,49 @@ function init(app, io, mountPath = '') {
             socket.emit('update', game);
         });
 
+        socket.on('control_toy', (data) => {
+            const { gameId, strength, pattern } = data;
+            const game = games[gameId];
+            if (game && game.toyControl && game.toyControl.active) {
+                if (game.toyControl.controllerUuid === playerUuid) {
+                    game.toyControl.currentStrength = Math.min(20, Math.max(0, parseInt(strength) || 0));
+                    game.toyControl.currentPattern = pattern || 'constant';
+                    
+                    const targetPlayer = getPlayerByUuid(game, game.toyControl.targetUuid);
+                    if (targetPlayer && isToyActive(targetPlayer)) {
+                        lovenseHelper.triggerVibration(game.toyControl.targetUuid, 'toy_control_direct', { 
+                            strength: game.toyControl.currentStrength, 
+                            duration: 2 
+                        });
+                    }
+                    
+                    gameIo.to(gameId).emit('toy_control_tick', {
+                        currentStrength: game.toyControl.currentStrength,
+                        userStrength: game.toyControl.currentStrength,
+                        pattern: game.toyControl.currentPattern,
+                        remainingSec: Math.max(0, Math.ceil((game.toyControl.endTime - Date.now()) / 1000))
+                    });
+                }
+            }
+        });
+
+        socket.on('stop_toy_control', (data) => {
+            const { gameId } = data;
+            const game = games[gameId];
+            if (game && game.toyControl && game.toyControl.active) {
+                if (game.toyControl.targetUuid === playerUuid || game.toyControl.controllerUuid === playerUuid) {
+                    if (game.toyControl.targetUuid === playerUuid) {
+                        const targetPlayer = getPlayerByUuid(game, playerUuid);
+                        if (targetPlayer) {
+                            targetPlayer.connected = false;
+                            targetPlayer.toyEnabled = false;
+                        }
+                    }
+                    endToyControl(gameId);
+                }
+            }
+        });
+
         socket.on('voice_signal', (data) => {
             if (currentRoom) {
                 socket.to(currentRoom).emit('voice_signal', data);
@@ -687,6 +936,7 @@ function init(app, io, mountPath = '') {
                     }
 
                     if (playerLeft) {
+                        endToyControl(currentRoom, true);
                         game.lastActive = Date.now();
                         if (game.status === 'playing') {
                             game.status = 'abandoned';
@@ -731,6 +981,16 @@ function init(app, io, mountPath = '') {
     }, 60 * 1000);
 }
 
+function getRooms() {
+    return Object.values(gamesRef || {}).map(game => ({
+        id: game.id,
+        player1: game.player1,
+        player2: game.player2,
+        status: game.status,
+        winner: game.winner
+    }));
+}
+
 // Standalone execution support
 if (require.main === module) {
     const http = require('http');
@@ -749,5 +1009,5 @@ if (require.main === module) {
         console.log(`Simple Connect 4 Server running standalone on port ${PORT}`);
     });
 } else {
-    module.exports = { init };
+    module.exports = { init, getRooms };
 }

@@ -89,12 +89,15 @@ app.use(ageGateMiddleware);
 // Serve Terminal Lobby static files at root
 app.use('/', express.static(path.join(__dirname, 'public')));
 
+const roomSources = [];
+
 // Mount Four in a Row Game
 const fourinarowPath = path.join(__dirname, 'games', 'fourinarow', 'server.js');
 try {
     const fourinarow = require(fourinarowPath);
     if (typeof fourinarow.init === 'function') {
         fourinarow.init(app, io, '/games/fourinarow');
+        roomSources.push({ key: 'fourinarow', label: 'Four in a Row', basePath: '/games/fourinarow', module: fourinarow });
         console.log('Successfully mounted Four in a Row game at /games/fourinarow');
     } else {
         console.error('Four in a Row module found but init function is missing.');
@@ -109,6 +112,7 @@ try {
     const chess = require(chessPath);
     if (typeof chess.init === 'function') {
         chess.init(app, io, '/games/chess');
+        roomSources.push({ key: 'chess', label: 'Chess', basePath: '/games/chess', module: chess });
         console.log('Successfully mounted Chess game at /games/chess');
     } else {
         console.error('Chess module found but init function is missing.');
@@ -123,6 +127,7 @@ try {
     const tictactoe = require(tictactoePath);
     if (typeof tictactoe.init === 'function') {
         tictactoe.init(app, io, '/games/tictactoe');
+        roomSources.push({ key: 'tictactoe', label: 'Tic Tac Toe', basePath: '/games/tictactoe', module: tictactoe });
         console.log('Successfully mounted Tic Tac Toe game at /games/tictactoe');
     } else {
         console.error('Tic Tac Toe module found but init function is missing.');
@@ -137,6 +142,7 @@ try {
     const checkers = require(checkersPath);
     if (typeof checkers.init === 'function') {
         checkers.init(app, io, '/games/checkers');
+        roomSources.push({ key: 'checkers', label: 'Checkers', basePath: '/games/checkers', module: checkers });
         console.log('Successfully mounted Checkers game at /games/checkers');
     } else {
         console.error('Checkers module found but init function is missing.');
@@ -151,6 +157,7 @@ try {
     const navalclash = require(navalClashPath);
     if (typeof navalclash.init === 'function') {
         navalclash.init(app, io, '/games/navalclash');
+        roomSources.push({ key: 'navalclash', label: 'Naval Clash', basePath: '/games/navalclash', module: navalclash });
         console.log('Successfully mounted Naval Clash game at /games/navalclash');
     } else {
         console.error('Naval Clash module found but init function is missing.');
@@ -165,6 +172,7 @@ try {
     const reversi = require(reversiPath);
     if (typeof reversi.init === 'function') {
         reversi.init(app, io, '/games/reversi');
+        roomSources.push({ key: 'reversi', label: 'Reversi', basePath: '/games/reversi', module: reversi });
         console.log('Successfully mounted Reversi game at /games/reversi');
     } else {
         console.error('Reversi module found but init function is missing.');
@@ -179,6 +187,7 @@ try {
     const dotsandboxes = require(dotsAndBoxesPath);
     if (typeof dotsandboxes.init === 'function') {
         dotsandboxes.init(app, io, '/games/dotsandboxes');
+        roomSources.push({ key: 'dotsandboxes', label: 'Dots & Boxes', basePath: '/games/dotsandboxes', module: dotsandboxes });
         console.log('Successfully mounted Dots and Boxes game at /games/dotsandboxes');
     } else {
         console.error('Dots and Boxes module found but init function is missing.');
@@ -193,6 +202,7 @@ try {
     const memorymatch = require(memoryMatchPath);
     if (typeof memorymatch.init === 'function') {
         memorymatch.init(app, io, '/games/memorymatch');
+        roomSources.push({ key: 'memorymatch', label: 'Memory Match', basePath: '/games/memorymatch', module: memorymatch });
         console.log('Successfully mounted Memory Match game at /games/memorymatch');
     } else {
         console.error('Memory Match module found but init function is missing.');
@@ -201,25 +211,23 @@ try {
     console.error('Failed to load Memory Match game module:', err);
 }
 
-// Mount Card Games (Suppressed for now to save credits and focus on board games)
-/*
-const cardGames = ['blackjack', 'uno', 'poker', 'ginrummy', 'solitaire', 'speed', 'gofish', 'war'];
-cardGames.forEach(game => {
-    const gamePath = path.join(__dirname, 'games', game, 'server.js');
-    try {
-        const mod = require(gamePath);
-        if (typeof mod.init === 'function') {
-            mod.init(app, io, `/games/${game}`);
-            console.log(`Successfully mounted Card Game [${game}] at /games/${game}`);
-        } else {
-            console.error(`Card Game [${game}] module found but init function is missing.`);
-        }
-    } catch (err) {
-        // Log but don't crash if modules aren't written yet
-        console.warn(`Card Game [${game}] not fully implemented or failed to load.`);
-    }
+app.get('/api/rooms/global', (req, res) => {
+    const rooms = roomSources.flatMap(source => {
+        const getRooms = typeof source.module.getRooms === 'function' ? source.module.getRooms : null;
+        if (!getRooms) return [];
+        return getRooms()
+            .filter(room => room && room.id && room.id !== 'lobby')
+            .map(room => ({
+                ...room,
+                gameKey: source.key,
+                gameLabel: source.label,
+                gamePath: source.basePath
+            }));
+    });
+
+    const visibleRooms = rooms.filter(room => room.status !== 'won' && room.status !== 'abandoned' && room.status !== 'draw');
+    res.json(visibleRooms);
 });
-*/
 
 // Global Terminal API / Sockets can be added here if needed
 

@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control & Chaos</title>
     <!-- Premium Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@500;700;900&display=swap"
+        rel="stylesheet">
     <script>
         // Cache-bust terminal CSS so live deploys immediately reflect new styling.
         const terminalStyle = document.createElement('link');
@@ -14,6 +17,7 @@
         document.head.appendChild(terminalStyle);
     </script>
 </head>
+
 <body>
 
     <div id="terminal-view" class="view">
@@ -27,9 +31,9 @@
         <!-- GAME SELECTOR SCREEN -->
         <main class="terminal-container" id="selector-screen">
             <h3 class="section-title">SELECT A 2-PLAYER GAME</h3>
-            
+
             <div class="games-grid">
-                
+
                 <!-- BOARD GAMES SET -->
                 <!-- Four in a Row Card (Playable) -->
                 <div class="game-card active-game board-game-card" onclick="loadGame('fourinarow')">
@@ -37,7 +41,8 @@
                     <div class="game-card-content">
                         <div class="game-icon">🔴</div>
                         <h3 class="game-title">FOUR IN A ROW</h3>
-                        <p class="game-desc">Get four tokens in a row vertically, horizontally, or diagonally. Full browser and toy connection support.</p>
+                        <p class="game-desc">Get four tokens in a row vertically, horizontally, or diagonally. Full
+                            browser and toy connection support.</p>
                         <span class="status-indicator playable">PLAYABLE</span>
                     </div>
                 </div>
@@ -48,7 +53,8 @@
                     <div class="game-card-content">
                         <div class="game-icon">👑</div>
                         <h3 class="game-title">CHESS</h3>
-                        <p class="game-desc">Classic game of strategy and tactics. Battle your opponent's king. Toy integration ready.</p>
+                        <p class="game-desc">Classic game of strategy and tactics. Battle your opponent's king. Toy
+                            integration ready.</p>
                         <span class="status-indicator playable">PLAYABLE</span>
                     </div>
                 </div>
@@ -59,7 +65,8 @@
                     <div class="game-card-content">
                         <div class="game-icon">🏁</div>
                         <h3 class="game-title">CHECKERS</h3>
-                        <p class="game-desc">Jump over and capture your opponent's pieces in this fast-paced classic board game.</p>
+                        <p class="game-desc">Jump over and capture your opponent's pieces in this fast-paced classic
+                            board game.</p>
                         <span class="status-indicator playable">PLAYABLE</span>
                     </div>
                 </div>
@@ -70,7 +77,8 @@
                     <div class="game-card-content">
                         <div class="game-icon">❌</div>
                         <h3 class="game-title">TIC TAC TOE</h3>
-                        <p class="game-desc">Get three, four, or five tokens in a row. Select custom board sizes (3x3, 6x6, or 10x10) for extra difficulty.</p>
+                        <p class="game-desc">Get three, four, or five tokens in a row. Select custom board sizes (3x3,
+                            6x6, or 10x10) for extra difficulty.</p>
                         <span class="status-indicator playable">PLAYABLE</span>
                     </div>
                 </div>
@@ -81,7 +89,8 @@
                     <div class="game-card-content">
                         <div class="game-icon">⚓</div>
                         <h3 class="game-title">NAVAL CLASH</h3>
-                        <p class="game-desc">Position your battleships, randomize fleet setups, and launch tactical attacks to destroy enemy fleets.</p>
+                        <p class="game-desc">Position your battleships, randomize fleet setups, and launch tactical
+                            attacks to destroy enemy fleets.</p>
                         <span class="status-indicator playable">PLAYABLE</span>
                     </div>
                 </div>
@@ -92,7 +101,8 @@
                     <div class="game-card-content">
                         <div class="game-icon">☯️</div>
                         <h3 class="game-title">REVERSI</h3>
-                        <p class="game-desc">Trapped opponent disks between your colors to flip them. Out-populate the board to claim victory.</p>
+                        <p class="game-desc">Trapped opponent disks between your colors to flip them. Out-populate the
+                            board to claim victory.</p>
                         <span class="status-indicator playable">PLAYABLE</span>
                     </div>
                 </div>
@@ -103,7 +113,8 @@
                     <div class="game-card-content">
                         <div class="game-icon">✏️</div>
                         <h3 class="game-title">DOTS & BOXES</h3>
-                        <p class="game-desc">Draw lines between dots to claim boxes. Score extra turns on closed boxes and capture the grid.</p>
+                        <p class="game-desc">Draw lines between dots to claim boxes. Score extra turns on closed boxes
+                            and capture the grid.</p>
                         <span class="status-indicator playable">PLAYABLE</span>
                     </div>
                 </div>
@@ -114,11 +125,27 @@
                     <div class="game-card-content">
                         <div class="game-icon">🧠</div>
                         <h3 class="game-title">MEMORY MATCH</h3>
-                        <p class="game-desc">Flip cards to match emoji pairs. Score matches to retain your turn and test your speed-memory skills.</p>
+                        <p class="game-desc">Flip cards to match emoji pairs. Score matches to retain your turn and test
+                            your speed-memory skills.</p>
                         <span class="status-indicator playable">PLAYABLE</span>
                     </div>
                 </div>
 
+            </div>
+
+            <!-- Global Match Browser -->
+            <div class="global-match-browser">
+                <div class="global-browser-header">
+                    <div>
+                        <h4 class="global-browser-title">GLOBAL MATCH BROWSER</h4>
+                        <p class="global-browser-subtitle">Browse live rooms across every board game from one place.</p>
+                    </div>
+                    <div class="global-browser-tools">
+                        <span id="global-room-count" class="global-browser-count">0 ACTIVE ROOMS</span>
+                        <button class="btn-sponsor-link btn-browser-refresh" onclick="refreshGlobalRooms()">REFRESH</button>
+                    </div>
+                </div>
+                <div id="global-rooms-list" class="global-rooms-list"></div>
             </div>
 
             <!-- Lovense Sponsor/Affiliate Promo -->
@@ -127,8 +154,10 @@
                 <div class="sponsor-content">
                     <span class="sponsor-badge">SPONSOR</span>
                     <h4 class="sponsor-title">Power Up Your Play with Lovense</h4>
-                    <p class="sponsor-desc">Experience real-time interactive feedback by connecting Bluetooth adult toys. Purchase official toys via our affiliate link to support the terminal development.</p>
-                    <a href="https://www.lovense.com/" target="_blank" class="btn-sponsor-link">Shop Lovense Toys ⚡</a>
+                    <p class="sponsor-desc">Experience real-time interactive feedback by connecting Bluetooth adult
+                        toys. Purchase official toys via our affiliate link to support the terminal development.</p>
+                    <a href="https://www.lovense.com/r/52zzr7" target="_blank" class="btn-sponsor-link">Shop Lovense
+                        Toys ⚡</a>
                 </div>
             </div>
         </main>
@@ -195,15 +224,213 @@
             const mainHeader = document.querySelector('#terminal-view > header');
 
             iframe.src = "";
-            
+
             gameScreen.classList.add('hidden');
             selector.classList.remove('hidden');
             if (mainHeader) mainHeader.classList.remove('hidden');
+            refreshGlobalRooms();
         }
 
         function reloadCurrentGame() {
             const iframe = document.getElementById('game-frame');
             iframe.src = iframe.src;
+        }
+
+        const GLOBAL_ROOM_SOURCES = [
+            { key: 'fourinarow', label: 'Four in a Row', basePath: '/games/fourinarow' },
+            { key: 'chess', label: 'Chess', basePath: '/games/chess' },
+            { key: 'checkers', label: 'Checkers', basePath: '/games/checkers' },
+            { key: 'tictactoe', label: 'Tic Tac Toe', basePath: '/games/tictactoe' },
+            { key: 'navalclash', label: 'Naval Clash', basePath: '/games/navalclash' },
+            { key: 'reversi', label: 'Reversi', basePath: '/games/reversi' },
+            { key: 'dotsandboxes', label: 'Dots & Boxes', basePath: '/games/dotsandboxes' },
+            { key: 'memorymatch', label: 'Memory Match', basePath: '/games/memorymatch' }
+        ];
+
+        function getGlobalRoomUrl(room) {
+            const debugQuery = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '?debug=true' : '';
+            return `${room.gamePath}/board/${room.id}${debugQuery}`;
+        }
+
+        function getGlobalRoomStatusLabel(status) {
+            if (status === 'waiting') return 'JOINABLE';
+            if (status === 'playing') return 'LIVE';
+            if (status === 'cpu_difficulty_select') return 'CPU SETUP';
+            return String(status || 'UNKNOWN').toUpperCase();
+        }
+
+        function getGlobalRoomActionLabel(status) {
+            if (status === 'waiting' || status === 'cpu_difficulty_select') return 'OPEN ROOM';
+            if (status === 'playing') return 'SPECTATE';
+            return 'OPEN';
+        }
+
+        function sortGlobalRooms(rooms) {
+            const priority = { waiting: 0, cpu_difficulty_select: 1, playing: 2 };
+            return [...rooms].sort((a, b) => {
+                const ap = priority[a.status] ?? 9;
+                const bp = priority[b.status] ?? 9;
+                if (ap !== bp) return ap - bp;
+                if (a.gameLabel !== b.gameLabel) return a.gameLabel.localeCompare(b.gameLabel);
+                return String(a.id).localeCompare(String(b.id));
+            });
+        }
+
+        function renderGlobalRooms(rooms) {
+            const list = document.getElementById('global-rooms-list');
+            const count = document.getElementById('global-room-count');
+            if (!list) return;
+
+            const activeRooms = sortGlobalRooms((rooms || []).filter(room => room.status !== 'won' && room.status !== 'draw' && room.status !== 'abandoned'));
+            if (count) {
+                count.innerText = `${activeRooms.length} ACTIVE ROOM${activeRooms.length === 1 ? '' : 'S'}`;
+            }
+
+            if (activeRooms.length === 0) {
+                list.innerHTML = '<div class="global-empty-state">No active matches right now. Create the first room from any game.</div>';
+                return;
+            }
+
+            list.innerHTML = '';
+            activeRooms.forEach(room => {
+                const item = document.createElement('div');
+                item.className = 'global-room-item';
+
+                const meta = document.createElement('div');
+                meta.className = 'global-room-meta';
+
+                const gameBadge = document.createElement('span');
+                gameBadge.className = 'global-room-game';
+                gameBadge.textContent = room.gameLabel || room.gameKey || 'GAME';
+                meta.appendChild(gameBadge);
+
+                const statusBadge = document.createElement('span');
+                statusBadge.className = `global-room-status status-${room.status || 'unknown'}`;
+                statusBadge.textContent = getGlobalRoomStatusLabel(room.status);
+                meta.appendChild(statusBadge);
+
+                const code = document.createElement('div');
+                code.className = 'global-room-code';
+                code.textContent = room.id;
+
+                const gameLine = document.createElement('div');
+                gameLine.className = 'global-room-game-line';
+                gameLine.textContent = `GAME: ${room.gameLabel || room.gameKey || 'UNKNOWN'}`;
+
+                const players = document.createElement('div');
+                players.className = 'global-room-players';
+                const p1 = room.player1 ? room.player1.name : 'Waiting...';
+                const p2 = room.player2 ? room.player2.name : 'Waiting...';
+                players.textContent = `${p1} vs ${p2}`;
+
+                const details = document.createElement('div');
+                details.className = 'global-room-details';
+                details.appendChild(gameLine);
+                details.appendChild(code);
+                details.appendChild(players);
+
+                const actionBtn = document.createElement('button');
+                actionBtn.className = 'btn-browser-action';
+                actionBtn.textContent = getGlobalRoomActionLabel(room.status);
+                actionBtn.addEventListener('click', () => {
+                    window.location.href = getGlobalRoomUrl(room);
+                });
+
+                const left = document.createElement('div');
+                left.className = 'global-room-left';
+                left.appendChild(meta);
+                left.appendChild(details);
+
+                item.appendChild(left);
+                item.appendChild(actionBtn);
+                list.appendChild(item);
+            });
+        }
+
+        async function fetchJsonWithTimeout(url, timeoutMs = 3500) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+                const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+                if (!res.ok) throw new Error(`Request failed: ${url}`);
+                return await res.json();
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        function normalizeRoom(room, source) {
+            return {
+                ...room,
+                gameKey: room.gameKey || source.key,
+                gameLabel: room.gameLabel || source.label,
+                gamePath: room.gamePath || source.basePath
+            };
+        }
+
+        async function fetchBoardGameRooms(source) {
+            try {
+                const rooms = await fetchJsonWithTimeout(`${source.basePath}/api/rooms`);
+                return Array.isArray(rooms) ? rooms.map(room => normalizeRoom(room, source)) : [];
+            } catch (err) {
+                console.warn(`Failed to load ${source.label} rooms:`, err);
+                return [];
+            }
+        }
+
+        function mergeRoomLists(roomLists) {
+            const merged = new Map();
+
+            for (const rooms of roomLists) {
+                for (const room of rooms || []) {
+                    if (!room || !room.id) continue;
+                    if (room.id === 'lobby') continue;
+
+                    const key = `${room.gameKey || 'game'}:${room.id}`;
+                    const existing = merged.get(key);
+                    const score = (room.gameLabel ? 2 : 0) + (room.gamePath ? 1 : 0);
+                    const existingScore = existing ? ((existing.gameLabel ? 2 : 0) + (existing.gamePath ? 1 : 0)) : -1;
+
+                    if (!existing || score >= existingScore) {
+                        merged.set(key, room);
+                    }
+                }
+            }
+
+            return Array.from(merged.values());
+        }
+
+        async function refreshGlobalRooms() {
+            const list = document.getElementById('global-rooms-list');
+            if (list) {
+                list.innerHTML = '<div class="global-empty-state">Loading active matches...</div>';
+            }
+
+            try {
+                const [globalRooms, boardRoomsResults] = await Promise.all([
+                    fetchJsonWithTimeout('/api/rooms/global'),
+                    Promise.all(GLOBAL_ROOM_SOURCES.map(source => fetchBoardGameRooms(source)))
+                ]);
+
+                const rooms = mergeRoomLists([
+                    Array.isArray(globalRooms) ? globalRooms : [],
+                    ...boardRoomsResults
+                ]);
+
+                renderGlobalRooms(rooms);
+            } catch (err) {
+                try {
+                    const boardRooms = await Promise.all(GLOBAL_ROOM_SOURCES.map(source => fetchBoardGameRooms(source)));
+                    const rooms = mergeRoomLists(boardRooms);
+                    renderGlobalRooms(rooms);
+                } catch (fallbackErr) {
+                    if (list) {
+                        list.innerHTML = '<div class="global-empty-state">Could not load global matches right now.</div>';
+                    }
+                    console.error('Failed to load global rooms:', err);
+                    console.error('Fallback room load failed:', fallbackErr);
+                }
+            }
         }
 
         function showRules() {
@@ -223,6 +450,10 @@
                 }
             }
         }
+
+        refreshGlobalRooms();
+        setInterval(refreshGlobalRooms, 15000);
     </script>
 </body>
+
 </html>

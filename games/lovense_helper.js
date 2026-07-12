@@ -6,6 +6,7 @@ const LOVENSE_TOKEN = "q9U33GxiMHTq0z1K3gEM3T70RJKPb_3MLlgD0ElnOLFlMN42OFJat-HTW
 
 // Keeps track of active modules: { moduleName: { games, gameIo } }
 const registeredModules = {};
+const manuallyDisconnectedUids = new Set();
 
 /**
  * Registers a game module's state and Socket.io instance for connection updates
@@ -93,6 +94,29 @@ async function triggerVibration(uid, type, options = {}) {
     if (!uid || uid.startsWith('cpu-') || uid.startsWith('browser_') || uid === 'cpu-bot') {
         return; // Bypassed for CPU bots or browser mocks
     }
+
+    if (type === 'stop' || type === 'toy_control_stop') {
+        try {
+            console.log(`[Lovense Helper] Stop Command to UID ${uid}`);
+            const resJson = await securePost('https://api.lovense-api.com/api/lan/v2/command', {
+                token: LOVENSE_TOKEN,
+                uid: uid,
+                command: "Function",
+                action: "Stop",
+                timeSec: 1,
+                apiVer: 2
+            });
+            console.log("[Lovense Helper] Stop response:", resJson);
+        } catch (err) {
+            console.error("[Lovense Helper] Stop command failed:", err);
+        }
+        return;
+    }
+
+    if (manuallyDisconnectedUids.has(uid)) {
+        console.log(`[Lovense Helper] Skipping ${type} for manually disconnected UID ${uid}`);
+        return;
+    }
     
     let strength = options.strength || 0;
     let duration = options.duration || 0;
@@ -157,9 +181,45 @@ async function triggerVibration(uid, type, options = {}) {
 }
 
 /**
+ * Stop / disconnect a toy from game control without removing the Lovense app pairing.
+ * This prevents an immediate callback from re-marking the toy as connected until the
+ * user verifies again.
+ */
+async function disconnectToy(uid) {
+    if (!uid || uid.startsWith('cpu-') || uid.startsWith('browser_') || uid === 'cpu-bot') {
+        return { success: true };
+    }
+
+    manuallyDisconnectedUids.add(uid);
+
+    try {
+        await securePost('https://api.lovense-api.com/api/lan/v2/command', {
+            token: LOVENSE_TOKEN,
+            uid: uid,
+            command: "Function",
+            action: "Stop",
+            timeSec: 1,
+            apiVer: 2
+        });
+        await securePost('https://api.lovense-api.com/api/lan/v2/command', {
+            token: LOVENSE_TOKEN,
+            uid: uid,
+            command: "Function",
+            action: "Vibrate:0",
+            timeSec: 1,
+            apiVer: 2
+        });
+        return { success: true };
+    } catch (err) {
+        console.error("[Lovense Helper] Disconnect command failed:", err);
+        return { success: false, error: err.message || "Failed to disconnect toy" };
+    }
+}
+
+/**
  * Unified callback endpoint to handle connection status changes from Lovense
  */
-function handleCallback(req, res) {
+async function handleCallback(req, res) {
     const { uid, status } = req.body;
     console.log(`[Lovense Helper] Received callback for UID: ${uid}, Status: ${status}`);
     
@@ -177,11 +237,11 @@ function handleCallback(req, res) {
             let updated = false;
             
             if (game.player1 && game.player1.uuid === uid) {
-                game.player1.connected = isConnected;
+                game.player1.connected = isConnected && !manuallyDisconnectedUids.has(uid);
                 updated = true;
             }
             if (game.player2 && game.player2.uuid === uid) {
-                game.player2.connected = isConnected;
+                game.player2.connected = isConnected && !manuallyDisconnectedUids.has(uid);
                 updated = true;
             }
             
@@ -190,6 +250,10 @@ function handleCallback(req, res) {
                 gameIo.to(gameId).emit('update', game);
             }
         }
+    }
+
+    if (isConnected) {
+        await triggerVibration(uid, 'move');
     }
     
     res.send("OK");
@@ -220,6 +284,7 @@ async function verifyConnection(uid) {
         const isSuccessCode = (resJson.code === 0 || resJson.code === 200);
         const isSuccessMessage = (message === "success" || message.includes("success"));
         if (resJson.result === true || isSuccessCode || isSuccessMessage) {
+            manuallyDisconnectedUids.delete(uid);
             return { success: true };
         } else {
             return { success: false, error: resJson.message || `Code ${resJson.code}` };
@@ -233,6 +298,7 @@ module.exports = {
     registerModule,
     getQrCode,
     triggerVibration,
+    disconnectToy,
     handleCallback,
     verifyConnection
 };

@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Age Verification Required | Lovense Game Terminal</title>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --bg-dark: #09090e;
@@ -26,7 +29,7 @@
 
         body {
             background-color: var(--bg-dark);
-            background-image: 
+            background-image:
                 radial-gradient(circle at 10% 20%, rgba(192, 0, 255, 0.08) 0%, transparent 40%),
                 radial-gradient(circle at 90% 80%, rgba(0, 238, 255, 0.08) 0%, transparent 40%);
             font-family: 'Rajdhani', sans-serif;
@@ -48,7 +51,7 @@
             border-radius: 20px;
             padding: 40px 30px;
             text-align: center;
-            box-shadow: 
+            box-shadow:
                 0 20px 50px rgba(0, 0, 0, 0.8),
                 inset 0 0 15px rgba(255, 255, 255, 0.02);
             position: relative;
@@ -74,6 +77,7 @@
                 opacity: 0;
                 transform: scale(0.92) translateY(15px);
             }
+
             100% {
                 opacity: 1;
                 transform: scale(1) translateY(0);
@@ -113,10 +117,13 @@
         }
 
         @keyframes pulse-red {
-            0%, 100% {
+
+            0%,
+            100% {
                 box-shadow: 0 0 8px rgba(255, 51, 102, 0.15);
                 border-color: rgba(255, 51, 102, 0.8);
             }
+
             50% {
                 box-shadow: 0 0 15px rgba(255, 51, 102, 0.4);
                 border-color: rgba(255, 51, 102, 1);
@@ -223,6 +230,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="gate-card">
         <div class="gate-header">
@@ -231,7 +239,8 @@
         </div>
 
         <p class="gate-warning">
-            This server features interactive matches with <strong>Lovense toys</strong>, multiplayer lobbies, and unmoderated adult chatrooms. 
+            This server features interactive matches with <strong>Lovense toys</strong>, multiplayer lobbies, and
+            unmoderated adult chatrooms.
             <br><br>
             You must be <strong>18 years or older</strong> to enter this site.
         </p>
@@ -246,8 +255,9 @@
                 ⚡ Lovense Integration Enabled
             </div>
             <p class="affiliate-text">
-                Connect your Bluetooth toys to experience real-time match feedback. Need toys? 
-                <a href="https://www.lovense.com/" target="_blank" class="affiliate-link">Shop Lovense Interactive Toys</a> to enhance your lobby experience.
+                Connect your Bluetooth toys to experience real-time match feedback. Need toys?
+                <a href="https://www.lovense.com/r/52zzr7" target="_blank" class="affiliate-link">Shop Lovense
+                    Interactive Toys</a> to enhance your lobby experience.
             </p>
         </div>
     </div>
@@ -258,15 +268,15 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = '/';
-                }
-            })
-            .catch(err => {
-                console.error('Age verification failed', err);
-            });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/';
+                    }
+                })
+                .catch(err => {
+                    console.error('Age verification failed', err);
+                });
         });
 
         document.getElementById('btn-exit').addEventListener('click', () => {
@@ -274,4 +284,5 @@
         });
     </script>
 </body>
+
 </html>
