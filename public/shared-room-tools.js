@@ -49,25 +49,46 @@
                 align-items: center;
                 justify-content: space-between;
                 gap: 8px;
-                margin: 10px 0 8px;
-                padding: 8px 10px;
-                border: 1px solid rgba(255,255,255,0.12);
-                border-radius: 12px;
-                background:
-                    linear-gradient(180deg, rgba(15, 20, 30, 0.95), rgba(9, 12, 20, 0.82));
-                backdrop-filter: blur(10px);
-                box-shadow:
-                    0 0 0 1px rgba(0, 229, 255, 0.06),
-                    0 10px 30px rgba(0, 0, 0, 0.35);
+                margin: 4px 8px 6px;
+                padding: 4px 8px;
+                border: 1px solid rgba(0, 229, 255, 0.12);
+                border-radius: 8px;
+                background: rgba(10, 12, 20, 0.6);
+                backdrop-filter: blur(8px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             }
             .room-tools-pill {
-                font-size: 0.72rem;
-                letter-spacing: 0.06em;
+                font-size: 0.68rem;
+                letter-spacing: 0.04em;
                 text-transform: uppercase;
-                color: var(--text-secondary, #9aa4b2);
+                color: rgba(245, 247, 251, 0.6);
                 white-space: nowrap;
             }
-            .room-tools-toggle,
+            .room-tools-toggle {
+                appearance: none;
+                border: 1px solid rgba(0, 229, 255, 0.25);
+                background: rgba(0, 229, 255, 0.06);
+                color: #9deeff;
+                border-radius: 6px;
+                padding: 4px 8px;
+                cursor: pointer;
+                font-size: 0.68rem;
+                font-weight: 600;
+                letter-spacing: 0.04em;
+                line-height: 1;
+                transition: background 150ms, border-color 150ms, transform 150ms;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
+            .room-tools-toggle:hover {
+                background: rgba(0, 229, 255, 0.15);
+                border-color: rgba(0, 229, 255, 0.5);
+                transform: translateY(-0.5px);
+            }
+            .room-tools-toggle:active {
+                transform: translateY(0);
+            }
             .room-tools-action,
             .room-tools-emoji {
                 appearance: none;
@@ -82,7 +103,6 @@
                 line-height: 1;
                 transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
             }
-            .room-tools-toggle:hover,
             .room-tools-action:hover,
             .room-tools-emoji:hover {
                 transform: translateY(-1px);
