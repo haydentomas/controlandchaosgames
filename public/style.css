@@ -51,7 +51,7 @@ body {
 .lobby-sponsor-side {
     /* display: none !important; */ /* UNCOMMENT TO HIDE BANNERS FOR BOSS DEMOS */
     position: fixed;
-    top: 150px;
+    top: 280px;
     width: 240px;
     display: flex;
     flex-direction: column;
@@ -107,10 +107,6 @@ body {
     .lobby-sponsor-side {
         display: none !important;
     }
-}
-
-#selector-screen.hidden ~ .lobby-sponsor-side {
-    display: none !important;
 }
 
 @media (min-width: 1366px) {
