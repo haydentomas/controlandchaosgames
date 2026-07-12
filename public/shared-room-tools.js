@@ -396,6 +396,8 @@
                     radial-gradient(circle at top, rgba(0, 229, 255, 0.10), transparent 35%),
                     radial-gradient(circle at bottom, rgba(163, 88, 255, 0.08), transparent 28%),
                     rgba(10, 10, 20, 0.88);
+                opacity: 0;
+                transition: opacity 0.15s ease-in-out;
             }
             .chat-sidebar::before {
                 content: '';
@@ -811,6 +813,7 @@
         sidebar.insertBefore(panel, messages);
 
         buildEmojiPicker();
+        sidebar.style.opacity = '1';
 
         const toggle = document.getElementById('room-tools-toggle');
         toggle.addEventListener('click', () => {
