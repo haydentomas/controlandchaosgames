@@ -56,6 +56,7 @@
                 background: rgba(10, 12, 20, 0.6);
                 backdrop-filter: blur(8px);
                 box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                overflow: hidden;
             }
             .room-tools-pill {
                 font-size: 0.68rem;
@@ -379,9 +380,10 @@
             }
             .room-tools-self-state {
                 margin-left: auto;
-                font-size: 0.72rem;
-                color: #9deeff;
-                text-align: right;
+                font-size: 0.65rem;
+                font-weight: bold;
+                color: #ff4d4d;
+                white-space: nowrap;
             }
             .chat-sidebar {
                 position: relative;
@@ -484,13 +486,9 @@
         const selfState = document.getElementById('room-tools-self-state');
         if (selfState) {
             if (blocked) {
-                selfState.textContent = 'You are blocked from this room.';
+                selfState.textContent = '🚫 BLOCKED';
             } else if (muted) {
-                selfState.textContent = 'You are muted in this room.';
-            } else if (chatOff) {
-                selfState.textContent = 'Chat is disabled by the host.';
-            } else if (voiceOff) {
-                selfState.textContent = 'Voice is disabled by the host.';
+                selfState.textContent = '🔇 MUTED';
             } else {
                 selfState.textContent = '';
             }
@@ -762,7 +760,7 @@
         const admin = isHost(game);
         toggle.textContent = admin ? '🛡️ HOST CONTROLS' : '⚑ PLAYER TOOLS';
         summary.textContent = game && game.moderation
-            ? `${game.moderation.visibility === 'private' ? 'Private room' : 'Public room'} • Chat ${game.moderation.chatEnabled === false ? 'off' : 'on'} • Voice ${game.moderation.voiceEnabled === false ? 'off' : 'on'}`
+            ? `${game.moderation.visibility === 'private' ? 'Private' : 'Public'} • Chat ${game.moderation.chatEnabled === false ? 'Off' : 'On'} • Voice ${game.moderation.voiceEnabled === false ? 'Off' : 'On'}`
             : 'Room tools ready';
         toggle.title = admin ? 'Host-only session controls' : 'Player tools and reporting';
 
