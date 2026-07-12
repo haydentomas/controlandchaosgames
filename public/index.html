@@ -24,9 +24,14 @@
         <header>
             <h1 class="logo">CONTROL & CHAOS</h1>
             <div class="lovense-promo">
-                <span class="pulse-dot"></span> Lovense Enabled Gaming <span class="pulse-dot"></span>
+                <span class="pulse-dot"></span> Lovense-enabled gaming <span class="pulse-dot"></span>
             </div>
         </header>
+
+        <div class="site-notice-bar">
+            Optional haptic hardware integration, voice-enabled rooms, and live multiplayer chat.
+            <button type="button" class="notice-link" onclick="openInfoModal('community')">Read community rules</button>
+        </div>
 
         <!-- GAME SELECTOR SCREEN -->
         <main class="terminal-container" id="selector-screen">
@@ -154,8 +159,9 @@
                 <div class="sponsor-content">
                     <span class="sponsor-badge">SPONSOR</span>
                     <h4 class="sponsor-title">Power Up Your Play with Lovense</h4>
-                    <p class="sponsor-desc">Experience real-time interactive feedback by connecting Bluetooth adult
-                        toys. Purchase official toys via our affiliate link to support the terminal development.</p>
+                    <p class="sponsor-desc">Experience real-time interactive feedback by connecting optional Bluetooth
+                        haptic devices. Purchase official Lovense hardware via our affiliate link to support terminal
+                        development.</p>
                     <a href="https://www.lovense.com/r/52zzr7" target="_blank" class="btn-sponsor-link">Shop Lovense
                         Toys ⚡</a>
                 </div>
@@ -176,6 +182,26 @@
                 <iframe id="game-frame" src="" allow="microphone; clipboard-write"></iframe>
             </div>
         </main>
+
+        <footer class="site-footer">
+            <div class="site-footer-links">
+                <button type="button" class="footer-link" onclick="openInfoModal('privacy')">Privacy</button>
+                <button type="button" class="footer-link" onclick="openInfoModal('terms')">Terms</button>
+                <button type="button" class="footer-link" onclick="openInfoModal('community')">Community Rules</button>
+            </div>
+            <div class="site-footer-note">
+                Voice chat and haptic features are optional. The site uses session-based room state and does not
+                require a database for standard play.
+            </div>
+        </footer>
+    </div>
+
+    <div id="info-modal" class="info-modal hidden" aria-hidden="true">
+        <div class="info-modal-card" role="dialog" aria-modal="true" aria-labelledby="info-modal-title">
+            <button class="info-modal-close" type="button" onclick="closeInfoModal()">×</button>
+            <h3 id="info-modal-title" class="info-modal-title">Info</h3>
+            <div id="info-modal-body" class="info-modal-body"></div>
+        </div>
     </div>
 
     <script>
@@ -235,6 +261,57 @@
             const iframe = document.getElementById('game-frame');
             iframe.src = iframe.src;
         }
+
+        const INFO_CONTENT = {
+            privacy: {
+                title: 'Privacy',
+                body: `
+                    <p>We keep the default site lightweight and session-based. Standard gameplay uses room state in memory for the active session.</p>
+                    <p>Optional haptic connection details are only used to run the connected game session. If you add persistent storage later, update this notice before launch.</p>
+                `
+            },
+            terms: {
+                title: 'Terms',
+                body: `
+                    <p>Use the site responsibly. Do not harass other players, spam rooms, or abuse voice/chat.</p>
+                    <p>Game rooms, chat, and voice are social features; haptic integration is optional and user-controlled.</p>
+                `
+            },
+            community: {
+                title: 'Community Rules',
+                body: `
+                    <p>Keep chat respectful. No hate speech, threats, impersonation, or deliberate disruption.</p>
+                    <p>Use room privacy controls, leave a room if it becomes unsafe, and disable voice or haptics whenever you want.</p>
+                `
+            }
+        };
+
+        function openInfoModal(key) {
+            const modal = document.getElementById('info-modal');
+            const title = document.getElementById('info-modal-title');
+            const body = document.getElementById('info-modal-body');
+            const content = INFO_CONTENT[key] || INFO_CONTENT.community;
+            if (!modal || !title || !body) return;
+            title.innerText = content.title;
+            body.innerHTML = content.body;
+            modal.classList.remove('hidden');
+            modal.classList.add('show');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeInfoModal() {
+            const modal = document.getElementById('info-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('show');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+
+        document.getElementById('info-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'info-modal') {
+                closeInfoModal();
+            }
+        });
 
         const GLOBAL_ROOM_SOURCES = [
             { key: 'fourinarow', label: 'Four in a Row', basePath: '/games/fourinarow' },
