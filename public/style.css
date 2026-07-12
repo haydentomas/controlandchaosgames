@@ -108,6 +108,10 @@ body {
     }
 }
 
+#selector-screen.hidden ~ .lobby-sponsor-side {
+    display: none !important;
+}
+
 @media (min-width: 1366px) {
    .view {
     min-height: 100vh;
