@@ -137,7 +137,7 @@
                 <div class="global-browser-header">
                     <div>
                         <h4 class="global-browser-title">GLOBAL MATCH BROWSER</h4>
-                        <p class="global-browser-subtitle">Browse live rooms across every board game from one place.</p>
+                        <p class="global-browser-subtitle">Browse live rooms across every board game from one place. (Only public rooms appear here)</p>
                     </div>
                     <div class="global-browser-tools">
                         <span id="global-room-count" class="global-browser-count">0 ACTIVE ROOMS</span>
@@ -358,7 +358,7 @@
             }
 
             if (activeRooms.length === 0) {
-                list.innerHTML = '<div class="global-empty-state">No active matches right now. Create the first room from any game.</div>';
+                list.innerHTML = '<div class="global-empty-state">No active matches right now. Create the first room from any game.<br><small style="display:block;margin-top:8px;opacity:0.6;font-size:0.75rem;">Note: Only rooms set to "Public" in Host Controls will appear in this browser.</small></div>';
                 return;
             }
 
