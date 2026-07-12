@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const cpuAi = require('../cpu_ai.js');
 const lovenseHelper = require('../lovense_helper.js');
+const roomModeration = require('../shared_room_moderation.js');
 
 let gamesRef = null;
 
@@ -13,6 +14,14 @@ function init(app, io, mountPath = '') {
     gamesRef = games;
     const gameIo = io.of(mountPath || '/');
     lovenseHelper.registerModule('navalclash', games, gameIo);
+    roomModeration.registerRoutes({
+        app,
+        mountPath,
+        games,
+        snapshotGame: game => sanitizeGameForPlayer(game),
+        emitGameUpdate: (gameId, game) => gameIo.to(gameId).emit('update', sanitizeGameForPlayer(game)),
+        endToyControl
+    });
 
     const activeIntervals = {};
 
@@ -171,6 +180,7 @@ function init(app, io, mountPath = '') {
                 vibeMode: 'fun',
                 toyControl: null
             };
+            roomModeration.ensureModeration(games[gameId]);
         }
         return games[gameId];
     }
@@ -252,7 +262,8 @@ function init(app, io, mountPath = '') {
                 player1: g.player1 ? { name: g.player1.name } : null,
                 player2: g.player2 ? { name: g.player2.name } : null,
                 status: g.status,
-                winner: g.winner
+                winner: g.winner,
+                moderation: g.moderation
             }));
         res.json(roomList);
     });
@@ -308,6 +319,7 @@ function init(app, io, mountPath = '') {
         }
 
         const game = getGame(gameId);
+        roomModeration.ensureModeration(game);
 
         if (!role) {
             if (game.player1 && game.player1.uuid === uuid) {
@@ -405,6 +417,7 @@ function init(app, io, mountPath = '') {
     app.post(`${mountPath}/api/join-cpu`, (req, res) => {
         const { gameId, uuid, name } = req.body;
         const game = getGame(gameId);
+        roomModeration.ensureModeration(game);
         game.lastActive = Date.now();
 
         game.player1 = { uuid, name, ready: false, ships: [], connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
@@ -880,13 +893,15 @@ function init(app, io, mountPath = '') {
 
         socket.on('voice_signal', (data) => {
             if (currentRoom) {
-                socket.to(currentRoom).emit('voice_signal', data);
+                const forwarded = roomModeration.handleVoiceSignal({ socket, gameId: currentRoom, games, playerUuid, data });
+                if (forwarded) socket.to(currentRoom).emit('voice_signal', forwarded);
             }
         });
 
         socket.on('chat_message', (data) => {
             if (currentRoom) {
-                gameIo.to(currentRoom).emit('chat_message', data);
+                const message = roomModeration.handleChatMessage({ socket, gameId: currentRoom, games, playerUuid, data });
+                if (message) gameIo.to(currentRoom).emit('chat_message', message);
             }
         });
 
@@ -922,7 +937,8 @@ function getRooms() {
         player1: game.player1,
         player2: game.player2,
         status: game.status,
-        winner: game.winner
+        winner: game.winner,
+        moderation: game.moderation
     }));
 }
 

@@ -158,7 +158,10 @@ app.get('/api/rooms/global', (req, res) => {
             }));
     });
 
-    const visibleRooms = rooms.filter(room => room.status !== 'won' && room.status !== 'abandoned' && room.status !== 'draw');
+    const visibleRooms = rooms.filter(room => {
+        const isPrivate = room.moderation && room.moderation.visibility === 'private';
+        return !isPrivate && room.status !== 'won' && room.status !== 'abandoned' && room.status !== 'draw';
+    });
     res.json(visibleRooms);
 });
 

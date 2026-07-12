@@ -1,6 +1,7 @@
 // server.js (Multiplayer Blackjack Duel Game Module)
 const express = require('express');
 const path = require('path');
+const roomModeration = require('../shared_room_moderation.js');
 
 let gamesRef = null;
 
@@ -10,6 +11,13 @@ function init(app, io, mountPath = '') {
     const games = {};
     gamesRef = games;
     const gameIo = io.of(mountPath || '/');
+    roomModeration.registerRoutes({
+        app,
+        mountPath,
+        games,
+        snapshotGame: game => game,
+        emitGameUpdate: (gameId, game) => gameIo.to(gameId).emit('update', game)
+    });
 
     const SUITS = ['S', 'H', 'D', 'C']; // Spades, Hearts, Diamonds, Clubs
     const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
@@ -145,6 +153,7 @@ function init(app, io, mountPath = '') {
                 lastActionText: 'Waiting for players.',
                 cpuTurnPending: false
             };
+            roomModeration.ensureModeration(games[gameId]);
         }
         return games[gameId];
     }
@@ -161,7 +170,8 @@ function init(app, io, mountPath = '') {
                 player1: g.player1,
                 player2: g.player2,
                 status: g.status,
-                winner: g.winner
+                winner: g.winner,
+                moderation: g.moderation
             }));
         res.json(roomList);
     });
@@ -170,6 +180,7 @@ function init(app, io, mountPath = '') {
         const { gameId, uuid } = req.body;
         const game = games[gameId];
         if (game) {
+            roomModeration.ensureModeration(game);
             let playerLeft = false;
             if (game.player1 && game.player1.uuid === uuid) {
                 game.player1 = null;
@@ -194,6 +205,7 @@ function init(app, io, mountPath = '') {
         }
 
         const game = getGame(gameId);
+        roomModeration.ensureModeration(game);
         game.player1 = { uuid, name };
         game.player2 = { uuid: 'cpu-bot', name: 'CyberBot 🤖' };
         game.isCpuMatch = true;
@@ -221,6 +233,7 @@ function init(app, io, mountPath = '') {
         if (!game) {
             return res.status(404).json({ error: 'Game not found.' });
         }
+        roomModeration.ensureModeration(game);
 
         game.difficulty = ['easy', 'medium', 'hard'].includes(difficulty) ? difficulty : 'medium';
         startRound(game);
@@ -235,6 +248,7 @@ function init(app, io, mountPath = '') {
         }
 
         const game = getGame(gameId);
+        roomModeration.ensureModeration(game);
 
         if (!role) {
             if (game.player1 && game.player1.uuid === uuid) {
@@ -404,11 +418,17 @@ function init(app, io, mountPath = '') {
         });
 
         socket.on('voice_signal', (data) => {
-            if (currentRoom) socket.to(currentRoom).emit('voice_signal', data);
+            if (currentRoom) {
+                const forwarded = roomModeration.handleVoiceSignal({ socket, gameId: currentRoom, games, playerUuid, data });
+                if (forwarded) socket.to(currentRoom).emit('voice_signal', forwarded);
+            }
         });
 
         socket.on('chat_message', (data) => {
-            if (currentRoom) gameIo.to(currentRoom).emit('chat_message', data);
+            if (currentRoom) {
+                const message = roomModeration.handleChatMessage({ socket, gameId: currentRoom, games, playerUuid, data });
+                if (message) gameIo.to(currentRoom).emit('chat_message', message);
+            }
         });
 
         socket.on('disconnect', () => {
@@ -440,7 +460,8 @@ function getRooms() {
         player1: game.player1,
         player2: game.player2,
         status: game.status,
-        winner: game.winner
+        winner: game.winner,
+        moderation: game.moderation
     }));
 }
 

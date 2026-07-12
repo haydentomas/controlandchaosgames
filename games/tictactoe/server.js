@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const cpuAi = require('../cpu_ai.js');
 const lovenseHelper = require('../lovense_helper.js');
+const roomModeration = require('../shared_room_moderation.js');
 
 let gamesRef = null;
 
@@ -14,6 +15,14 @@ function init(app, io, mountPath = '') {
     const activeIntervals = {};
     const gameIo = io.of(mountPath || '/');
     lovenseHelper.registerModule('tictactoe', games, gameIo);
+    roomModeration.registerRoutes({
+        app,
+        mountPath,
+        games,
+        snapshotGame: game => game,
+        emitGameUpdate: (gameId, game) => gameIo.to(gameId).emit('update', game),
+        endToyControl
+    });
 
     function createEmptyBoard(size) {
         const board = [];
@@ -38,6 +47,7 @@ function init(app, io, mountPath = '') {
                 vibeMode: 'fun',
                 toyControl: null
             };
+            roomModeration.ensureModeration(games[gameId]);
         }
         return games[gameId];
     }
@@ -277,7 +287,8 @@ function init(app, io, mountPath = '') {
                 player1: g.player1,
                 player2: g.player2,
                 status: g.status,
-                winner: g.winner
+                winner: g.winner,
+                moderation: g.moderation
             }));
         res.json(roomList);
     });
@@ -312,6 +323,7 @@ function init(app, io, mountPath = '') {
 
         const boardSize = size ? parseInt(size) : 3;
         const game = getGame(gameId, boardSize);
+        roomModeration.ensureModeration(game);
 
         if (!role) {
             if (game.player1 && game.player1.uuid === uuid) {
@@ -380,6 +392,7 @@ function init(app, io, mountPath = '') {
     app.post(`${mountPath}/api/join-cpu`, (req, res) => {
         const { gameId, uuid, name } = req.body;
         const game = getGame(gameId, 3); // Defaults to 3x3 for CPU quick setup
+        roomModeration.ensureModeration(game);
         game.lastActive = Date.now();
 
         game.player1 = { uuid, name, connected: false, toyEnabled: false, qrCode: null, linkCode: null, qrError: null };
@@ -416,6 +429,7 @@ function init(app, io, mountPath = '') {
         const { gameId, difficulty } = req.body;
         const game = games[gameId];
         if (game) {
+            roomModeration.ensureModeration(game);
             game.difficulty = difficulty || 'medium';
             game.status = 'playing';
             gameIo.to(gameId).emit('update', game);
@@ -427,6 +441,7 @@ function init(app, io, mountPath = '') {
         const { gameId, uuid, result } = req.body;
         const game = games[gameId];
         if (!game) return res.status(404).json({ error: 'Game not found.' });
+        roomModeration.ensureModeration(game);
 
         const player = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
         if (!player) return res.status(400).json({ error: 'Must be in the game to test.' });
@@ -527,6 +542,7 @@ function init(app, io, mountPath = '') {
         const { gameId, uuid } = req.body;
         const game = games[gameId];
         if (!game) return res.status(404).json({ error: "Game not found." });
+        roomModeration.ensureModeration(game);
         const player = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
         if (!player) return res.status(400).json({ error: "Player not registered." });
         await lovenseHelper.triggerVibration(player.uuid, 'move');
@@ -538,6 +554,7 @@ function init(app, io, mountPath = '') {
         const { gameId, uuid } = req.body;
         const game = games[gameId];
         if (!game) return res.status(404).json({ error: "Game not found." });
+        roomModeration.ensureModeration(game);
         const player = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
         if (!player) return res.status(400).json({ error: "Player not registered." });
         
@@ -557,6 +574,7 @@ function init(app, io, mountPath = '') {
         const { gameId, uuid } = req.body;
         const game = games[gameId];
         if (!game) return res.status(404).json({ error: 'Game not found.' });
+        roomModeration.ensureModeration(game);
         const player = (game.player1 && game.player1.uuid === uuid) ? game.player1 : (game.player2 && game.player2.uuid === uuid ? game.player2 : null);
         if (!player) return res.status(400).json({ error: 'Player not registered.' });
 
@@ -577,6 +595,7 @@ function init(app, io, mountPath = '') {
         const { gameId } = req.body;
         const game = games[gameId];
         if (game) {
+            roomModeration.ensureModeration(game);
             game.vibeMode = game.vibeMode === 'normal' ? 'fun' : 'normal';
             gameIo.to(gameId).emit('update', game);
             res.json({ success: true, vibeMode: game.vibeMode });
@@ -589,6 +608,7 @@ function init(app, io, mountPath = '') {
     app.post(`${mountPath}/api/reset`, (req, res) => {
         const { gameId, size, uuid } = req.body;
         const game = games[gameId];
+        roomModeration.ensureModeration(game);
 
         if (game) {
             endToyControl(gameId, true);
@@ -847,13 +867,15 @@ function init(app, io, mountPath = '') {
 
         socket.on('voice_signal', (data) => {
             if (currentRoom) {
-                socket.to(currentRoom).emit('voice_signal', data);
+                const forwarded = roomModeration.handleVoiceSignal({ socket, gameId: currentRoom, games, playerUuid, data });
+                if (forwarded) socket.to(currentRoom).emit('voice_signal', forwarded);
             }
         });
 
         socket.on('chat_message', (data) => {
             if (currentRoom) {
-                gameIo.to(currentRoom).emit('chat_message', data);
+                const message = roomModeration.handleChatMessage({ socket, gameId: currentRoom, games, playerUuid, data });
+                if (message) gameIo.to(currentRoom).emit('chat_message', message);
             }
         });
 
@@ -887,7 +909,8 @@ function getRooms() {
         player1: game.player1,
         player2: game.player2,
         status: game.status,
-        winner: game.winner
+        winner: game.winner,
+        moderation: game.moderation
     }));
 }
 
