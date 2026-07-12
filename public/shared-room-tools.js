@@ -866,5 +866,6 @@
         }
     }
 
+    addStyles();
     start();
 })();
