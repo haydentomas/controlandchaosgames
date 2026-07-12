@@ -49,6 +49,7 @@ body {
 
 /* Side Sponsor Banners */
 .lobby-sponsor-side {
+    /* display: none !important; */ /* UNCOMMENT TO HIDE BANNERS FOR BOSS DEMOS */
     position: fixed;
     top: 150px;
     width: 240px;
