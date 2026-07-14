@@ -1168,9 +1168,12 @@
             document.getElementById('btn-standalone-back').addEventListener('click', () => {
                 window.location.href = '/';
             });
-            document.getElementById('btn-standalone-reload').addEventListener('click', () => {
-                window.location.reload();
-            });
+            const btnStandaloneReload = document.getElementById('btn-standalone-reload');
+            if (btnStandaloneReload) {
+                btnStandaloneReload.addEventListener('click', () => {
+                    window.location.reload();
+                });
+            }
 
             // Bind Overlays Join
             document.getElementById('btn-overlay-join-1').addEventListener('click', () => joinRole('1'));
@@ -1186,9 +1189,10 @@
             shipBtns.forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     shipBtns.forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
-                    selectedShip = e.target.getAttribute('data-ship');
-                    selectedShipSize = parseInt(e.target.getAttribute('data-size'));
+                    const currentBtn = e.currentTarget;
+                    currentBtn.classList.add('active');
+                    selectedShip = currentBtn.getAttribute('data-ship');
+                    selectedShipSize = parseInt(currentBtn.getAttribute('data-size'), 10);
                 });
             });
 
@@ -1505,6 +1509,10 @@
                 }
             }
 
+            document.querySelectorAll('.btn-ship-select').forEach(btn => {
+                btn.classList.remove('placed');
+            });
+
             // Add classes
             placedShips.forEach(ship => {
                 ship.coords.forEach(([sr, sc]) => {
@@ -1533,7 +1541,9 @@
 
             shipSizes.forEach(shipSpec => {
                 let placed = false;
-                while (!placed) {
+                let attempts = 0;
+                while (!placed && attempts < 1000) {
+                    attempts++;
                     const orient = Math.random() < 0.5 ? 'H' : 'V';
                     const maxR = orient === 'V' ? 10 - shipSpec.size : 9;
                     const maxC = orient === 'H' ? 10 - shipSpec.size : 9;
@@ -1545,6 +1555,11 @@
                         placedShips.push({ name: shipSpec.name, size: shipSpec.size, coords });
                         placed = true;
                     }
+                }
+
+                if (!placed) {
+                    showToast(`Auto-place failed for ${shipSpec.name}. Try manual placement.`, 'error');
+                    return;
                 }
             });
 
