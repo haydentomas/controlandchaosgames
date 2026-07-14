@@ -57,6 +57,9 @@
                 backdrop-filter: blur(8px);
                 box-shadow: 0 4px 12px rgba(0,0,0,0.2);
                 overflow: hidden;
+                position: sticky;
+                top: 0;
+                z-index: 12;
             }
             .room-tools-pill {
                 font-size: 0.68rem;
@@ -81,6 +84,9 @@
                 display: inline-flex;
                 align-items: center;
                 gap: 4px;
+                flex: 0 0 auto;
+                white-space: nowrap;
+                min-width: max-content;
             }
             .room-tools-toggle:hover {
                 background: rgba(0, 229, 255, 0.15);
@@ -125,6 +131,8 @@
                 box-shadow:
                     0 12px 40px rgba(0, 0, 0, 0.38),
                     inset 0 1px 0 rgba(255,255,255,0.03);
+                max-height: min(58vh, 560px);
+                overflow: auto;
             }
             .room-tools-panel.show {
                 display: block;
