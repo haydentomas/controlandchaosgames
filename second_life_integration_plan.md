@@ -173,7 +173,7 @@ default
                 PRIM_MEDIA_CURRENT_URL, target_url,
                 PRIM_MEDIA_HEIGHT_PIXELS, 1024,
                 PRIM_MEDIA_WIDTH_PIXELS, 1024,
-                PRIM_MEDIA_CONTROLS, PRIM_MEDIA_CONTROLS_NONE,
+                PRIM_MEDIA_CONTROLS, PRIM_MEDIA_CONTROLS_STANDARD,
                 PRIM_MEDIA_PERMS_INTERACT, PRIM_MEDIA_PERM_ANYONE
             ]);
         }

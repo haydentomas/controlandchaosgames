@@ -228,6 +228,14 @@
     </div>
 
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const isSLMode = urlParams.get('mode') === 'sl';
+        const cabinetId = urlParams.get('cabinetId');
+
+        if (isSLMode) {
+            document.body.classList.add('sl-mode');
+        }
+
         function loadGame(gameKey) {
             const selector = document.getElementById('selector-screen');
             const gameScreen = document.getElementById('game-screen');
@@ -235,30 +243,32 @@
             const activeTitle = document.getElementById('active-game-name');
             const mainHeader = document.querySelector('#terminal-view > header');
 
+            const extraParams = isSLMode ? `&mode=sl&cabinetId=${encodeURIComponent(cabinetId || '')}` : "";
+
             if (gameKey === 'fourinarow') {
                 activeTitle.innerText = "CONTROL & CHAOS FOUR IN A ROW";
-                iframe.src = "/games/fourinarow/board/lobby?debug=true";
+                iframe.src = "/games/fourinarow/board/lobby?debug=true" + extraParams;
             } else if (gameKey === 'chess') {
                 activeTitle.innerText = "CONTROL & CHAOS CHESS";
-                iframe.src = "/games/chess/board/lobby?debug=true";
+                iframe.src = "/games/chess/board/lobby?debug=true" + extraParams;
             } else if (gameKey === 'tictactoe') {
                 activeTitle.innerText = "CONTROL & CHAOS TIC TAC TOE";
-                iframe.src = "/games/tictactoe/board/lobby?debug=true";
+                iframe.src = "/games/tictactoe/board/lobby?debug=true" + extraParams;
             } else if (gameKey === 'checkers') {
                 activeTitle.innerText = "CONTROL & CHAOS CHECKERS";
-                iframe.src = "/games/checkers/board/lobby?debug=true";
+                iframe.src = "/games/checkers/board/lobby?debug=true" + extraParams;
             } else if (gameKey === 'navalclash') {
                 activeTitle.innerText = "CONTROL & CHAOS: NAVAL CLASH";
-                iframe.src = "/games/navalclash/board/lobby?debug=true";
+                iframe.src = "/games/navalclash/board/lobby?debug=true" + extraParams;
             } else if (gameKey === 'reversi') {
                 activeTitle.innerText = "CONTROL & CHAOS: REVERSI";
-                iframe.src = "/games/reversi/board/lobby?debug=true";
+                iframe.src = "/games/reversi/board/lobby?debug=true" + extraParams;
             } else if (gameKey === 'dotsandboxes') {
                 activeTitle.innerText = "CONTROL & CHAOS: DOTS & BOXES";
-                iframe.src = "/games/dotsandboxes/board/lobby?debug=true";
+                iframe.src = "/games/dotsandboxes/board/lobby?debug=true" + extraParams;
             } else if (gameKey === 'memorymatch') {
                 activeTitle.innerText = "CONTROL & CHAOS: MEMORY MATCH";
-                iframe.src = "/games/memorymatch/board/lobby?debug=true";
+                iframe.src = "/games/memorymatch/board/lobby?debug=true" + extraParams;
             }
 
             selector.classList.add('hidden');

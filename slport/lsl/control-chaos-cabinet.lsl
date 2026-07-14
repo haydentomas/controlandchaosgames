@@ -20,7 +20,7 @@ string buildRegistrationBody(string callbackUrl)
     return "{\"cabinetId\":\"" + CABINET_ID + "\",\"callbackUrl\":\"" + callbackUrl + "\"}";
 }
 
-setCabinetScreen()
+integer setCabinetScreen()
 {
     string targetUrl = SERVER_URL + "/?mode=sl&cabinetId=" + CABINET_ID;
 
@@ -28,13 +28,13 @@ setCabinetScreen()
     llSetPrimMediaParams(MOAP_FACE, [
         PRIM_MEDIA_CURRENT_URL, targetUrl,
         PRIM_MEDIA_HOME_URL, targetUrl,
-        PRIM_MEDIA_AUTO_PLAY, TRUE,
-        PRIM_MEDIA_CONTROLS, PRIM_MEDIA_CONTROLS_NONE,
+        PRIM_MEDIA_CONTROLS, PRIM_MEDIA_CONTROLS_STANDARD,
         PRIM_MEDIA_PERMS_INTERACT, PRIM_MEDIA_PERM_ANYONE,
         PRIM_MEDIA_PERMS_CONTROL, PRIM_MEDIA_PERM_NONE
     ]);
 
     llOwnerSay("[SL Cabinet] MOAP set to " + targetUrl);
+    return TRUE;
 }
 
 default

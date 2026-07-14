@@ -27,7 +27,30 @@ This document lists simple, low-friction 2-player board and card games that can 
   * **Scoring:** Toy vibrates matching the number of seeds dropped into your store on that turn.
   * **Go Again (landing in store):** A short trigger pulse.
 
-### 4. Battleship (Arcade Style)
+### 4. Hex
+* **The Rules:** Players take turns claiming cells on a hexagonal grid, trying to connect their two matching sides before the opponent connects theirs.
+* **Why it fits:** Easy to understand, elegant strategy, and a clean visual board.
+* **Toy Integration:**
+  * **Bridge Advance:** A short pulse when a chain gets extended.
+  * **Winning Path:** A longer, escalating vibration as a winning connection forms.
+
+### 5. Hangman
+* **The Rules:** One player chooses a secret word, and the other guesses letters until the word is solved or the hangman is complete.
+* **Why it fits:** Extremely simple to build, very easy to play, and works well as a quick duel.
+* **Toy Integration:**
+  * **Correct Guess:** Small rewarding pulse.
+  * **Wrong Guess:** Mild warning vibration.
+  * **Win/Loss:** Strong final pattern for the outcome.
+
+### 6. Mastermind
+* **The Rules:** One player sets a hidden code of colored pegs, and the other tries to crack it using feedback after each guess.
+* **Why it fits:** Compact logic game, easy to build, and strong one-on-one replay value.
+* **Toy Integration:**
+  * **Partial Match:** Light confirmation pulse.
+  * **Exact Match:** Stronger success vibration.
+  * **Cracked Code:** Victory pattern.
+
+### 7. Battleship (Arcade Style)
 * **The Rules:** Secretly place a fleet of ships on a 10x10 grid. Take turns guessing coordinates to strike opponent ships. Sunk fleets lose.
 * **Why it fits:** High-tension, turn-based guessing game.
 * **Toy Integration:**

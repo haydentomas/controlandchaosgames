@@ -3,6 +3,19 @@
     let latestGame = null;
     let uiReady = false;
 
+    // Detect Second Life Mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const isSLMode = urlParams.get('mode') === 'sl';
+    if (isSLMode) {
+        if (document.body) {
+            document.body.classList.add('sl-mode');
+        } else {
+            document.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('sl-mode');
+            });
+        }
+    }
+
     function getGameId() {
         return typeof gameId !== 'undefined' ? gameId : null;
     }
@@ -467,6 +480,31 @@
                 .chat-sidebar {
                     backdrop-filter: blur(10px) saturate(1.1);
                 }
+            }
+
+            /* Second Life Mode Suppressions */
+            body.sl-mode {
+                background-image: none !important;
+                background-color: #000000 !important;
+            }
+            body.sl-mode .game-controls-wrapper,
+            body.sl-mode .chat-sponsor-bar,
+            body.sl-mode .lobby-sponsor-banner,
+            body.sl-mode .lobby-sponsor-side,
+            body.sl-mode #btn-standalone-back {
+                display: none !important;
+            }
+            body.sl-mode .spectator-container {
+                padding: 10px !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+            body.sl-mode .view {
+                padding: 0 !important;
+                min-height: 100vh !important;
+                justify-content: flex-start !important;
             }
         `;
         document.head.appendChild(style);

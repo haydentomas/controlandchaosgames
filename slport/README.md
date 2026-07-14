@@ -10,6 +10,7 @@ The current repo already has a draft integration plan in `../second_life_integra
 - LSL controller scripts for rezzed cabinets
 - frontend notes for MOAP / `?mode=sl` behavior
 - implementation checklists and testing notes
+- the minimal in-world board loader lives at `lsl/control-chaos-board.lsl`
 
 ## Suggested first milestones
 
@@ -24,4 +25,3 @@ The current repo already has a draft integration plan in `../second_life_integra
 - Keep cabinet state isolated by `cabinetId`.
 - Treat the callback URL as ephemeral and re-register after resets.
 - Do not assume SL-specific LSL behavior without testing in-world.
-
